@@ -21,22 +21,19 @@ class SeekerAgent(AgentBase):
         cv: str,
         trait: str,
         status: str,
-        sys_prompt: Optional[str] = None,
     ) -> None:
-        sys_prompt = sys_prompt or Template.system_prompt
         super().__init__(
             name=name,
-            sys_prompt=sys_prompt,
             model_config_name=model_config_name,
         )
         self.cv = cv
         self.trait = trait
         self.status = status
-        self.system_prompt = Msg("system", sys_prompt, role="system")
+        self.system_prompt = Msg("system", Template.system_prompt(cv=cv, trait=trait, status=status), role="system")
     
-    def set_search_job_number(self):
-        msg = Msg(self.name, Template.search_job_number_prompt, role="user")
-        prompt = self.model.format(self.system_prompt, msg)
+    def search_job_number_fun(self):
+        msg = Msg("user", Template.search_job_number_prompt(), role="user")
+        prompt = self.model.format(self.system_prompt, self.memory.get_memory(self.recent_n), msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             res_dict = json.loads(response.text)
@@ -47,9 +44,29 @@ class SeekerAgent(AgentBase):
                     f"Invalid response format in parse_func "
                     f"with response: {response.text}",
                 )
-
+        # print(prompt)
         response = self.model(prompt, parse_func=parse_func).raw
-        self.search_job_number = response
+        # print(response)
+        self.search_job_number = min(response, len(self.job_pool))
+
+    def apply_job_fun(self, search_jobs: list):
+        msg = Msg("user", Template.apply_jobs_prompt(self.search_job_number, search_jobs), role="user")
+        prompt = self.model.format(self.system_prompt, self.memory.get_memory(self.recent_n), msg)
+
+        def parse_func(response: ModelResponse) -> ModelResponse:
+            res_dict = json.loads(response.text)
+            if "apply_jobs" in res_dict:
+                return ModelResponse(raw=list(map(int, res_dict["apply_jobs"])))
+            else:
+                raise ValueError(
+                    f"Invalid response format in parse_func "
+                    f"with response: {response.text}",
+                )
+        
+        # print(prompt)
+        response = self.model(prompt, parse_func=parse_func).raw
+        # print(response)
+        self.apply_jobs = response
 
     def reply(self, x: Optional[dict] = None) -> dict:
         return Msg(self.name, None, role="assistant")

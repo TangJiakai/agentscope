@@ -1,15 +1,29 @@
-{# system prompt. #}
-{% set system_prompt %}
+{# Prompt: system prompt. #}
+{% macro system_prompt(cv, trait, status) %}
 You are a job seeker, and you will be looking for the ideal position that best suits you during this job search season.
-{% endset %}
+你目前的简历描述为{{cv}}，具有的个体特征为{{trait}}，目前的状态是{{status}}。
+{% endmacro %}
 
-{# Determine the number of job searches. #}
-{% set search_job_number_prompt %}
-我本人目前的简历描述为{{cv}}，本人具有的个体特征为{{trait}}，本人目前的状态是{{status}}，在当前求职季，我会搜寻工作并考虑对这些职位进行申请投递。请根据本人目前的情况，请在[1-2]中选择一个整数作为搜寻职位的数量，不要给出多余的思考过程。
+{# Prompt: Determine the number of job searches. #}
+{% macro search_job_number_prompt() %}
+你现在要搜寻工作并考虑对这些职位进行申请投递。请根据本人目前的情况，请在[1-2]中选择一个整数作为搜寻职位的数量，不要给出多余的思考过程。
 You should respond in the following format, which can be loaded by json.loads in Python:
 {
     "number": "an integer in the range of [1,2]"
 }
-{% endset %}
+{% endmacro %}
 
-{#  #}
+{# Prompt: apply for jobs #}
+{% macro apply_jobs_prompt(search_job_number, search_jobs) %}
+你已经搜寻到{{search_job_number}}个职位进行申请投递，分别如下
+{% for job in search_jobs %}
+- 职位: {{job.name}}
+职位描述和职位要求: {{job.jd}}
+{% endfor %}
+
+请根据目前自身的情况，选择一个或者多个职位进行简历的投递申请。
+You should extract the id inside the '[]'. You need to form these ids into a list (even if applying for only one job) and respond in the following format, which can be loaded by json.loads in Python:
+{
+    "apply_jobs": "a list formed by id"
+}
+{% endmacro %}

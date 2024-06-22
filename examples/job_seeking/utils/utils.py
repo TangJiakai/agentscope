@@ -5,7 +5,7 @@ import glob
 import re
 
 
-def setup_agents(agent_configs):
+def setup_agents(agent_configs, recent_n):
     """
     Load config and init agent by configs
     """
@@ -32,6 +32,7 @@ def setup_agents(agent_configs):
         agent_cls = get_agent_cls(config["class"])
         agent_args = config["args"]
         agent = agent_cls(**agent_args)
+        agent.recent_n = recent_n
         agent_objs.append(agent)
     return agent_objs
 
@@ -41,5 +42,5 @@ def extract_ids(input_str):
     Extract ids from input string
     """
     pattern = r"\[(\d+)\]"
-    ids = re.findall(pattern, input_str)
+    ids = list(map(int, re.findall(pattern, input_str)))
     return ids
