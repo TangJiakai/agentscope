@@ -20,6 +20,13 @@ class Seeker(object):
         self.status = status
 
 
+class WLJob(object):
+    def __init__(self, job_id: int, rank: int, wl_n: int) -> None:
+        self.job_id = job_id
+        self.rank = rank
+        self.wl_n = wl_n
+
+
 class SeekerAgent(AgentBase):
     """seeker agent."""
 
@@ -47,10 +54,10 @@ class SeekerAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, self.memory.get_memory(self.recent_n), msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            res_dict = json.loads(response.text)
-            if "number" in res_dict:
+            try:
+                res_dict = json.loads(response.text)
                 return ModelResponse(raw=int(res_dict["number"]))
-            else:
+            except:
                 raise ValueError(
                     f"Invalid response format in parse_func "
                     f"with response: {response.text}",
@@ -65,10 +72,10 @@ class SeekerAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, self.memory.get_memory(self.recent_n), msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            res_dict = json.loads(response.text)
-            if "apply_jobs" in res_dict:
+            try:
+                res_dict = json.loads(response.text)
                 return ModelResponse(raw=list(map(int, res_dict["apply_jobs"])))
-            else:
+            except:
                 raise ValueError(
                     f"Invalid response format in parse_func "
                     f"with response: {response.text}",

@@ -9,6 +9,7 @@ os.chdir(sys.path[0])
 import agentscope
 
 from utils.utils import *
+from seeker_agent import WLJob
 
 
 def parse_args() -> argparse.Namespace:
@@ -57,6 +58,12 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=2,
         help="The number of excess cv passed.",
+    )
+    parser.add_argument(
+        "--wl-n",
+        type=int,
+        default=2,
+        help="The number of waiting list.",
     )
     return parser.parse_args()
 
@@ -137,7 +144,7 @@ def main(args) -> None:
             job.apply_seekers.append(seeker_id)
     for agent in job_agents:
         # agent.cv_screening_fun([id2seeker[x]['agent'].seeker for x in agent.apply_seekers], args.excess_cv_passed_n)
-        cv_passed_seekers = random.sample(agent.apply_seekers, random.choice(range(len(agent.apply_seekers)))+1 if len(agent.apply_seekers) > 0 else 0)
+        agent.cv_passed_seekers = random.sample(agent.apply_seekers, random.choice(range(len(agent.apply_seekers)))+1 if len(agent.apply_seekers) > 0 else 0)
     
     for agent in job_agents:
         print(f"{agent.name} passes {[id2seeker[x]['agent'].name for x in agent.cv_passed_seekers]} seekers.")
@@ -159,11 +166,36 @@ def main(args) -> None:
     # 4. [Job & Seeker] Interview
     print("=" * 50)
     print("4. [Job & Seeker] Interview.")
-    # TODO: 目前简化流程，后续如果细化整个面试过程，需要再添加moderator类，执行面试交互QA的过程
-    # for job in job_agents:
-    #     job.interview_fun([id2seeker[x]['agent'] for x in job.cv_passed_seekers])
-    
+    # TODO: 目前简化面试流程，后续如果细化整个面试过程，需要再添加moderator类，执行面试交互QA的过程
+    for agent in job_agents:
+        agent.interview_fun([id2seeker[x]['agent'].seeker for x in agent.cv_passed_seekers])
 
+    # 5.1 [Job] Notify the result of interview.
+    print("=" * 50)
+    print("5.1 [Job] Decision the interview result.")
+    for agent in job_agents:
+        agent.make_decision_fun([id2seeker[x]['agent'].seeker for x in agent.cv_passed_seekers], args.wl_n)
+
+    # 5.2 [Seeker] Notify the result of interview.
+    print("=" * 50)
+    print("5.2 [Seeker] Notify the result of interview.")
+    for agent in seeker_agents:
+        agent.offer_jobs, agent.wl_jobs, agent.reject_jobs = list(), list(), list()
+        
+    for job_id in id2job:
+        job_agent = id2job[job_id]['agent']
+        for seeker_id in job_agent.offer_seekers:
+            seeker_agent = id2seeker[seeker_id]['agent']
+            seeker_agent.offer_jobs.append(job_id)
+        wl_n = len(job_agent.wl_seekers)
+        for i, seeker_id in enumerate(job_agent.wl_seekers):
+            seeker_agent.wl_jobs.append(WLJob(job_id, i+1, wl_n))
+        for seeker_id in job_agent.reject_seekers:
+            seeker_agent.reject_jobs.append(job_id)
+
+    for agent in seeker_agents:
+        print(f"{agent.name} receives {len(agent.offer_jobs)} offers, {len(agent.wl_jobs)} waiting list, and {len(agent.reject_jobs)} rejections.")
+  
 
 if __name__ == "__main__":
     args = parse_args()

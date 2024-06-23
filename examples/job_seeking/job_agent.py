@@ -61,10 +61,10 @@ class JobAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, self.memory.get_memory(self.recent_n), msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            res_dict = json.loads(response.text)
-            if "cv_passed_seekers" in res_dict:
+            try:
+                res_dict = json.loads(response.text)
                 return ModelResponse(raw=list(map(int, res_dict["cv_passed_seekers"])))
-            else:
+            except:
                 raise ValueError(
                     f"Invalid response format in parse_func "
                     f"with response: {response.text}",
@@ -76,8 +76,33 @@ class JobAgent(AgentBase):
         self.cv_passed_seekers = response
 
     def interview_fun(self, cv_passed_seekers: list):
-        current_hc = min(self.hc, len(cv_passed_seekers))
+        pass
 
+    def make_decision_fun(self, interview_seekers: list, wl_n: int):
+        offer_hc = min(self.hc, len(interview_seekers))
+        wl_n = min(wl_n, len(interview_seekers) - offer_hc)
+        msg = Msg("user", Template.make_decision(offer_hc, wl_n, interview_seekers), role="user")
+        prompt = self.model.format(self.system_prompt, self.memory.get_memory(self.recent_n), msg)
+
+        def parse_func(response: ModelResponse) -> ModelResponse:
+            try:
+                res_dict = json.loads(response.text)
+                return ModelResponse(raw={
+                    "offer_seekers": list(map(int, res_dict["offer_seekers"])),
+                    "wl_seekers": list(map(int, res_dict["wl_seekers"]))
+                })
+            except:
+                raise ValueError(
+                    f"Invalid response format in parse_func "
+                    f"with response: {response.text}",
+                )
+            
+        print(prompt)
+        response = self.model(prompt, parse_func=parse_func).raw
+        print(response)
+        self.offer_seekers = response["offer_seekers"]
+        self.wl_seekers = response["wl_seekers"]
+        self.reject_seekers = list(set(interview_seekers) - set(self.offer_seekers) - set(self.wl_seekers))
 
     def reply(self, x: Optional[dict] = None) -> dict:
         return Msg(self.name, None, role="assistant")
