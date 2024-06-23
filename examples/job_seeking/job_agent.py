@@ -6,6 +6,8 @@ from agentscope.agents import AgentBase
 from agentscope.message import Msg
 from agentscope.models.response import ModelResponse
 
+from utils.utils import extract_json_string
+
 file_loader = FileSystemLoader("prompts")
 env = Environment(loader=file_loader)
 Template = env.get_template('job_prompts.j2').module
@@ -62,18 +64,18 @@ class JobAgent(AgentBase):
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             try:
-                res_dict = json.loads(response.text)
-                return ModelResponse(raw=list(map(int, res_dict["cv_passed_seekers"])))
+                res_dict = json.loads(extract_json_string(response.text))
+                return ModelResponse(raw=list(map(int, res_dict["cv_passed_seeker_ids"])))
             except:
                 raise ValueError(
                     f"Invalid response format in parse_func "
                     f"with response: {response.text}",
                 )
 
-        # print(prompt)
+        print(prompt)
         response = self.model(prompt, parse_func=parse_func).raw
-        # print(response)
-        self.cv_passed_seekers = response
+        print(response)
+        self.cv_passed_seeker_ids = response
 
     def interview_fun(self, cv_passed_seekers: list):
         pass
@@ -86,10 +88,10 @@ class JobAgent(AgentBase):
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             try:
-                res_dict = json.loads(response.text)
+                res_dict = json.loads(extract_json_string(response.text))
                 return ModelResponse(raw={
-                    "offer_seekers": list(map(int, res_dict["offer_seekers"])),
-                    "wl_seekers": list(map(int, res_dict["wl_seekers"]))
+                    "offer_seeker_ids": list(map(int, res_dict["offer_seeker_ids"])),
+                    "wl_seeker_ids": list(map(int, res_dict["wl_seeker_ids"]))
                 })
             except:
                 raise ValueError(
@@ -100,9 +102,9 @@ class JobAgent(AgentBase):
         print(prompt)
         response = self.model(prompt, parse_func=parse_func).raw
         print(response)
-        self.offer_seekers = response["offer_seekers"]
-        self.wl_seekers = response["wl_seekers"]
-        self.reject_seekers = list(set(interview_seekers) - set(self.offer_seekers) - set(self.wl_seekers))
+        self.offer_seeker_ids = response["offer_seeker_ids"]
+        self.wl_seeker_ids = response["wl_seeker_ids"]
+        self.reject_seeker_ids = list(set([seeker.id for seeker in interview_seekers]) - set(self.offer_seeker_ids) - set(self.wl_seeker_ids))
 
     def reply(self, x: Optional[dict] = None) -> dict:
         return Msg(self.name, None, role="assistant")

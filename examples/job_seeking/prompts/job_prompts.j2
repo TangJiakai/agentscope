@@ -19,7 +19,7 @@ Position Requirements:
 您需要择优筛选出{{cv_passed_hc}}个求职者。
 You should extract the id inside the '<>'. You need to form these ids into a list (if there are no applicants, return an empty list) and respond in the following format, which can be loaded by json.loads in Python:
 {
-    "cv_passed_seekers": "a list formed by id"
+    "cv_passed_seeker_ids": "a list formed by id"
 }
 {% endmacro %}
 
@@ -38,7 +38,7 @@ You should extract the id inside the '<>'. You need to form these ids into a lis
 
 You should extract the id inside the '<>'. You need to form these ids into a list (if there are no applicants, return an empty list) and respond in the following format, which can be loaded by json.loads in Python:
 {
-    "offer_seekers": "a list formed by id",
-    "wl_seekers": "a list formed by id"
+    "offer_seeker_ids": "a list formed by id",
+    "wl_seeker_ids": "a list formed by id"
 }
 {% endmacro %}

@@ -23,11 +23,11 @@ You should respond in the following format, which can be loaded by json.loads in
 {% endmacro %}
 
 {# Prompt: apply for jobs #}
-{% macro apply_jobs_prompt(search_job_number, search_jobs) %}
-你已经搜寻到{{search_job_number}}个职位进行申请投递，分别如下
-{% for (company, job) in search_jobs %}
+{% macro apply_jobs_prompt(search_jobs) %}
+你已经搜寻到{{search_jobs | length}}个职位进行申请投递，分别如下
+{% for job in search_jobs %}
 - <{{job.id}}> {{job}}
-{{company}}
+{{job.company}}
 {% endfor %}
 根据目前自身的情况，请选择一个或者多个职位进行简历的投递申请。
 You should extract the id inside the '<>'. You need to form these ids into a list (even if applying for only one job) and respond in the following format, which can be loaded by json.loads in Python:
@@ -36,3 +36,37 @@ You should extract the id inside the '<>'. You need to form these ids into a lis
 }
 {% endmacro %}
 
+{# Prompt: make decision #}
+{% macro make_decision_prompt(offer_job_ids, wl_jobs, jobs) %}
+在当前求职季，获得的offer或者递补offer，下面将介绍这些offer的具体情况。
+
+{% if offer_job_ids | length > 0 %}
+总计得到{{offer_job_ids | length}}个Offer，分别如下：
+{% for job_id in offer_job_ids %}
+- <{{job_id}}> 职位名称：{{jobs[job_id]["agent"].job.name}}
+职位描述：{{jobs[job_id]["agent"].job.jd}}
+{{jobs[job_id]["agent"].job.company}}
+{% endfor %}
+{% endif %}
+
+{% if wl_jobs | length > 0 %}
+总计得到{{wl_jobs | length}}个递补Offer，分别如下：
+{% for wl_job in wl_jobs %}
+- <{{wl_job.id}}> 职位名称：{{jobs[wl_job.id]["agent"].job.name}}
+职位描述：{{jobs[wl_job.id]["agent"].job.jd}}
+{{jobs[wl_job.id]["agent"].job.company}}
+当前递补排名：{{wl_job.rank}}/{{wl_job.wl_n}}
+{% endfor %}
+{% endif %}
+
+综合以上情况，请做出以下选择：
+1. 从上述已有offer选择其中一个最佳offer（前提是你已经获得该offer，并输出选择最终offer的编号('<>'内的数字)。
+2. 放弃所有已获得的offer，等待递补的职位（前提是你已经获得递补offer）。
+3. 放弃所有offer和递补机会，继续寻找其他职位。
+
+You should respond in the following format, which can be loaded by json.loads in Python:
+{
+    "decision": "choose the final integer number from [1,2,3] as the final decision",
+    "final_offer_id": "if you choose 1, please extract the id number of the final offer in the '<>', otherwise, you can ignore this field"
+}
+{% endmacro %}

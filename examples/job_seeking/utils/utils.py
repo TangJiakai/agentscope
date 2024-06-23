@@ -44,3 +44,9 @@ def extract_ids(input_str):
     pattern = r"\[(\d+)\]"
     ids = list(map(int, re.findall(pattern, input_str)))
     return ids
+
+
+def extract_json_string(text):
+    pattern = re.compile(r'\{.*?\}', re.DOTALL)
+    match = pattern.search(text)
+    return match.group()
