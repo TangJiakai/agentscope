@@ -37,7 +37,7 @@ You should extract the id inside the '<>'. You need to form these ids into a lis
 {% endmacro %}
 
 {# Prompt: make decision #}
-{% macro make_decision_prompt(offer_job_ids, wl_jobs, jobs) %}
+{% macro make_decision_prompt(offer_job_ids, wl_jobs_dict, jobs) %}
 在当前求职季，获得的offer或者递补offer，下面将介绍这些offer的具体情况。
 
 {% if offer_job_ids | length > 0 %}
@@ -47,16 +47,20 @@ You should extract the id inside the '<>'. You need to form these ids into a lis
 职位描述：{{jobs[job_id]["agent"].job.jd}}
 {{jobs[job_id]["agent"].job.company}}
 {% endfor %}
+{% else %}
+没有offer。
 {% endif %}
 
-{% if wl_jobs | length > 0 %}
-总计得到{{wl_jobs | length}}个递补Offer，分别如下：
-{% for wl_job in wl_jobs %}
-- <{{wl_job.id}}> 职位名称：{{jobs[wl_job.id]["agent"].job.name}}
-职位描述：{{jobs[wl_job.id]["agent"].job.jd}}
-{{jobs[wl_job.id]["agent"].job.company}}
+{% if wl_jobs_dict | length > 0 %}
+总计得到{{wl_jobs_dict | length}}个递补Offer，分别如下：
+{% for wl_job_id, wl_job in wl_jobs_dict.items() %}
+- <{{wl_job_id}}> 职位名称：{{jobs[wl_job_id]["agent"].job.name}}
+职位描述：{{jobs[wl_job_id]["agent"].job.jd}}
+{{jobs[wl_job_id]["agent"].job.company}}
 当前递补排名：{{wl_job.rank}}/{{wl_job.wl_n}}
 {% endfor %}
+{% else %}
+没有递补offer。
 {% endif %}
 
 综合以上情况，请做出以下选择：

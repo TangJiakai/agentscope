@@ -22,13 +22,6 @@ class Seeker(object):
         self.status = status
 
 
-class WLJob(object):
-    def __init__(self, id: int, rank: int, wl_n: int) -> None:
-        self.id = id
-        self.rank = rank
-        self.wl_n = wl_n
-
-
 class SeekerAgent(AgentBase):
     """seeker agent."""
 
@@ -93,23 +86,23 @@ class SeekerAgent(AgentBase):
 
     def make_decision_fun(self, id2job: dict):
         """Make decision."""
-        if len(self.offer_job_ids) == 0 and len(self.wl_jobs) == 0:
+        if len(self.offer_job_ids) == 0 and len(self.wl_jobs_dict) == 0:
             self.decision = 0
             self.final_offer_id = None
-            self.reject_job_ids, self.reject_wl_job_ids = list(), list()
+            self.reject_offer_job_ids, self.reject_wl_job_ids = list(), list()
 
         if len(self.offer_job_ids) > 0:
             print(f"总计得到{len(self.offer_job_ids)}个Offer，分别如下:\n")
             for job_id in self.offer_job_ids:
                 print(job_id, id2job[job_id]["agent"].job.name, id2job[job_id]["agent"].job.jd, id2job[job_id]["agent"].job.company)
 
-        if len(self.wl_jobs) > 0:
-            print(f"总计得到{len(self.wl_jobs)}个递补Offer，分别如下:\n")
-            for wl_job in self.wl_jobs:
-                print(wl_job.id, id2job[wl_job.id]["agent"].job.name, id2job[wl_job.id]["agent"].job.jd, id2job[wl_job.id]["agent"].job.company, wl_job.rank, wl_job.wl_n)
+        if len(self.wl_jobs_dict) > 0:
+            print(f"总计得到{len(self.wl_jobs_dict)}个递补Offer，分别如下:\n")
+            for wl_job_id, wl_job in self.wl_jobs_dict.items():
+                print(wl_job_id, id2job[wl_job_id]["agent"].job.name, id2job[wl_job_id]["agent"].job.jd, id2job[wl_job_id]["agent"].job.company, wl_job.rank, wl_job.wl_n)
 
 
-        msg = Msg("user", Template.make_decision_prompt(self.offer_job_ids, self.wl_jobs, id2job), role="user")
+        msg = Msg("user", Template.make_decision_prompt(self.offer_job_ids, self.wl_jobs_dict, id2job), role="user")
         prompt = self.model.format(self.system_prompt, self.memory.get_memory(self.recent_n), msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
@@ -142,18 +135,21 @@ class SeekerAgent(AgentBase):
         if response["decision"] == 1:   # Accept offer
             self.decision = 1
             self.final_offer_id = response["final_offer_id"]
-            self.reject_job_ids = list(set(self.offer_job_ids) - set([self.final_offer_id]))
-            self.reject_wl_job_ids = [x.id for x in self.wl_jobs]
+            self.reject_offer_job_ids = list(set(self.offer_job_ids) - set([self.final_offer_id]))
+            self.reject_wl_job_ids = [x for x in self.wl_jobs_dict]
         elif response["decision"] == 2: # Reject offer and wait jobs in waitlist
             self.decision = 2
             self.final_offer_id = None
-            self.reject_job_ids = self.offer_job_ids
+            self.offer_job_ids = list()
+            self.reject_offer_job_ids = self.offer_job_ids
             self.reject_wl_job_ids = list()
         elif response["decision"] == 3: # Reject offer and waitlist jobs, prepare for next round
             self.decision = 3
             self.final_offer_id = None
-            self.reject_job_ids = self.offer_job_ids
-            self.reject_wl_job_ids = [x.id for x in self.wl_jobs]
+            self.offer_job_ids = list()
+            self.wl_jobs_dict = dict()
+            self.reject_offer_job_ids = self.offer_job_ids
+            self.reject_wl_job_ids = [x for x in self.wl_jobs_dict]
 
     def reply(self, x: Optional[dict] = None) -> dict:
         return Msg(self.name, None, role="assistant")
