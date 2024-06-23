@@ -1,7 +1,16 @@
 {# Prompt: system prompt. #}
-{% macro system_prompt(cv, trait, status) %}
-You are a job seeker, and you will be looking for the ideal position that best suits you during this job search season.
-你目前的简历描述为{{cv}}，具有的个体特征为{{trait}}，目前的状态是{{status}}。
+{% macro system_prompt(seeker) %}
+You are a job seeker.
+{% if seeker.status == "在职" %}
+Your current status is employed, and you want to seek a better job in the job market.
+{% else %}
+Your current status is unemployed, and you need to find a suitable and ideal job.
+{% endif %}
+Your basic information is as follows:
+Name: {{seeker.name}}
+Resume Description: {{seeker.cv}}
+Personal Trait: {{seeker.trait}}
+Current Status: {{seeker.status}}
 {% endmacro %}
 
 {# Prompt: Determine the number of job searches. #}
@@ -16,14 +25,14 @@ You should respond in the following format, which can be loaded by json.loads in
 {# Prompt: apply for jobs #}
 {% macro apply_jobs_prompt(search_job_number, search_jobs) %}
 你已经搜寻到{{search_job_number}}个职位进行申请投递，分别如下
-{% for job in search_jobs %}
-- 职位: {{job.name}}
-职位描述和职位要求: {{job.jd}}
+{% for (company, job) in search_jobs %}
+- <{{job.id}}> {{job}}
+{{company}}
 {% endfor %}
-
-请根据目前自身的情况，选择一个或者多个职位进行简历的投递申请。
-You should extract the id inside the '[]'. You need to form these ids into a list (even if applying for only one job) and respond in the following format, which can be loaded by json.loads in Python:
+根据目前自身的情况，请选择一个或者多个职位进行简历的投递申请。
+You should extract the id inside the '<>'. You need to form these ids into a list (even if applying for only one job) and respond in the following format, which can be loaded by json.loads in Python:
 {
     "apply_jobs": "a list formed by id"
 }
 {% endmacro %}
+

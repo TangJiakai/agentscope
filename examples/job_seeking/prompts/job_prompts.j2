@@ -1,22 +1,29 @@
-{# system prompt#}
-{% macro system_prompt(name, jd) %}
-You are a company interviewer, and you will evaluate job applicants' resumes to select those who can maximize the company's benefits.
-您要发布的职位是*{{name}}*，职位描述和要求如下：
-{{jd}}
+{# system prompt #}
+{% macro system_prompt(job, company) %}
+You are an interviewer for company {{company.name}}. The company's brief description is {{company.cd}}. Now, the company has entrusted you to recruit for position {{job.name}}. The specific information for the position is as follows:
+Position Title: {{job.name}}
+Position Description: {{job.jd}}
+Position Requirements: 
+{% for r in job.jr %}
+- {{r}}
+{% endfor %}
 {% endmacro %}
 
 {# Screen resumes for job seekers #}
 {% macro screen_resumes(cv_passed_hc, apply_seekers) %}
-目前共收到{{apply_seekers | length}}份简历，您需要筛选出符合公司要求的求职者。下面给出每位求职者的简历（注意'[]'内是求职者的编号）：
+目前共收到{{apply_seekers | length}}份简历，您需要筛选出符合公司要求的求职者。下面给出每位求职者的简历（注意'<>'内是求职者的编号）：
 {% for seeker in apply_seekers %}
-- {{seeker.name}}的简历如下：
+- <{{seeker.id}}> {{seeker.name}}的简历如下：
 {{seeker.cv}}
 {% endfor %}
 您需要择优筛选出{{cv_passed_hc}}个求职者。
-You should extract the id inside the '[]'. You need to form these ids into a list (if there are no applicants, return an empty list) and respond in the following format, which can be loaded by json.loads in Python:
+You should extract the id inside the '<>'. You need to form these ids into a list (if there are no applicants, return an empty list) and respond in the following format, which can be loaded by json.loads in Python:
 {
     "cv_passed_seekers": "a list formed by id"
 }
 {% endmacro %}
 
+{# Issue offers and waitlist to job seekers #}
+{% macro interview_result_fun(hc, job_seekers)%}
 
+{% endmacro %}

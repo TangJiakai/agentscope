@@ -11,6 +11,15 @@ env = Environment(loader=file_loader)
 Template = env.get_template('seeker_prompts.j2').module
 
 
+class Seeker(object):
+    def __init__(self, id: int, name: str, cv: str, trait: str, status: str):
+        self.id = id
+        self.name = name
+        self.cv = cv
+        self.trait = trait
+        self.status = status
+
+
 class SeekerAgent(AgentBase):
     """seeker agent."""
 
@@ -18,6 +27,7 @@ class SeekerAgent(AgentBase):
         self,
         name: str,
         model_config_name: str,
+        id: int,
         cv: str,
         trait: str,
         status: str,
@@ -26,11 +36,12 @@ class SeekerAgent(AgentBase):
             name=name,
             model_config_name=model_config_name,
         )
-        self.cv = cv
-        self.trait = trait
-        self.status = status
-        self.system_prompt = Msg("system", Template.system_prompt(cv=cv, trait=trait, status=status), role="system")
+        self.seeker = Seeker(id, name, cv, trait, status)
+        self.system_prompt = Msg("system", Template.system_prompt(self.seeker), role="system")
     
+    def get_id(self):
+        return self.seeker.id
+
     def search_job_number_fun(self):
         msg = Msg("user", Template.search_job_number_prompt(), role="user")
         prompt = self.model.format(self.system_prompt, self.memory.get_memory(self.recent_n), msg)

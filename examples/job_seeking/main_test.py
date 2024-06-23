@@ -100,8 +100,8 @@ def main(args) -> None:
     print("=" * 50)
     print("1.1 [Seeker] Determine the number of job searches.")
     for agent in seeker_agents:
-        agent.search_job_number_fun()
-        # agent.search_job_number = random.choice([1,2])
+        # agent.search_job_number_fun()
+        agent.search_job_number = random.choice([1,2])
     for agent in seeker_agents:
         print(f"{agent.name} wants to search {agent.search_job_number} jobs.")
 
@@ -119,8 +119,8 @@ def main(args) -> None:
     for agent in seeker_agents:
         jobs = [id2job[x]['agent'].job for x in agent.search_jobs]
         companies = [id2company[job.company_id]['agent'].company for job in jobs]
-        agent.apply_job_fun(list(zip(companies, jobs)))
-        # agent.apply_jobs = random.sample(agent.search_jobs, random.choice(range(len(agent.search_jobs)))+1 if len(agent.search_jobs) > 0 else 0)
+        # agent.apply_job_fun(list(zip(companies, jobs)))
+        agent.apply_jobs = random.sample(agent.search_jobs, random.choice(range(len(agent.search_jobs)))+1 if len(agent.search_jobs) > 0 else 0)
     for agent in seeker_agents:
         print(f"{agent.name} applies {[id2job[x]['agent'].name for x in agent.apply_jobs]} jobs.")
 
@@ -136,8 +136,8 @@ def main(args) -> None:
             job = id2job[job_id]['agent']
             job.apply_seekers.append(seeker_id)
     for agent in job_agents:
-        agent.cv_screening_fun([id2seeker[x]['agent'].seeker for x in agent.apply_seekers], args.excess_cv_passed_n)
-        # cv_passed_seekers = random.sample(agent.apply_seekers, random.choice(range(len(agent.apply_seekers)))+1 if len(agent.apply_seekers) > 0 else 0)
+        # agent.cv_screening_fun([id2seeker[x]['agent'].seeker for x in agent.apply_seekers], args.excess_cv_passed_n)
+        cv_passed_seekers = random.sample(agent.apply_seekers, random.choice(range(len(agent.apply_seekers)))+1 if len(agent.apply_seekers) > 0 else 0)
     
     for agent in job_agents:
         print(f"{agent.name} passes {[id2seeker[x]['agent'].name for x in agent.cv_passed_seekers]} seekers.")
@@ -162,6 +162,7 @@ def main(args) -> None:
     # TODO: 目前简化流程，后续如果细化整个面试过程，需要再添加moderator类，执行面试交互QA的过程
     # for job in job_agents:
     #     job.interview_fun([id2seeker[x]['agent'] for x in job.cv_passed_seekers])
+    
 
 
 if __name__ == "__main__":

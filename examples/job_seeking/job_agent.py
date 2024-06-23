@@ -11,6 +11,24 @@ env = Environment(loader=file_loader)
 Template = env.get_template('job_prompts.j2').module
 
 
+class Job(object):
+    def __init__(self, id: int, company_id: int, name: str, jd: str, jr: list, hc: int):
+        self.id = id
+        self.company_id = company_id
+        self.name = name
+        self.jd = jd
+        self.jr = jr
+        self.hc = hc
+
+    def __str__(self):
+        jr_string = "\n".join([f"- {r}" for r in self.jr])
+        return (
+            f"Position Title: {self.name}\n"
+            f"Position Description: {self.jd}\n"
+            f"Position Requirements:\n{jr_string}"
+        )
+    
+
 class JobAgent(AgentBase):
     """job agent."""
 
@@ -18,15 +36,24 @@ class JobAgent(AgentBase):
         self,
         name: str,
         model_config_name: str,
+        id: int,
+        company_id: int,
         jd: str,
+        jr: list,
         hc: int,
     ) -> None:
         super().__init__(
             name=name,
             model_config_name=model_config_name
         )
+        self.job = Job(id, company_id, name, jd, jr, hc)
         self.hc = hc
-        self.system_prompt = Msg("system", Template.system_prompt(name, jd), role="system")
+
+    def get_id(self):
+        return self.job.id
+
+    def init_system_prompt(self, company):
+        self.system_prompt = Msg("system", Template.system_prompt(self.job, company), role="system")
 
     def cv_screening_fun(self, apply_seekers: list, excess_cv_passed_n: int):
         cv_passed_hc = min(self.hc+excess_cv_passed_n, len(apply_seekers))
@@ -43,8 +70,14 @@ class JobAgent(AgentBase):
                     f"with response: {response.text}",
                 )
 
+        # print(prompt)
         response = self.model(prompt, parse_func=parse_func).raw
+        # print(response)
         self.cv_passed_seekers = response
+
+    def interview_fun(self, cv_passed_seekers: list):
+        current_hc = min(self.hc, len(cv_passed_seekers))
+
 
     def reply(self, x: Optional[dict] = None) -> dict:
         return Msg(self.name, None, role="assistant")
