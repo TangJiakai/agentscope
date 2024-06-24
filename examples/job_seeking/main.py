@@ -83,38 +83,38 @@ def single_turn_make_decision_fun(seeker_agents, job_agents, id2seeker, id2job):
     # 6.1 [Seeker] Make decision
     print("6.1 [Seeker] Make decision.")
     for seeker_agent in seeker_agents:
-        # seeker_agent.make_decision_fun(id2job)
-        if len(seeker_agent.offer_job_ids) == 0 and len(seeker_agent.wl_jobs_dict) == 0:
-            seeker_agent.decision = 0
-            seeker_agent.final_offer_id = None
-            seeker_agent.reject_offer_job_ids, seeker_agent.reject_wl_job_ids = list(), list()
-        else:
-            if len(seeker_agent.offer_job_ids) > 0:
-                if len(seeker_agent.wl_jobs_dict) > 0:
-                    decision = random.choice([1, 2, 3])
-                else:
-                    decision = random.choice([1, 3])
-            else:
-                decision = 2
-            if decision == 1:
-                final_offer_id = random.choice(seeker_agent.offer_job_ids)
-                seeker_agent.decision = 1
-                seeker_agent.final_offer_id = final_offer_id
-                seeker_agent.reject_offer_job_ids = list(set(seeker_agent.offer_job_ids) - set([final_offer_id]))
-                seeker_agent.reject_wl_job_ids = [x for x in seeker_agent.wl_jobs_dict]
-            elif decision == 2:
-                seeker_agent.decision = 2
-                seeker_agent.final_offer_id = None
-                seeker_agent.offer_job_ids = list()
-                seeker_agent.reject_offer_job_ids = seeker_agent.offer_job_ids
-                seeker_agent.reject_wl_job_ids = list()
-            else:
-                seeker_agent.decision = 3
-                seeker_agent.final_offer_id = None
-                seeker_agent.offer_job_ids = list()
-                seeker_agent.wl_jobs_dict = dict()
-                seeker_agent.reject_offer_job_ids = seeker_agent.offer_job_ids
-                seeker_agent.reject_wl_job_ids = [x for x in seeker_agent.wl_jobs_dict]
+        seeker_agent.make_decision_fun(id2job)
+        # if len(seeker_agent.offer_job_ids) == 0 and len(seeker_agent.wl_jobs_dict) == 0:
+        #     seeker_agent.decision = 0
+        #     seeker_agent.final_offer_id = None
+        #     seeker_agent.reject_offer_job_ids, seeker_agent.reject_wl_job_ids = list(), list()
+        # else:
+        #     if len(seeker_agent.offer_job_ids) > 0:
+        #         if len(seeker_agent.wl_jobs_dict) > 0:
+        #             decision = random.choice([1, 2, 3])
+        #         else:
+        #             decision = random.choice([1, 3])
+        #     else:
+        #         decision = 2
+        #     if decision == 1:
+        #         final_offer_id = random.choice(seeker_agent.offer_job_ids)
+        #         seeker_agent.decision = 1
+        #         seeker_agent.final_offer_id = final_offer_id
+        #         seeker_agent.reject_offer_job_ids = list(set(seeker_agent.offer_job_ids) - set([final_offer_id]))
+        #         seeker_agent.reject_wl_job_ids = [x for x in seeker_agent.wl_jobs_dict]
+        #     elif decision == 2:
+        #         seeker_agent.decision = 2
+        #         seeker_agent.final_offer_id = None
+        #         seeker_agent.offer_job_ids = list()
+        #         seeker_agent.reject_offer_job_ids = seeker_agent.offer_job_ids
+        #         seeker_agent.reject_wl_job_ids = list()
+        #     else:
+        #         seeker_agent.decision = 3
+        #         seeker_agent.final_offer_id = None
+        #         seeker_agent.offer_job_ids = list()
+        #         seeker_agent.wl_jobs_dict = dict()
+        #         seeker_agent.reject_offer_job_ids = seeker_agent.offer_job_ids
+        #         seeker_agent.reject_wl_job_ids = [x for x in seeker_agent.wl_jobs_dict]
 
     for seeker_agent in seeker_agents:
         if seeker_agent.decision == 0:  # No any offers, and continue to search for jobs
@@ -184,8 +184,8 @@ def single_turn(args, seeker_agents, job_agents, company_agents, id2seeker, id2j
     print("=" * 50)
     print("1.1 [Seeker] Determine the number of job searches.")
     for seeker_agent in seeker_agents:
-        # agent.search_job_number_fun()
-        seeker_agent.search_job_number = random.choice([1,2])
+        seeker_agent.search_job_number_fun()
+        # seeker_agent.search_job_number = random.choice([1,2])
     for seeker_agent in seeker_agents:
         print(f"{seeker_agent.name} wants to search {seeker_agent.search_job_number} jobs.")
 
@@ -202,8 +202,8 @@ def single_turn(args, seeker_agents, job_agents, company_agents, id2seeker, id2j
     print("2. [Seeker] Apply for jobs.")
     for seeker_agent in seeker_agents:
         jobs = [id2job[x]['agent'].job for x in seeker_agent.search_job_ids]
-        # agent.apply_job_fun(jobs)
-        seeker_agent.apply_job_ids = random.sample(seeker_agent.search_job_ids, random.choice(range(len(seeker_agent.search_job_ids)))+1 if len(seeker_agent.search_job_ids) > 0 else 0)
+        seeker_agent.apply_job_fun(jobs)
+        # seeker_agent.apply_job_ids = random.sample(seeker_agent.search_job_ids, random.choice(range(len(seeker_agent.search_job_ids)))+1 if len(seeker_agent.search_job_ids) > 0 else 0)
     for seeker_agent in seeker_agents:
         print(f"{seeker_agent.name} applies {[id2job[x]['agent'].name for x in seeker_agent.apply_job_ids]} jobs.")
 
@@ -219,8 +219,8 @@ def single_turn(args, seeker_agents, job_agents, company_agents, id2seeker, id2j
             job_agent = id2job[job_id]['agent']
             job_agent.apply_seeker_ids.append(seeker_id)
     for job_agent in job_agents:
-        # job_agent.cv_screening_fun([id2seeker[x]['agent'].seeker for x in job_agent.apply_seeker_ids], args.excess_cv_passed_n)
-        job_agent.cv_passed_seeker_ids = random.sample(job_agent.apply_seeker_ids, random.choice(range(len(job_agent.apply_seeker_ids)))+1 if len(job_agent.apply_seeker_ids) > 0 else 0)
+        job_agent.cv_screening_fun([id2seeker[x]['agent'].seeker for x in job_agent.apply_seeker_ids], args.excess_cv_passed_n)
+        # job_agent.cv_passed_seeker_ids = random.sample(job_agent.apply_seeker_ids, random.choice(range(len(job_agent.apply_seeker_ids)))+1 if len(job_agent.apply_seeker_ids) > 0 else 0)
     
     for job_agent in job_agents:
         print(f"{job_agent.name} passes the cv screening for {[id2seeker[x]['agent'].name for x in job_agent.cv_passed_seeker_ids]} seekers.")
@@ -250,12 +250,12 @@ def single_turn(args, seeker_agents, job_agents, company_agents, id2seeker, id2j
     print("=" * 50)
     print("5.1 [Job] Decision the interview result.")
     for job_agent in job_agents:
-        # job_agent.make_decision_fun([id2seeker[x]['agent'].seeker for x in job_agent.cv_passed_seeker_ids], args.wl_n)
-        offer_hc = min(job_agent.hc, len(job_agent.cv_passed_seeker_ids))
-        wl_n = min(args.wl_n, len(job_agent.cv_passed_seeker_ids) - offer_hc)
-        job_agent.offer_seeker_ids = random.sample(job_agent.cv_passed_seeker_ids, offer_hc)
-        job_agent.wl_seeker_ids = random.sample(list(set(job_agent.cv_passed_seeker_ids) - set(job_agent.offer_seeker_ids)), wl_n)
-        job_agent.reject_seeker_ids = list(set(job_agent.cv_passed_seeker_ids) - set(job_agent.offer_seeker_ids) - set(job_agent.wl_seeker_ids))
+        job_agent.make_decision_fun([id2seeker[x]['agent'].seeker for x in job_agent.cv_passed_seeker_ids], args.wl_n)
+        # offer_hc = min(job_agent.hc, len(job_agent.cv_passed_seeker_ids))
+        # wl_n = min(args.wl_n, len(job_agent.cv_passed_seeker_ids) - offer_hc)
+        # job_agent.offer_seeker_ids = random.sample(job_agent.cv_passed_seeker_ids, offer_hc)
+        # job_agent.wl_seeker_ids = random.sample(list(set(job_agent.cv_passed_seeker_ids) - set(job_agent.offer_seeker_ids)), wl_n)
+        # job_agent.reject_seeker_ids = list(set(job_agent.cv_passed_seeker_ids) - set(job_agent.offer_seeker_ids) - set(job_agent.wl_seeker_ids))
 
     for job_agent in job_agents:
         print(f"{job_agent.name} offers {[id2seeker[x]['agent'].name for x in job_agent.offer_seeker_ids]}, waitlists {[id2seeker[x]['agent'].name for x in job_agent.wl_seeker_ids]}, and rejects {[id2seeker[x]['agent'].name for x in job_agent.reject_seeker_ids]}.")
