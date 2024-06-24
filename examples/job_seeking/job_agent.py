@@ -34,6 +34,17 @@ class Job(object):
 class JobAgent(AgentBase):
     """job agent."""
 
+    name: str   # Name of the job
+    model_config_name: str  # Model config name
+    job: Job  # Job object
+    system_prompt: Msg  # System prompt
+    hc: int  # Headcount
+    cv_passed_seeker_ids: list  # CV passed seeker ids
+    offer_seeker_ids: list  # Offer seeker ids
+    wl_seeker_ids: list  # Waitlist seeker ids
+    reject_seeker_ids: list  # Reject seeker ids
+    update_variables: list  # Update variables
+
     def __init__(
         self,
         name: str,
@@ -50,6 +61,9 @@ class JobAgent(AgentBase):
         )
         self.job = Job(id, company_id, name, jd, jr, hc)
         self.hc = hc
+
+        self.cv_passed_seeker_ids, self.offer_seeker_ids, self.wl_seeker_ids, self.reject_seeker_ids = list(), list(), list(), list()
+        self.update_variables = [self.cv_passed_seeker_ids, self.offer_seeker_ids, self.wl_seeker_ids, self.reject_seeker_ids]
 
     def get_id(self):
         return self.job.id
@@ -106,39 +120,12 @@ class JobAgent(AgentBase):
         self.wl_seeker_ids = response["wl_seeker_ids"]
         self.reject_seeker_ids = list(set([seeker.id for seeker in interview_seekers]) - set(self.offer_seeker_ids) - set(self.wl_seeker_ids))
 
-    def update_fun(self):
+    def add_memory(self):
         pass
+
+    def update_fun(self):
+        for var in self.update_variables:
+            var.clear()
 
     def reply(self, x: Optional[dict] = None) -> dict:
         return Msg(self.name, None, role="assistant")
-        # if self.memory:
-        #     self.memory.add(x)
-
-        # msg_hint = Msg("system", HINT_PROMPT, role="system")
-
-        # prompt = self.model.format(
-        #     self.memory.get_memory(),
-        #     msg_hint,
-        # )
-
-        # response = self.model(
-        #     prompt,
-        #     parse_func=parse_func,
-        #     max_retries=3,
-        # ).raw
-
-        # # For better presentation, we print the response proceeded by
-        # # json.dumps, this msg won't be recorded in memory
-        # self.speak(
-        #     Msg(
-        #         self.name,
-        #         json.dumps(response, indent=4, ensure_ascii=False),
-        #         role="assistant",
-        #     ),
-        # )
-
-        # if self.memory:
-        #     self.memory.add(Msg(self.name, response, role="assistant"))
-
-        # # Hide thought from the response
-        # return Msg(self.name, response["move"], role="assistant")
