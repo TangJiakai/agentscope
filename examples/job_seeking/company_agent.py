@@ -29,6 +29,11 @@ class Company(object):
 class CompanyAgent(AgentBase):
     """company agent."""
 
+    name: str   # Name of the company
+    model_config_name: str  # Model config name
+    company: Company  # Company object
+    system_prompt: Msg  # System prompt
+
     def __init__(
         self,
         name: str,
@@ -46,37 +51,9 @@ class CompanyAgent(AgentBase):
 
     def get_id(self):
         return self.company.id
+    
+    def update_fun(self):
+        pass
 
     def reply(self, x: Optional[dict] = None) -> dict:
         return Msg(self.name, None, role="assistant")
-        # if self.memory:
-        #     self.memory.add(x)
-
-        # msg_hint = Msg("system", HINT_PROMPT, role="system")
-
-        # prompt = self.model.format(
-        #     self.memory.get_memory(),
-        #     msg_hint,
-        # )
-
-        # response = self.model(
-        #     prompt,
-        #     parse_func=parse_func,
-        #     max_retries=3,
-        # ).raw
-
-        # # For better presentation, we print the response proceeded by
-        # # json.dumps, this msg won't be recorded in memory
-        # self.speak(
-        #     Msg(
-        #         self.name,
-        #         json.dumps(response, indent=4, ensure_ascii=False),
-        #         role="assistant",
-        #     ),
-        # )
-
-        # if self.memory:
-        #     self.memory.add(Msg(self.name, response, role="assistant"))
-
-        # # Hide thought from the response
-        # return Msg(self.name, response["move"], role="assistant")

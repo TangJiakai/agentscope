@@ -25,6 +25,21 @@ class Seeker(object):
 class SeekerAgent(AgentBase):
     """seeker agent."""
 
+    name: str   # Name of the seeker
+    model_config_name: str  # Model config name
+    seeker: Seeker  # Seeker object
+    system_prompt: Msg  # System prompt
+    search_job_number: int  # Search job number
+    job_ids_pool: list  # Job ids pool
+    apply_job_ids: list  # Apply job ids
+    offer_job_ids: list  # Offer job ids
+    wl_jobs_dict: dict  # Waitlist jobs dict
+    decision: int  # Decision, 0: no any (wl) offer, 1: accept offer, 2: reject offer and wait jobs in waitlist, 3: reject offer and waitlist jobs, prepare for next round
+    final_offer_id: int  # Final offer id
+    reject_offer_job_ids: list  # Reject offer job ids
+    reject_wl_job_ids: list  # Reject waitlist job ids
+    update_variables: list  # Update variables
+
     def __init__(
         self,
         name: str,
@@ -40,6 +55,9 @@ class SeekerAgent(AgentBase):
         )
         self.seeker = Seeker(id, name, cv, trait, status)
         self.system_prompt = Msg("system", Template.system_prompt(self.seeker), role="system")
+
+        self.job_ids_pool, self.apply_job_ids, self.offer_job_ids, self.wl_jobs_dict = list(), list(), list(), dict()
+        self.update_variables = [self.job_ids_pool, self.apply_job_ids, self.offer_job_ids, self.wl_jobs_dict]
     
     def get_id(self):
         """Return the id of the seeker."""
@@ -134,6 +152,7 @@ class SeekerAgent(AgentBase):
         print(response)
         if response["decision"] == 1:   # Accept offer
             self.decision = 1
+            self.seeker.status = "在职"
             self.final_offer_id = response["final_offer_id"]
             self.reject_offer_job_ids = list(set(self.offer_job_ids) - set([self.final_offer_id]))
             self.reject_wl_job_ids = [x for x in self.wl_jobs_dict]
@@ -151,40 +170,12 @@ class SeekerAgent(AgentBase):
         
         self.offer_job_ids = list()
 
-    def update_fun(self):
+    def add_memory(self):
         pass
+
+    def update_fun(self):
+        for var in self.update_variables:
+            var.clear()
 
     def reply(self, x: Optional[dict] = None) -> dict:
         return Msg(self.name, None, role="assistant")
-
-        # if self.memory:
-        #     self.memory.add(x)
-
-        # msg_hint = Msg("system", HINT_PROMPT, role="system")
-
-        # prompt = self.model.format(
-        #     self.memory.get_memory(),
-        #     msg_hint,
-        # )
-
-        # response = self.model(
-        #     prompt,
-        #     parse_func=parse_func,
-        #     max_retries=3,
-        # ).raw
-
-        # # For better presentation, we print the response proceeded by
-        # # json.dumps, this msg won't be recorded in memory
-        # self.speak(
-        #     Msg(
-        #         self.name,
-        #         json.dumps(response, indent=4, ensure_ascii=False),
-        #         role="assistant",
-        #     ),
-        # )
-
-        # if self.memory:
-        #     self.memory.add(Msg(self.name, response, role="assistant"))
-
-        # # Hide thought from the response
-        # return Msg(self.name, response["move"], role="assistant")
