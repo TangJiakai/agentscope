@@ -55,7 +55,10 @@ class SeekerAgent(AgentBase):
         )
         self.seeker = Seeker(id, name, cv, trait, status)
         self.system_prompt = Msg("system", Template.system_prompt(self.seeker), role="system")
-        self.memory_info = {}
+        self.memory_info = {
+            "final_decision": 0,
+            "waiting_time": 0,
+        }
 
         self.job_ids_pool, self.apply_job_ids, self.offer_job_ids, self.wl_jobs_dict = list(), list(), list(), dict()
         self.update_variables = [self.job_ids_pool, self.apply_job_ids, self.offer_job_ids, self.wl_jobs_dict]
@@ -172,7 +175,9 @@ class SeekerAgent(AgentBase):
         self.offer_job_ids = list()
 
     def add_memory(self):
-        pass
+        mem = Msg("assistant", Template.seeker_memory(self.memory_info), role="assistant")
+        print(mem)
+        self.memory.add(mem)
 
     def update_fun(self):
         for var in self.update_variables:

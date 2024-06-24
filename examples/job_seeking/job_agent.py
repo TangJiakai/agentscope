@@ -81,6 +81,7 @@ class JobAgent(AgentBase):
                 res_dict = json.loads(extract_json_string(response.text))
                 return ModelResponse(raw=list(map(int, res_dict["cv_passed_seeker_ids"])))
             except:
+                print("*****" + response.text + "*****")
                 raise ValueError(
                     f"Invalid response format in parse_func "
                     f"with response: {response.text}",

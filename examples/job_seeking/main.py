@@ -119,12 +119,17 @@ def single_turn_make_decision_fun(seeker_agents, job_agents, id2seeker, id2job):
 
     for seeker_agent in seeker_agents:
         if seeker_agent.decision == 0:  # No any offers, and continue to search for jobs
+            seeker_agent.memory_info["final_decision"] = 3
             print(f"{seeker_agent.name} has no any offers, and continues to search for jobs.")
         elif seeker_agent.decision == 1:    # Accept the offer
+            seeker_agent.memory_info["final_decision"] = 1 if seeker_agent.memory_info["waiting_time"] == 0 else 2
+            seeker_agent.memory_info["final_offer"] = id2job[seeker_agent.final_offer_id]['agent'].job
             print(f"{seeker_agent.name} accepts the offer {id2job[seeker_agent.final_offer_id]['agent'].name}.")
         elif seeker_agent.decision == 2:    # Wait for the waitlist offer
+            seeker_agent.memory_info["waiting_time"] += 1
             print(f"{seeker_agent.name} rejects all offers, and waits for {[id2job[x]['agent'].name for x in seeker_agent.wl_jobs_dict]}.")
         elif seeker_agent.decision == 3:    # Reject all offers and waiting list, and continue to search for jobs
+            seeker_agent.memory_info["final_decision"] = 4 if seeker_agent.memory_info["waiting_time"] == 0 else 5
             print(f"{seeker_agent.name} rejects all offers and waiting list, and continues to search for jobs.")
     
     # 6.2 [Job] Complete the handshake agreements or adjust the waitlist accordingly.
