@@ -74,3 +74,57 @@ You should respond in the following format, which can be loaded by json.loads in
     "final_offer_id": "if you choose 1, please extract the id number of the final offer in the '<>', otherwise, you can ignore this field"
 }
 {% endmacro %}
+
+{# MemoryTemplate: seeker memory. #}
+{% macro seeker_memory(memory_info) %}
+在当前求职季，我搜寻了{{memory_info["search_job_number"]}}个职位，分别如下：
+{% for job in search_jobs %}
+- <{{job.id}}> 职位名称：{{job.name}}
+公司名称：{{job.company}}
+职位描述：{{job.jd}}
+{% endfor %}
+其中，我选择了{{apply_job_ids | length}}个职位进行简历的投递申请，分别如下：
+{% for job_id in apply_job_ids %}
+- <{{job_id}}>
+{% endfor %}
+我收到了{{cv_passed_job_ids | length}}个职位的面试机会，分别如下：
+{% for job_id in cv_passed_job_ids %}
+- <{{job_id}}>
+{% endfor %}
+面试结果收到的offer和递补offer如下：
+{% if initial_offer_job_ids | length > 0 %}
+总计得到{{initial_offer_job_ids | length}}个offer，分别如下：
+{% for job_id in initial_offer_job_ids %}
+- <{{job_id}}>
+{% endfor %}
+{% else %}
+没有offer。
+{% endif %}
+{% if initial_wl_jobs_dict | length > 0 %}
+总计得到{{initial_wl_jobs_dict | length}}个递补offer，分别如下：
+{% for wl_job_id, wl_job in initial_wl_jobs_dict.items() %}
+- <{{wl_job_id}}>
+递补排名：{{wl_job.rank}}/{{wl_job.wl_n}}
+{% endfor %}
+{% else %}
+没有递补offer。
+{% endif %}
+最终，在当前求职季，我的决定是：
+{% if final_decision == 1 %}
+直接接受了offer：<{{final_offer_id}}>
+职位名称：{{final_offer.name}}
+公司名称：{{final_offer.company}}
+职位描述：{{final_offer.jd}}
+{% elif final_decision == 2 %}
+在等待了{{waiting_time}}轮之后，接受了offer：<{{final_offer_id}}>
+职位名称：{{final_offer.name}}
+公司名称：{{final_offer.company}}
+职位描述：{{final_offer.jd}}
+{% elif final_decision == 3 %}
+由于没有得到任何offer和递补offer，本轮无offer。
+{% elif final_decision == 4 %}
+一直等待递补offer，但到达了最大轮数，本轮无offer。
+{% elif final_decision == 5 %}
+直接拒绝了所有的offer和递补机会，本轮无offer。
+{% endif %}
+{% endmacro %}

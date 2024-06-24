@@ -40,7 +40,8 @@ class SeekerAgent(AgentBase):
         )
         self.seeker = Seeker(id, name, cv, trait, status)
         self.system_prompt = Msg("system", Template.system_prompt(self.seeker), role="system")
-    
+        self.memory_info = {}
+
     def get_id(self):
         """Return the id of the seeker."""
         return self.seeker.id

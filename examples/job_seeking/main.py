@@ -2,6 +2,7 @@
 import sys, os
 import random
 import argparse
+from copy import deepcopy
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_dir, '../../src'))
 os.chdir(sys.path[0])
@@ -194,6 +195,7 @@ def main(args) -> None:
         # agent.search_job_number_fun()
         seeker_agent.search_job_number = random.choice([1,2])
     for seeker_agent in seeker_agents:
+        seeker_agent.memory_info["search_job_number"] = seeker_agent.search_job_number
         print(f"{seeker_agent.name} wants to search {seeker_agent.search_job_number} jobs.")
 
     # 1.2 [Seeker] Search for jobs.
@@ -202,6 +204,7 @@ def main(args) -> None:
     for seeker_agent in seeker_agents:
         seeker_agent.search_job_ids = random.sample(seeker_agent.job_ids_pool, seeker_agent.search_job_number)
     for seeker_agent in seeker_agents:
+        seeker_agent.memory_info["search_jobs"] = [id2job[x]['agent'].job for x in seeker_agent.search_job_ids]
         print(f"{seeker_agent.name} searches {[id2job[x]['agent'].name for x in seeker_agent.search_job_ids]} jobs.")
 
     # 2. [Seeker] Apply for jobs.
@@ -212,6 +215,7 @@ def main(args) -> None:
         # agent.apply_job_fun(jobs)
         seeker_agent.apply_job_ids = random.sample(seeker_agent.search_job_ids, random.choice(range(len(seeker_agent.search_job_ids)))+1 if len(seeker_agent.search_job_ids) > 0 else 0)
     for seeker_agent in seeker_agents:
+        seeker_agent.memory_info["apply_job_ids"] = seeker_agent.apply_job_ids
         print(f"{seeker_agent.name} applies {[id2job[x]['agent'].name for x in seeker_agent.apply_job_ids]} jobs.")
 
     # 3.1 [Job] Screen cv from job seekers.
@@ -244,6 +248,7 @@ def main(args) -> None:
             seeker_agent.cv_passed_job_ids.append(job_id)
 
     for seeker_agent in seeker_agents:
+        seeker_agent.memory_info["cv_passed_job_ids"] = seeker_agent.cv_passed_job_ids
         print(f"{seeker_agent.name} passes the cv screening for {[id2job[x]['agent'].name for x in seeker_agent.cv_passed_job_ids]} jobs.")
     
     # 4. [Job & Seeker] Interview
@@ -287,6 +292,8 @@ def main(args) -> None:
             seeker_agent.fail_job_ids.append(job_id)
 
     for seeker_agent in seeker_agents:
+        seeker_agent.memory_info["initial_offer_job_ids"] = deepcopy(seeker_agent.offer_job_ids)
+        seeker_agent.memory_info["initial_wl_jobs_dict"] = deepcopy(seeker_agent.wl_jobs_dict)
         print(f"{seeker_agent.name} receives {len(seeker_agent.offer_job_ids)} offers, {len(seeker_agent.wl_jobs_dict)} waiting list, and {len(seeker_agent.fail_job_ids)} failed jobs.")
     
     # 6. [Seeker & Job] Make decision
