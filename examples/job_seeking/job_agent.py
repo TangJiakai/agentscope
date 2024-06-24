@@ -106,6 +106,9 @@ class JobAgent(AgentBase):
         self.wl_seeker_ids = response["wl_seeker_ids"]
         self.reject_seeker_ids = list(set([seeker.id for seeker in interview_seekers]) - set(self.offer_seeker_ids) - set(self.wl_seeker_ids))
 
+    def update_fun(self):
+        pass
+
     def reply(self, x: Optional[dict] = None) -> dict:
         return Msg(self.name, None, role="assistant")
         # if self.memory:

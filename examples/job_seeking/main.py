@@ -68,6 +68,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def single_turn_make_decision_fun(seeker_agents, job_agents, id2seeker, id2job):
+    # 6.1 [Seeker] Make decision
     print("6.1 [Seeker] Make decision.")
     for seeker_agent in seeker_agents:
         # seeker_agent.make_decision_fun(id2job)
@@ -116,23 +117,35 @@ def single_turn_make_decision_fun(seeker_agents, job_agents, id2seeker, id2job):
     print("6.2 [Job] Complete the handshake agreements and adjust the waitlist accordingly.")
     for seeker_id in id2seeker:
         seeker_agent = id2seeker[seeker_id]['agent']
-        if seeker_agent.decision in [0, 1]: # No any (wl) offers or accept the offer
-            continue
-        elif seeker_agent.decision in [2, 3]: # Process the rejected offers
-            for job_id in seeker_agent.reject_offer_job_ids:
-                job_agent = id2job[job_id]['agent']
-                job_agent.offer_seeker_ids.remove(seeker_id)
-                if len(job_agent.wl_seeker_ids) > 0:
-                    wl_seeker_id = job_agent.wl_seeker_ids.pop(0)
-                    job_agent.offer_seeker_ids.append(wl_seeker_id)
-                    id2seeker[wl_seeker_id]['agent'].offer_job_ids.append(job_id)
-        if seeker_agent.decision == 3:
-            for job_id in seeker_agent.reject_wl_job_ids:
-                job_agent = id2job[job_id]['agent']
-                job_agent.wl_seeker_ids.remove(seeker_id)
-                if len(job_agent.wl_seeker_ids) > 0:
-                    wl_seeker_id = job_agent.wl_seeker_ids.pop(0)
-                    job_agent.offer_seeker_ids.append(wl_seeker_id)
+        if seeker_agent.decision == 1: # Accept the offer
+            job_agent = id2job[seeker_agent.final_offer_id]['agent']
+            job_agent.hc -= 1
+            job_agent.offer_seeker_ids.remove(seeker_id)
+        for job_id in seeker_agent.reject_offer_job_ids:
+            job_agent = id2job[job_id]['agent']
+            job_agent.offer_seeker_ids.remove(seeker_id)
+            if len(job_agent.wl_seeker_ids) > 0:
+                wl_seeker_id = job_agent.wl_seeker_ids.pop(0)
+                job_agent.offer_seeker_ids.append(wl_seeker_id)
+        for job_id in seeker_agent.reject_wl_job_ids:
+            job_agent = id2job[job_id]['agent']
+            job_agent.wl_seeker_ids.remove(seeker_id)
+            if len(job_agent.wl_seeker_ids) > 0:
+                wl_seeker_id = job_agent.wl_seeker_ids.pop(0)
+                job_agent.offer_seeker_ids.append(wl_seeker_id)
+
+    for seeker_agent in seeker_agents:
+        seeker_agent.offer_job_ids, seeker_agent.wl_jobs_dict = list(), dict()
+    
+    for job_id in id2job:
+        job_agent = id2job[job_id]['agent']
+        for seeker_id in job_agent.offer_seeker_ids:
+            seeker_agent = id2seeker[seeker_id]['agent']
+            seeker_agent.offer_job_ids.append(job_id)
+        wl_n = len(job_agent.wl_seeker_ids)
+        for i, seeker_id in enumerate(job_agent.wl_seeker_ids):
+            seeker_agent = id2seeker[seeker_id]['agent']
+            seeker_agent.wl_jobs_dict[job_id] = {"rank": i+1, "wl_n": wl_n}
         
     for job_agent in job_agents:
         print(f"{job_agent.name} offers {[id2seeker[x]['agent'].name for x in job_agent.offer_seeker_ids]}, waitlists {[id2seeker[x]['agent'].name for x in job_agent.wl_seeker_ids]}.")
@@ -277,13 +290,32 @@ def main(args) -> None:
         print(f"{seeker_agent.name} receives {len(seeker_agent.offer_job_ids)} offers, {len(seeker_agent.wl_jobs_dict)} waiting list, and {len(seeker_agent.fail_job_ids)} failed jobs.")
     
     # 6. [Seeker & Job] Make decision
-    # 6.1 [Seeker] Make decision
     print("=" * 50)
     cur_seeker_agents = seeker_agents
-    while True:
+    stop_flag = True
+    while stop_flag:
         single_turn_make_decision_fun(cur_seeker_agents, job_agents, id2seeker, id2job)
         cur_seeker_agents = [x for x in cur_seeker_agents if x.decision in [2,3]]
 
+        # Check if exists seeker agents that have offers
+        stop_flag = False
+        for seeker_agent in cur_seeker_agents:
+            if len(seeker_agent.offer_job_ids) > 0:
+                stop_flag = True
+                break
+
+    # 7. [Seeker & Job] The seekers and jobs refresh the information.
+    print("=" * 50)
+    # 7.1 [Seeker] Refresh information
+    print("7.1 [Seeker] Refresh information.")
+    for seeker_agent in seeker_agents:
+        seeker_agent.update_fun()
+
+    # 7.2 [Company] Refresh hc
+    print("=" * 50)
+    print("7.2 [Company] Refresh information.")
+    for company_agent in company_agents:
+        company_agent.update_fun()
 
 if __name__ == "__main__":
     args = parse_args()
