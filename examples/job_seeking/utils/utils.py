@@ -46,7 +46,11 @@ def extract_ids(input_str):
     return ids
 
 
-def extract_json_string(text):
+def extract_dict(text):
     pattern = re.compile(r'\{.*?\}', re.DOTALL)
-    match = pattern.search(text)
-    return match.group()
+    matches = pattern.findall(text)
+    for match in matches:
+        json_obj = json.loads(match)
+        if json_obj:
+            return json_obj
+    raise ValueError(f"Fail to extract valid dict from [{text}].")
