@@ -15,7 +15,7 @@ Current Status: {{seeker.status}}
 
 {# Prompt: Determine the number of job searches. #}
 {% macro search_job_number_prompt() %}
-你现在要搜寻工作并考虑对这些职位进行申请投递。请根据本人目前的情况，请在[1-2]中选择一个整数作为搜寻职位的数量，不要给出多余的思考过程。
+你现在要搜寻工作并考虑对这些职位进行申请投递。请根据自身情况，请在[1-2]中选择一个整数作为搜寻职位的数量，不要给出多余的思考过程。
 You should respond in the following format, which can be loaded by json.loads in Python:
 {
     "number": "an integer in the range of [1,2]"
@@ -30,7 +30,7 @@ You should respond in the following format, which can be loaded by json.loads in
 {{job.company}}
 {% endfor %}
 
-在决定是否投递职位申请时，我的目的是最大化我的各期总效用折现到当前时点的总值，影响总效用的因素包括：
+在决定是否投递职位申请时，你目的是最大化我的各期总效用折现到当前时点的总值，影响总效用的因素包括：
 1.	工作稳定性越高，工作期间每期带来的效用越大
 2.	福利待遇越好，工作期间每期带来的效用越大
 3.	工资越高，工作期间每期带来的效用越大
@@ -40,7 +40,7 @@ You should respond in the following format, which can be loaded by json.loads in
 7.	岗位风险程度与我的风险厌恶程度越契合，工作期间每期带来的效用越大
 8.	投递应聘申请会减少我的当期效用，每投递一份申请带来的效用减少相等
 
-根据目前自身的情况，请选择一个或者多个职位进行简历的投递申请。
+根据目前自身的情况，请选择至少一个职位进行简历的投递申请，你不能选择全部都放弃。
 You should extract the id inside the '<>'. You need to form these ids into a list (even if applying for only one job) and respond in the following format, which can be loaded by json.loads in Python:
 {
     "apply_jobs": "a list formed by id"

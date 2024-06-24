@@ -1,12 +1,11 @@
 from typing import Optional
 from jinja2 import Environment, FileSystemLoader
-import json
 
 from agentscope.agents import AgentBase
 from agentscope.message import Msg
 from agentscope.models import ModelResponse
 
-from utils.utils import extract_json_string
+from utils.utils import extract_dict
 
 file_loader = FileSystemLoader("prompts")
 env = Environment(loader=file_loader)
@@ -74,7 +73,7 @@ class SeekerAgent(AgentBase):
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             try:
-                res_dict = json.loads(extract_json_string(response.text))
+                res_dict = extract_dict(response.text)
                 return ModelResponse(raw=int(res_dict["number"]))
             except:
                 raise ValueError(
@@ -93,7 +92,7 @@ class SeekerAgent(AgentBase):
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             try:
-                res_dict = json.loads(extract_json_string(response.text))
+                res_dict = extract_dict(response.text)
                 return ModelResponse(raw=list(map(int, res_dict["apply_jobs"])))
             except:
                 raise ValueError(
@@ -129,7 +128,7 @@ class SeekerAgent(AgentBase):
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             try:
-                res_dict = json.loads(extract_json_string(response.text))
+                res_dict = extract_dict(response.text)
                 res_dict = {k: int(v) if v else None for k, v in res_dict.items()}
                 assert res_dict["decision"] in [1,2,3], ValueError(
                     f"Invalid response in parse_func "

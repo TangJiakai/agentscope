@@ -1,12 +1,11 @@
 from typing import Optional
 from jinja2 import Environment, FileSystemLoader
-import json
 
 from agentscope.agents import AgentBase
 from agentscope.message import Msg
 from agentscope.models.response import ModelResponse
 
-from utils.utils import extract_json_string
+from utils.utils import extract_dict
 
 file_loader = FileSystemLoader("prompts")
 env = Environment(loader=file_loader)
@@ -78,7 +77,7 @@ class JobAgent(AgentBase):
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             try:
-                res_dict = json.loads(extract_json_string(response.text))
+                res_dict = extract_dict(response.text)
                 return ModelResponse(raw=list(map(int, res_dict["cv_passed_seeker_ids"])))
             except:
                 print("*****" + response.text + "*****")
@@ -103,7 +102,7 @@ class JobAgent(AgentBase):
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             try:
-                res_dict = json.loads(extract_json_string(response.text))
+                res_dict = extract_dict(response.text)
                 return ModelResponse(raw={
                     "offer_seeker_ids": list(map(int, res_dict["offer_seeker_ids"])),
                     "wl_seeker_ids": list(map(int, res_dict["wl_seeker_ids"]))
