@@ -143,6 +143,7 @@ def single_turn_make_decision_fun(seeker_agents, job_agents, id2seeker, id2job):
             print(job_agent.offer_seeker_ids)
             print(seeker_id)
             job_agent.offer_seeker_ids.remove(seeker_id)
+            job_agent.memory_info["final_offer_seeker"].append(id2seeker[seeker_id]['agent'].seeker)
         for job_id in seeker_agent.reject_offer_job_ids:
             job_agent = id2job[job_id]['agent']
             job_agent.offer_seeker_ids.remove(seeker_id)
@@ -229,6 +230,8 @@ def single_turn(args, seeker_agents, job_agents, company_agents, id2seeker, id2j
             job_agent.apply_seeker_ids.append(seeker_id)
     for job_agent in job_agents:
         job_agent.cv_screening_fun([id2seeker[x]['agent'].seeker for x in job_agent.apply_seeker_ids], args.excess_cv_passed_n)
+        job_agent.memory_info["apply_seekers"] = [id2seeker[x]['agent'].seeker for x in job_agent.apply_seeker_ids]
+        job_agent.memory_info["cv_passed_seeker_ids"] = job_agent.cv_passed_seeker_ids
         # job_agent.cv_passed_seeker_ids = random.sample(job_agent.apply_seeker_ids, random.choice(range(len(job_agent.apply_seeker_ids)))+1 if len(job_agent.apply_seeker_ids) > 0 else 0)
     
     for job_agent in job_agents:
@@ -268,6 +271,8 @@ def single_turn(args, seeker_agents, job_agents, company_agents, id2seeker, id2j
         # job_agent.reject_seeker_ids = list(set(job_agent.cv_passed_seeker_ids) - set(job_agent.offer_seeker_ids) - set(job_agent.wl_seeker_ids))
 
     for job_agent in job_agents:
+        job_agent.memory_info["offer_seeker_ids"] = deepcopy(job_agent.offer_seeker_ids)
+        job_agent.memory_info["wl_seeker_ids"] = deepcopy(job_agent.wl_seeker_ids)
         print(f"{job_agent.name} offers {[id2seeker[x]['agent'].name for x in job_agent.offer_seeker_ids]}, waitlists {[id2seeker[x]['agent'].name for x in job_agent.wl_seeker_ids]}, and rejects {[id2seeker[x]['agent'].name for x in job_agent.reject_seeker_ids]}.")
 
     # 5.2 [Seeker] Notify the result of interview.
@@ -301,7 +306,7 @@ def single_turn(args, seeker_agents, job_agents, company_agents, id2seeker, id2j
         print(f"Make decision turn {i+1}")
 
         single_turn_make_decision_fun(cur_seeker_agents, job_agents, id2seeker, id2job)
-        cur_seeker_agents = [x for x in cur_seeker_agents if x.decision in [2,3]]
+        cur_seeker_agents = [x for x in cur_seeker_agents if x.decision == 2]
 
         # Check if exists seeker agents that have offers
         stop_flag = True

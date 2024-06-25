@@ -179,6 +179,10 @@ class SeekerAgent(AgentBase):
         self.memory.add(mem)
 
     def update_fun(self):
+        self.memory_info = {
+            "final_decision": 0,
+            "waiting_time": 0,
+        }
         for var in self.update_variables:
             var.clear()
 

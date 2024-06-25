@@ -17,7 +17,7 @@ Position Requirements:
 {{seeker.cv}}
 {% endfor %}
 为了能够最大化公司利益，同时减少成本支出，您需要择优筛选出{{cv_passed_hc}}个求职者。
-You should extract the id inside the '<>'. You need to form these ids into a list (if there are no applicants, return an empty list) and respond in the following format, which can be loaded by json.loads in Python:
+You should extract the id inside the '<>'. You need to form these ids into a list (if there are no applicants, return an empty list) and respond in the following format, which can be loaded by json.loads in Python. Only output the json itself without any other text:
 {
     "cv_passed_seeker_ids": "a list formed by id"
 }
@@ -43,4 +43,41 @@ You should extract the id inside the '<>'. You need to form these ids into a lis
     "offer_seeker_ids": "a list formed by id",
     "wl_seeker_ids": "a list formed by id"
 }
+{% endmacro %}
+
+{# MemoryTemplate: job memory. #}
+{% macro job_memory(memory_info) %}
+在当前求职季，本职位共收到{{memory_info["apply_seekers"] | length}}份简历，求职者简历如下：
+{% for seeker in memory_info["apply_seekers"] %}
+- <{{seeker.id}}> {{seeker.name}}的简历如下：
+{{seeker.cv}}
+{% endfor %}
+经过初筛后，简历通过共{{memory_info["cv_passed_seeker_ids"] | length}}人，分别为：
+{% for seeker_id in memory_info["cv_passed_seeker_ids"] %}
+- <{{seeker_id}}>
+{% endfor %}
+本职位决定的offer，waiting list如下：
+offer：
+{% if memory_info["offer_seeker_ids"] | length > 0 %}
+{% for seeker_id in memory_info["offer_seeker_ids"] %}
+- <{{seeker_id}}>
+{% endfor %}
+{% else %}
+无。
+{% endif %}
+waiting list：
+{% if memory_info["wl_seeker_ids"] | length > 0 %}
+{% for seeker_id in memory_info["wl_seeker_ids"] %}
+- <{{seeker_id}}>
+{% endfor %}
+{% else %}
+无。
+{% endif %}
+最终，在当前求职季，本职位招{{memory_info["final_offer_seeker"] | length}}人。
+{% if memory_info["final_offer_seeker"] | length > 0 %}
+分别如下：{% for seeker in memory_info["final_offer_seeker"] %}
+- <{{seeker.id}}> {{seeker.name}}，简历如下：
+{{seeker.cv}}
+{% endfor %}
+{% endif %}
 {% endmacro %}
