@@ -167,9 +167,9 @@ class SeekerAgent(AgentBase):
         elif response["decision"] == 3: # Reject offer and waitlist jobs, prepare for next round
             self.decision = 3
             self.final_offer_id = None
+            self.reject_wl_job_ids = [x for x in self.wl_jobs_dict]
             self.wl_jobs_dict = dict()
             self.reject_offer_job_ids = self.offer_job_ids
-            self.reject_wl_job_ids = [x for x in self.wl_jobs_dict]
         
         self.offer_job_ids = list()
 

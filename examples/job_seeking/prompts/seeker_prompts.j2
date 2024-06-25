@@ -124,7 +124,7 @@ You should respond in the following format, which can be loaded by json.loads in
 {% if memory_info["final_decision"] == 0 %}
 一直等待递补offer，但最后没有拿到递补offer，本轮无offer。
 {% elif memory_info["final_decision"] == 1 %}
-直接接受了offer：<{{memory_info["final_offer_id"]}}>
+直接接受了offer：<{{memory_info["final_offer"].id}}>
 职位名称：{{memory_info["final_offer"].name}}
 公司名称：{{memory_info["final_offer"].company}}
 职位描述：{{memory_info["final_offer"].jd}}

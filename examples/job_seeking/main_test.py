@@ -106,17 +106,17 @@ def single_turn_make_decision_fun(seeker_agents, job_agents, id2seeker, id2job):
             elif decision == 2:
                 seeker_agent.decision = 2
                 seeker_agent.final_offer_id = None
-                seeker_agent.offer_job_ids = list()
                 seeker_agent.reject_offer_job_ids = seeker_agent.offer_job_ids
+                seeker_agent.offer_job_ids = list()
                 seeker_agent.reject_wl_job_ids = list()
             else:
                 seeker_agent.decision = 3
                 seeker_agent.final_offer_id = None
-                seeker_agent.offer_job_ids = list()
-                seeker_agent.wl_jobs_dict = dict()
                 seeker_agent.reject_offer_job_ids = seeker_agent.offer_job_ids
                 seeker_agent.reject_wl_job_ids = [x for x in seeker_agent.wl_jobs_dict]
-
+                seeker_agent.offer_job_ids = list()
+                seeker_agent.wl_jobs_dict = dict()
+                
     for seeker_agent in seeker_agents:
         if seeker_agent.decision == 0:  # No any offers, and continue to search for jobs
             seeker_agent.memory_info["final_decision"] = 3
