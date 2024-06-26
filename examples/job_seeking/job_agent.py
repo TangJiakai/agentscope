@@ -13,13 +13,14 @@ Template = env.get_template('job_prompts.j2').module
 
 
 class Job(object):
-    def __init__(self, id: int, company_id: int, name: str, jd: str, jr: list, hc: int):
+    def __init__(self, id: int, company_id: int, name: str, jd: str, jr: list, hc: int, emb: list = None):
         self.id = id
         self.company_id = company_id
         self.name = name
         self.jd = jd
         self.jr = jr
         self.hc = hc
+        self.emb = emb
 
     def __str__(self):
         jr_string = "\n".join([f"- {r}" for r in self.jr])
@@ -53,12 +54,13 @@ class JobAgent(AgentBase):
         jd: str,
         jr: list,
         hc: int,
+        emb: list = None,
     ) -> None:
         super().__init__(
             name=name,
             model_config_name=model_config_name
         )
-        self.job = Job(id, company_id, name, jd, jr, hc)
+        self.job = Job(id, company_id, name, jd, jr, hc, emb)
         self.hc = hc
 
         self.cv_passed_seeker_ids, self.offer_seeker_ids, self.wl_seeker_ids, self.reject_seeker_ids = list(), list(), list(), list()
