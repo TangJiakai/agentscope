@@ -2,7 +2,7 @@ from typing import Optional
 from jinja2 import Environment, FileSystemLoader
 
 from agentscope.agents import AgentBase
-from agentscope.message import Msg
+from agentscope.message import Msg, Tht
 from agentscope.models import ModelResponse
 
 from utils.utils import extract_dict
@@ -69,7 +69,8 @@ class SeekerAgent(AgentBase):
     def search_job_number_fun(self):
         """Set search job number."""
         msg = Msg("user", Template.search_job_number_prompt(), role="user")
-        prompt = self.model.format(self.system_prompt, self.memory.get_memory(self.recent_n), msg)
+        tht = self.reflect(current_action="确定要搜寻的工作数量")
+        prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             try:
@@ -88,7 +89,8 @@ class SeekerAgent(AgentBase):
     def apply_job_fun(self, search_jobs: list):
         """Apply job."""
         msg = Msg("user", Template.apply_jobs_prompt(search_jobs), role="user")
-        prompt = self.model.format(self.system_prompt, self.memory.get_memory(self.recent_n), msg)
+        tht = self.reflect(current_action="选择要投递简历的职位")
+        prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             try:
@@ -124,7 +126,8 @@ class SeekerAgent(AgentBase):
 
 
         msg = Msg("user", Template.make_decision_prompt(self.offer_job_ids, self.wl_jobs_dict, id2job), role="user")
-        prompt = self.model.format(self.system_prompt, self.memory.get_memory(self.recent_n), msg)
+        tht = self.reflect(current_action="决定接受、等待递补或拒绝offer")
+        prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             try:
@@ -177,6 +180,14 @@ class SeekerAgent(AgentBase):
         mem = Msg("assistant", Template.seeker_memory(self.memory_info), role="assistant")
         print(mem)
         self.memory.add(mem)
+
+    def reflect(self, current_action):
+        """Reflect from memories."""
+        msg = Msg("user", Template.reflection(self.memory.get_memory(self.recent_n), current_action), role="user")
+        prompt = self.model.format(self.system_prompt, msg)
+
+        response = self.model(prompt).raw
+        return Tht(content=response)
 
     def update_fun(self):
         self.memory_info = {

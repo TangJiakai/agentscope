@@ -141,3 +141,12 @@ You should respond in the following format, which can be loaded by json.loads in
 在等待了{{memory_info["waiting_time"]}}轮之后，拒绝了所有的offer和递补机会，本轮无offer。
 {% endif %}
 {% endmacro %}
+
+{# ReflectionTemplate: reflection. #}
+{% macro reflection(recent_memories, current_action) %}
+最近的求职季中，我的记忆是：
+{{recent_memories}}
+我当前要进行的动作是：
+{{current_action}}
+根据当前要进行的动作，从最近的记忆中总结出有助于我进行决策的要点。
+{% endmacro %}
