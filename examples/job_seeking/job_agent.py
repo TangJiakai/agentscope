@@ -62,6 +62,9 @@ class JobAgent(AgentBase):
         )
         self.job = Job(id, company_id, name, jd, jr, hc, emb)
         self.hc = hc
+        self.memory_info = {
+            "final_offer_seeker":[],
+        }
 
         self.cv_passed_seeker_ids, self.offer_seeker_ids, self.wl_seeker_ids, self.reject_seeker_ids = list(), list(), list(), list()
         self.update_variables = [self.cv_passed_seeker_ids, self.offer_seeker_ids, self.wl_seeker_ids, self.reject_seeker_ids]
@@ -123,9 +126,14 @@ class JobAgent(AgentBase):
         self.reject_seeker_ids = list(set([seeker.id for seeker in interview_seekers]) - set(self.offer_seeker_ids) - set(self.wl_seeker_ids))
 
     def add_memory(self):
-        pass
+        mem = Msg("assistant", Template.job_memory(self.memory_info), role="assistant")
+        print(mem)
+        self.memory.add(mem)
 
     def update_fun(self):
+        self.memory_info = {
+            "final_offer_seeker":[],
+        }
         for var in self.update_variables:
             var.clear()
 

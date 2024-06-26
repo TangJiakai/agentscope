@@ -15,7 +15,7 @@ Current Status: {{seeker.status}}
 
 {# Prompt: Determine the number of job searches. #}
 {% macro search_job_number_prompt() %}
-你现在要搜寻工作并考虑对这些职位进行申请投递。请根据自身情况，请在[1-2]中选择一个整数作为搜寻职位的数量，不要给出多余的思考过程。
+你现在要搜寻工作并考虑对这些职位进行申请投递，工作搜寻强度越高，我搜寻的职位数量就越多，找到合适我的工作的概率就更大，但同时我花在这件事上的精力也就越多，效用会相应降低。请根据个人目前的情况，请在[1-2]中选择一个整数以最大化我的各期总效用折现到当前时点的总值，不要给出多余的思考过程。
 You should respond in the following format, which can be loaded by json.loads in Python:
 {
     "number": "an integer in the range of [1,2]"
@@ -74,7 +74,7 @@ You should extract the id inside the '<>'. You need to form these ids into a lis
 没有递补offer。
 {% endif %}
 
-综合以上情况，请做出以下选择：
+基于以上情况，为了能够最大化个人多期折现期望效用，从下面三个选择中选择最优选项：
 1. 从上述已有offer选择其中一个最佳offer（前提是你已经获得该offer，并输出选择最终offer的编号('<>'内的数字)。
 2. 放弃所有已获得的offer，等待递补的职位（前提是你已经获得递补offer）。
 3. 放弃所有offer和递补机会，继续寻找其他职位。
@@ -82,7 +82,7 @@ You should extract the id inside the '<>'. You need to form these ids into a lis
 You should respond in the following format, which can be loaded by json.loads in Python:
 {
     "decision": "choose the final integer number from [1,2,3] as the final decision",
-    "final_offer_id": "if you choose 1, please extract the id number of the final offer in the '<>', otherwise, you can omit it or set it to null"
+    "final_offer_id": "if you choose 1, please extract the id number of the final offer in the '<>' and just output 1, otherwise, you can omit it or set it to null"
 }
 {% endmacro %}
 
@@ -124,12 +124,12 @@ You should respond in the following format, which can be loaded by json.loads in
 {% if memory_info["final_decision"] == 0 %}
 一直等待递补offer，但最后没有拿到递补offer，本轮无offer。
 {% elif memory_info["final_decision"] == 1 %}
-直接接受了offer：<{{memory_info["final_offer_id"]}}>
+直接接受了offer：<{{memory_info["final_offer"].id}}>
 职位名称：{{memory_info["final_offer"].name}}
 公司名称：{{memory_info["final_offer"].company}}
 职位描述：{{memory_info["final_offer"].jd}}
 {% elif memory_info["final_decision"] == 2 %}
-在等待了{{memory_info["waiting_time"]}}轮之后，接受了offer：<{{memory_info["final_offer_id"]}}>
+在等待了{{memory_info["waiting_time"]}}轮之后，接受了offer：<{{memory_info["final_offer"].id}}>
 职位名称：{{memory_info["final_offer"].name}}
 公司名称：{{memory_info["final_offer"].company}}
 职位描述：{{memory_info["final_offer"].jd}}
@@ -140,4 +140,13 @@ You should respond in the following format, which can be loaded by json.loads in
 {% elif memory_info["final_decision"] == 5 %}
 在等待了{{memory_info["waiting_time"]}}轮之后，拒绝了所有的offer和递补机会，本轮无offer。
 {% endif %}
+{% endmacro %}
+
+{# ReflectionTemplate: reflection. #}
+{% macro reflection(recent_memories, current_action) %}
+最近的求职季中，我的记忆是：
+{{recent_memories}}
+我当前要进行的动作是：
+{{current_action}}
+根据当前要进行的动作，从最近的记忆中总结出有助于我进行决策的要点。
 {% endmacro %}
