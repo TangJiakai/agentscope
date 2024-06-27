@@ -3,7 +3,7 @@
 import torch
 from torch import Tensor
 import torch.nn.functional as F
-from transformers.adapters import BertAdapterModel
+from adapters import BertAdapterModel
 
 
 SIMILARITY_METRIC_IP = "ip"
