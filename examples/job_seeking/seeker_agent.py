@@ -13,19 +13,19 @@ Template = env.get_template('seeker_prompts.j2').module
 
 
 class Seeker(object):
-    def __init__(self, id: int, name: str, cv: str, trait: str, status: str, emb : list = None, job_condition: str = None, finding=True):
+    def __init__(self, id: int, name: str, cv: str, trait: str, status: str, job_condition: str = None):
         self.id = id
         self.name = name
         self.cv = cv
         self.trait = trait
         self.status = status
-        self.emb = emb
         if self.status != "在职":
             self.job_condition = "没有工作"
         elif job_condition is None:
             self.job_condition = ""
         else:
             self.job_condition = job_condition
+        self.emb = None
 
 
 class SeekerAgent(AgentBase):
@@ -55,13 +55,12 @@ class SeekerAgent(AgentBase):
         cv: str,
         trait: str,
         status: str,
-        emb : list = None,
     ) -> None:
         super().__init__(
             name=name,
             model_config_name=model_config_name,
         )
-        self.seeker = Seeker(id, name, cv, trait, status, emb)
+        self.seeker = Seeker(id, name, cv, trait, status)
         self.system_prompt = Msg("system", Template.system_prompt(self.seeker), role="system")
         self.memory_info = {
             "final_decision": 0,
