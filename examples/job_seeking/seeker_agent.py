@@ -13,13 +13,19 @@ Template = env.get_template('seeker_prompts.j2').module
 
 
 class Seeker(object):
-    def __init__(self, id: int, name: str, cv: str, trait: str, status: str, emb : list = None):
+    def __init__(self, id: int, name: str, cv: str, trait: str, status: str, emb : list = None, job_condition: str = None, finding=True):
         self.id = id
         self.name = name
         self.cv = cv
         self.trait = trait
         self.status = status
         self.emb = emb
+        if self.status != "在职":
+            self.job_condition = "没有工作"
+        elif job_condition is None:
+            self.job_condition = ""
+        else:
+            self.job_condition = job_condition
 
 
 class SeekerAgent(AgentBase):
@@ -39,6 +45,7 @@ class SeekerAgent(AgentBase):
     reject_offer_job_ids: list  # Reject offer job ids
     reject_wl_job_ids: list  # Reject waitlist job ids
     update_variables: list  # Update variables
+    finding: bool  # Finding job or not
 
     def __init__(
         self,
@@ -190,7 +197,27 @@ class SeekerAgent(AgentBase):
 
         response = self.model(prompt).raw
         return Tht(content=response)
+    
+    def determine_status(self):
+        msg = Msg("user", Template.determine_status_prompt(), role="user")
+        tht = self.reflect(current_action="选择是否进行工作搜寻")
+        prompt = self.model.format(self.system_prompt, tht, msg)
 
+        def parse_func(response: ModelResponse) -> ModelResponse:
+            try:
+                res_dict = response.text.strip().lower()
+                if 'yes' in res_dict:
+                    return ModelResponse(raw=True)
+                return ModelResponse(raw=False)
+            except:
+                raise ValueError(
+                    f"Invalid response format in parse_func "
+                    f"with response: {response.text}",
+                )
+        
+        response = self.model(prompt, parse_func=parse_func).raw
+        self.finding = response
+        
     def update_fun(self):
         self.memory_info = {
             "final_decision": 0,

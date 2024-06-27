@@ -1,0 +1,4 @@
+faiss-cpu==1.7.4
+adapter-transformers
+torch==2.3.1 
+transformers
