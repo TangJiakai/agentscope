@@ -85,7 +85,14 @@ minimal_requires = [
     "scipy",
 ]
 
-distribute_requires = minimal_requires + rpc_requires
+jobseeking_requires = [
+    "faiss-cpu==1.7.4",
+    "adapter-transformers==3.2.1",
+    "torch==2.3.1",
+    "transformers==4.41.2"
+]
+
+distribute_requires = minimal_requires + rpc_requires + jobseeking_requires
 
 dev_requires = minimal_requires + test_requires
 

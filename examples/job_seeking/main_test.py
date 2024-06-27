@@ -8,9 +8,15 @@ sys.path.append(os.path.join(current_dir, '../../src'))
 os.chdir(sys.path[0])
 
 import agentscope
+from embedding_model import *
+from transformers import AutoConfig, AutoTokenizer
+from tqdm import tqdm
+import faiss
+import numpy as np
 
 from utils.utils import *
 
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 def parse_args() -> argparse.Namespace:
     """Parse arguments"""
@@ -76,6 +82,24 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=2,
         help="The number of waiting list.",
+    )
+    parser.add_argument(
+        "--emb_model_path",
+        type=str,
+        default="jingtao/DAM-bert_base-mlm-dureader",
+        help="The path of embedding model.",
+    )
+    parser.add_argument(
+        "--adapter_path",
+        type=str,
+        default="https://huggingface.co/jingtao/REM-bert_base-dense-distil-dureader/resolve/main/lora192-pa4.zip",
+        help="The path of adapter module.",
+    )
+    parser.add_argument(
+        "--emb_batch_size",
+        type=int,
+        default=4,
+        help="The batch size of calculating text embeddings.",
     )
     return parser.parse_args()
 
@@ -174,17 +198,27 @@ def single_turn_make_decision_fun(seeker_agents, job_agents, id2seeker, id2job):
         print(f"{job_agent.name} offers {[id2seeker[x]['agent'].name for x in job_agent.offer_seeker_ids]}, waitlists {[id2seeker[x]['agent'].name for x in job_agent.wl_seeker_ids]}.")
         
 
-def single_turn(args, seeker_agents, job_agents, company_agents, id2seeker, id2job, id2company):
-    seeker_num, job_num, company_num = len(seeker_agents), len(job_agents), len(company_agents)
+def single_turn(args, all_seeker_agents, job_agents, company_agents, id2seeker, id2job, id2company, job_dense_index):
 
     # TODO: 求职者状态转换，如果不准备找工作，此轮可以无视此人
-
-    # TODO: 需要找工作的求职者的 job_ids_pool 使用Faiss进行相似度搜索，找到若干工作作为当前大轮的初始职位池
+    seeker_agents=[]
+    for seeker_agent in all_seeker_agents:
+        seeker_agent.determine_status()
+        if seeker_agent.finding:
+            seeker_agents.append(seeker_agent)
+    seeker_num,all_seeker_num, job_num, company_num =len(seeker_agents), len(all_seeker_agents), len(job_agents), len(company_agents)
+    # 需要找工作的求职者的 job_ids_pool 使用Faiss进行相似度搜索，找到若干工作作为当前大轮的初始职位池
     # Assign job pool to seeker agents
     for seeker_agent in seeker_agents:
-        seeker_agent.job_ids_pool = random.sample(range(1, job_num + 1), args.pool_size)
+        # seeker_agent.job_ids_pool = random.sample(range(1, job_num + 1), args.pool_size)
+        seeker_emb = seeker_agent.seeker.emb
+        _, job_text_ids = job_dense_index.search(np.array([seeker_emb]), args.pool_size)
+        job_ids_pool = []
+        for i, job_id in enumerate(job_text_ids[0]):
+            job_ids_pool.append(job_agents[job_id].get_id())
+        seeker_agent.job_ids_pool = job_ids_pool
     
-    print(f"Successfully initialized {seeker_num} seeker agents, {job_num} job agents, and {company_num} company agents.")
+    print(f"Successfully initialized a total of {all_seeker_num} seeker agents, {seeker_num} is finding job, {job_num} job agents, and {company_num} company agents.")
 
     # Start simulation
     # 1.1 [Seeker] Determine the number of job searches.
@@ -338,6 +372,82 @@ def single_turn(args, seeker_agents, job_agents, company_agents, id2seeker, id2j
     for company_agent in company_agents:
         company_agent.update_fun()
 
+
+def build_embedding_model(args):
+    config = AutoConfig.from_pretrained(args.emb_model_path)
+    config.similarity_metric, config.pooling = "ip", "average"
+    tokenizer = AutoTokenizer.from_pretrained(args.emb_model_path, config=config)
+    model = BertDense.from_pretrained(args.emb_model_path, config=config)
+    adapter_name = model.load_adapter(args.adapter_path)
+    model.set_active_adapters(adapter_name)
+    print("Successfully build the model")
+    return model, tokenizer
+
+# calculate text embeddings for seekers and jobs
+def calculate_embeddings(args, seeker_agents, job_agents, id2seeker, id2job):
+    # only calculate text embeddings for new agents
+    need_embs_seeker_agents, need_embs_job_agents = [], []
+    for seeker_agent in seeker_agents:
+        if seeker_agent.seeker.emb is None:
+            need_embs_seeker_agents.append(seeker_agent)
+    for job_agent in job_agents:
+        if job_agent.job.emb is None:
+            need_embs_job_agents.append(job_agent)
+
+    seeker_cv_texts, job_texts = [], []
+    for seeker_agent in need_embs_seeker_agents:
+        text = str(seeker_agent.seeker.cv) + "\n" + str(seeker_agent.seeker.trait)
+        seeker_cv_texts.append(text)
+    for job_agent in need_embs_job_agents:
+        text = job_agent.job.jd + "\n" + str(job_agent.job.jr)
+        job_texts.append(text)
+    
+    # init embedding model
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    emb_model, tokenizer = build_embedding_model(args)
+    emb_model.to(device)
+    seeker_embs, job_embs = [], []
+    # calculate seekers' embeddings
+    if len(seeker_cv_texts) > 0:
+        seeker_dataset = TextDataset(seeker_cv_texts, tokenizer)
+        seeker_loader = torch.utils.data.DataLoader(seeker_dataset, batch_size=args.emb_batch_size, collate_fn=emb_collate_fn)
+        for batch in tqdm(seeker_loader):
+            with torch.no_grad():
+                output = emb_model(input_ids = batch[0].to(device),attention_mask = batch[1].to(device))
+            seeker_embs.append(output)
+        seeker_embs = torch.cat(seeker_embs, dim=0).cpu().numpy()
+        for i in range(len(need_embs_seeker_agents)):
+            need_embs_seeker_agents[i].seeker.emb = seeker_embs[i].tolist()
+
+    # calculate jobs' embeddings 
+    if len(job_texts) > 0:
+        job_dataset = TextDataset(job_texts, tokenizer)
+        job_loader = torch.utils.data.DataLoader(job_dataset, batch_size=args.emb_batch_size, collate_fn=emb_collate_fn)
+        for batch in tqdm(job_loader):
+            with torch.no_grad():
+                output = emb_model(input_ids = batch[0].to(device), attention_mask = batch[1].to(device))
+            job_embs.append(output)
+        job_embs = torch.cat(job_embs, dim=0).cpu().numpy()
+        for i in range(len(need_embs_job_agents)):
+            need_embs_job_agents[i].job.emb = job_embs[i].tolist()
+        
+    print("Finish calculating text embeddings.")
+
+
+def build_dense_index(args, seeker_agents, job_agents, id2seeker, id2job):
+    calculate_embeddings(args, seeker_agents, job_agents, id2seeker, id2job)
+    # build faiss index
+    hidden_dim = len(seeker_agents[0].seeker.emb)
+    job_embs = []
+    for job_agent in job_agents:
+        job_embs.append(job_agent.job.emb)
+    job_embs = np.array(job_embs)   
+    job_dense_index = faiss.IndexFlatL2(hidden_dim)
+    job_dense_index.add(job_embs)
+    print("Finish building faiss index.")
+    return job_dense_index
+
+
 def main(args) -> None:
     agentscope.init(
         project="Job Seeking Simulation",
@@ -368,7 +478,9 @@ def main(args) -> None:
 
     for i in range(args.turn_n):
         print(f"Turn {i+1}")
-        single_turn(args, seeker_agents, job_agents, company_agents, id2seeker, id2job, id2company)
+        # 考虑到每一轮过后简历和职位信息会变化，所以每一轮开始前都需要重新建立向量索引库
+        job_dense_index = build_dense_index(args, seeker_agents, job_agents, id2seeker, id2job)
+        single_turn(args, seeker_agents, job_agents, company_agents, id2seeker, id2job, id2company, job_dense_index)
 
 if __name__ == "__main__":
     args = parse_args()
