@@ -91,7 +91,7 @@ You should respond in the following format, which can be loaded by json.loads in
 在当前求职季，我搜寻了{{memory_info["search_job_number"]}}个职位，分别如下：
 {% for job in memory_info["search_jobs"] %}
 - <{{job.id}}> 职位名称：{{job.name}}
-公司名称：{{job.company}}
+所属公司信息：{{job.company}}
 职位描述：{{job.jd}}
 {% endfor %}
 其中，我选择了{{memory_info["apply_job_ids"] | length}}个职位进行简历的投递申请，分别如下：
@@ -126,12 +126,12 @@ You should respond in the following format, which can be loaded by json.loads in
 {% elif memory_info["final_decision"] == 1 %}
 直接接受了offer：<{{memory_info["final_offer"].id}}>
 职位名称：{{memory_info["final_offer"].name}}
-公司名称：{{memory_info["final_offer"].company}}
+所属公司信息：{{memory_info["final_offer"].company}}
 职位描述：{{memory_info["final_offer"].jd}}
 {% elif memory_info["final_decision"] == 2 %}
 在等待了{{memory_info["waiting_time"]}}轮之后，接受了offer：<{{memory_info["final_offer"].id}}>
 职位名称：{{memory_info["final_offer"].name}}
-公司名称：{{memory_info["final_offer"].company}}
+所属公司信息：{{memory_info["final_offer"].company}}
 职位描述：{{memory_info["final_offer"].jd}}
 {% elif memory_info["final_decision"] == 3 %}
 由于没有得到任何offer和递补offer，本轮无offer。

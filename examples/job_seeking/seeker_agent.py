@@ -70,6 +70,8 @@ class SeekerAgent(AgentBase):
         """Set search job number."""
         msg = Msg("user", Template.search_job_number_prompt(), role="user")
         tht = self.reflect(current_action="确定要搜寻的工作数量")
+        print("---"*10)
+        print(tht)
         prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
@@ -183,7 +185,7 @@ class SeekerAgent(AgentBase):
 
     def reflect(self, current_action):
         """Reflect from memories."""
-        msg = Msg("user", Template.reflection(self.memory.get_memory(self.recent_n), current_action), role="user")
+        msg = Msg("user", Template.reflection([x["content"] for x in self.memory.get_memory(self.recent_n)], current_action), role="user")
         prompt = self.model.format(self.system_prompt, msg)
 
         response = self.model(prompt).raw
