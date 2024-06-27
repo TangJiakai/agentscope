@@ -26,13 +26,13 @@ def extract_text_embed(
         masked_hidden = last_hidden_state.masked_fill(~attention_mask[..., None].bool(), 0.)
         text_embeds = masked_hidden.sum(dim=1) / attention_mask.sum(dim=1)[..., None]
     else:
-        raise NotImplementedError()
+        raise NotImplementedError('pooling method not implemented')
     if similarity_metric == SIMILARITY_METRIC_IP:
         pass
     elif similarity_metric == SIMILARITY_METRIC_COS:
         text_embeds = F.normalize(text_embeds, p=2, dim=-1)
     else:
-        raise NotImplementedError()
+        raise NotImplementedError('similarity metric not implemented')
     return text_embeds
 
 class BertDense(BertAdapterModel):
@@ -74,9 +74,10 @@ class TextDataset(torch.utils.data.Dataset):
         attention_mask = torch.tensor(tokenized_text["attention_mask"])
         return input_ids, attention_mask
 
-def emb_collate_fn(batch):
-    input_ids = [item[0] for item in batch]
-    attention_masks = [item[1] for item in batch]
-    input_ids = torch.stack(input_ids, dim=0)
-    attention_masks = torch.stack(attention_masks, dim=0)
-    return input_ids, attention_masks
+    @staticmethod
+    def emb_collate_fn(batch):
+        input_ids = [item[0] for item in batch]
+        attention_masks = [item[1] for item in batch]
+        input_ids = torch.stack(input_ids, dim=0)
+        attention_masks = torch.stack(attention_masks, dim=0)
+        return input_ids, attention_masks

@@ -16,7 +16,6 @@ import numpy as np
 
 from utils.utils import *
 
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 def parse_args() -> argparse.Namespace:
     """Parse arguments"""
@@ -56,6 +55,12 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default="https://huggingface.co/jingtao/REM-bert_base-dense-distil-dureader/resolve/main/lora192-pa4.zip",
         help="The path of adapter module.",
+    )
+    parser.add_argument(
+        "--gpu_id",
+        type=str,
+        default="0",
+        help="The id(s) of GPU.",
     )
 
     parser.add_argument(
@@ -403,17 +408,17 @@ def calculate_embeddings(args, seeker_agents, job_agents, id2seeker, id2job):
         job_texts.append(text)
     
     # init embedding model
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     emb_model, tokenizer = build_embedding_model(args)
     emb_model.to(device)
+    emb_model.eval()
     seeker_embs, job_embs = [], []
     # calculate seekers' embeddings
     if len(seeker_cv_texts) > 0:
         seeker_dataset = TextDataset(seeker_cv_texts, tokenizer)
-        seeker_loader = torch.utils.data.DataLoader(seeker_dataset, batch_size=args.emb_batch_size, collate_fn=emb_collate_fn)
+        seeker_loader = torch.utils.data.DataLoader(seeker_dataset, batch_size=args.emb_batch_size, collate_fn=TextDataset.emb_collate_fn)
         for batch in tqdm(seeker_loader):
-            with torch.no_grad():
-                output = emb_model(input_ids = batch[0].to(device),attention_mask = batch[1].to(device))
+            output = emb_model(input_ids=batch[0].to(device), attention_mask = batch[1].to(device))
             seeker_embs.append(output)
         seeker_embs = torch.cat(seeker_embs, dim=0).cpu().numpy()
         for i in range(len(need_embs_seeker_agents)):
@@ -422,10 +427,9 @@ def calculate_embeddings(args, seeker_agents, job_agents, id2seeker, id2job):
     # calculate jobs' embeddings 
     if len(job_texts) > 0:
         job_dataset = TextDataset(job_texts, tokenizer)
-        job_loader = torch.utils.data.DataLoader(job_dataset, batch_size=args.emb_batch_size, collate_fn=emb_collate_fn)
+        job_loader = torch.utils.data.DataLoader(job_dataset, batch_size=args.emb_batch_size, collate_fn=TextDataset.emb_collate_fn)
         for batch in tqdm(job_loader):
-            with torch.no_grad():
-                output = emb_model(input_ids = batch[0].to(device), attention_mask = batch[1].to(device))
+            output = emb_model(input_ids = batch[0].to(device), attention_mask = batch[1].to(device))
             job_embs.append(output)
         job_embs = torch.cat(job_embs, dim=0).cpu().numpy()
         for i in range(len(need_embs_job_agents)):
@@ -484,4 +488,6 @@ def main(args) -> None:
 
 if __name__ == "__main__":
     args = parse_args()
+    os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu_id
     main(args)
