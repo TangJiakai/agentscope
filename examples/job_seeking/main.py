@@ -45,6 +45,18 @@ def parse_args() -> argparse.Namespace:
         default="configs/company_agent_configs.json",
         help="The path of company agent configs file.",
     )
+    parser.add_argument(
+        "--emb_model_path",
+        type=str,
+        default="jingtao/DAM-bert_base-mlm-dureader",
+        help="The path of embedding model.",
+    )
+    parser.add_argument(
+        "--adapter_path",
+        type=str,
+        default="https://huggingface.co/jingtao/REM-bert_base-dense-distil-dureader/resolve/main/lora192-pa4.zip",
+        help="The path of adapter module.",
+    )
 
     parser.add_argument(
         "--turn-n",
@@ -70,6 +82,12 @@ def parse_args() -> argparse.Namespace:
         default=5,
         help="The number of recent memory for every prompt.",
     )
+    parser.add_argument(
+        "--emb_batch_size",
+        type=int,
+        default=4,
+        help="The batch size of calculating text embeddings.",
+    )
     
     parser.add_argument(
         "--excess-cv-passed-n",
@@ -82,24 +100,6 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=2,
         help="The number of waiting list.",
-    )
-    parser.add_argument(
-        "--emb_model_path",
-        type=str,
-        default="jingtao/DAM-bert_base-mlm-dureader",
-        help="The path of embedding model.",
-    )
-    parser.add_argument(
-        "--adapter_path",
-        type=str,
-        default="https://huggingface.co/jingtao/REM-bert_base-dense-distil-dureader/resolve/main/lora192-pa4.zip",
-        help="The path of adapter module.",
-    )
-    parser.add_argument(
-        "--emb_batch_size",
-        type=int,
-        default=4,
-        help="The batch size of calculating text embeddings.",
     )
     return parser.parse_args()
 
