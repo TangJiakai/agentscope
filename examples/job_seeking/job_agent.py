@@ -77,6 +77,10 @@ class JobAgent(AgentBase):
 
     def cv_screening_fun(self, apply_seekers: list, excess_cv_passed_n: int):
         cv_passed_hc = min(self.hc+excess_cv_passed_n, len(apply_seekers))
+        if cv_passed_hc == 0:
+            self.cv_passed_seeker_ids = list()
+            return
+        
         msg = Msg("user", Template.screen_resumes(cv_passed_hc, apply_seekers), role="user")
         prompt = self.model.format(self.system_prompt, self.memory.get_memory(self.recent_n), msg)
 
@@ -85,15 +89,14 @@ class JobAgent(AgentBase):
                 res_dict = extract_dict(response.text)
                 return ModelResponse(raw=list(map(int, res_dict["cv_passed_seeker_ids"])))
             except:
-                print("*****" + response.text + "*****")
                 raise ValueError(
                     f"Invalid response format in parse_func "
                     f"with response: {response.text}",
                 )
 
-        print(prompt)
+        # print(prompt)
         response = self.model(prompt, parse_func=parse_func).raw
-        print(response)
+        # print(response)
         self.cv_passed_seeker_ids = response
 
     def interview_fun(self, cv_passed_seekers: list):
@@ -102,6 +105,12 @@ class JobAgent(AgentBase):
     def make_decision_fun(self, interview_seekers: list, wl_n: int):
         offer_hc = min(self.hc, len(interview_seekers))
         wl_n = min(wl_n, len(interview_seekers) - offer_hc)
+        if offer_hc == 0:
+            self.offer_seeker_ids = list()
+            self.wl_seeker_ids = list()
+            self.reject_seeker_ids = [seeker.id for seeker in interview_seekers]
+            return
+        
         msg = Msg("user", Template.make_decision(offer_hc, wl_n, interview_seekers), role="user")
         prompt = self.model.format(self.system_prompt, self.memory.get_memory(self.recent_n), msg)
 
@@ -118,16 +127,16 @@ class JobAgent(AgentBase):
                     f"with response: {response.text}",
                 )
             
-        print(prompt)
+        # print(prompt)
         response = self.model(prompt, parse_func=parse_func).raw
-        print(response)
+        # print(response)
         self.offer_seeker_ids = response["offer_seeker_ids"]
         self.wl_seeker_ids = response["wl_seeker_ids"]
         self.reject_seeker_ids = list(set([seeker.id for seeker in interview_seekers]) - set(self.offer_seeker_ids) - set(self.wl_seeker_ids))
 
     def add_memory(self):
         mem = Msg("assistant", Template.job_memory(self.memory_info), role="assistant")
-        print(mem)
+        # print(mem)
         self.memory.add(mem)
 
     def update_fun(self):

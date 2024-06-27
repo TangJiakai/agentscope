@@ -78,8 +78,6 @@ class SeekerAgent(AgentBase):
         """Set search job number."""
         msg = Msg("user", Template.search_job_number_prompt(), role="user")
         tht = self.reflect(current_action="确定要搜寻的工作数量")
-        print("---"*10)
-        print(tht)
         prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
@@ -124,16 +122,15 @@ class SeekerAgent(AgentBase):
             self.final_offer_id = None
             self.reject_offer_job_ids, self.reject_wl_job_ids = list(), list()
 
-        if len(self.offer_job_ids) > 0:
-            print(f"总计得到{len(self.offer_job_ids)}个Offer，分别如下:\n")
-            for job_id in self.offer_job_ids:
-                print(job_id, id2job[job_id]["agent"].job.name, id2job[job_id]["agent"].job.jd, id2job[job_id]["agent"].job.company)
+        # if len(self.offer_job_ids) > 0:
+        #     print(f"总计得到{len(self.offer_job_ids)}个Offer，分别如下:\n")
+        #     for job_id in self.offer_job_ids:
+        #         print(job_id, id2job[job_id]["agent"].job.name, id2job[job_id]["agent"].job.jd, id2job[job_id]["agent"].job.company)
 
-        if len(self.wl_jobs_dict) > 0:
-            print(f"总计得到{len(self.wl_jobs_dict)}个递补Offer，分别如下:\n")
-            for wl_job_id, wl_job in self.wl_jobs_dict.items():
-                print(wl_job_id, id2job[wl_job_id]["agent"].job.name, id2job[wl_job_id]["agent"].job.jd, id2job[wl_job_id]["agent"].job.company, wl_job.rank, wl_job.wl_n)
-
+        # if len(self.wl_jobs_dict) > 0:
+        #     print(f"总计得到{len(self.wl_jobs_dict)}个递补Offer，分别如下:\n")
+        #     for wl_job_id, wl_job in self.wl_jobs_dict.items():
+        #         print(wl_job_id, id2job[wl_job_id]["agent"].job.name, id2job[wl_job_id]["agent"].job.jd, id2job[wl_job_id]["agent"].job.company, wl_job.rank, wl_job.wl_n)
 
         msg = Msg("user", Template.make_decision_prompt(self.offer_job_ids, self.wl_jobs_dict, id2job), role="user")
         tht = self.reflect(current_action="决定接受、等待递补或拒绝offer")
@@ -163,9 +160,9 @@ class SeekerAgent(AgentBase):
                     f"with response: {response.text}",
                 )
         
-        print(prompt)
+        # print(prompt)
         response = self.model(prompt, parse_func=parse_func).raw
-        print(response)
+        # print(response)
         if response["decision"] == 1:   # Accept offer
             self.decision = 1
             self.seeker.status = "在职"
@@ -188,7 +185,6 @@ class SeekerAgent(AgentBase):
 
     def add_memory(self):
         mem = Msg("assistant", Template.seeker_memory(self.memory_info), role="assistant")
-        print(mem)
         self.memory.add(mem)
 
     def reflect(self, current_action):

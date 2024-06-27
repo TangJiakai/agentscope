@@ -42,7 +42,7 @@ You should respond in the following format, which can be loaded by json.loads in
 8.	投递应聘申请会减少我的当期效用，每投递一份申请带来的效用减少相等
 
 根据目前自身的情况，请选择至少一个职位进行简历的投递申请，你不能选择全部都放弃。
-You should extract the id inside the '<>'. You need to form these ids into a list (even if applying for only one job) and respond in the following format, which can be loaded by json.loads in Python:
+You should extract the id inside the '<>' and donot output '<>'. You need to form these ids into a list (even if applying for only one job) and respond in the following format, which can be loaded by json.loads in Python:
 {
     "apply_jobs": "a list formed by id"
 }
