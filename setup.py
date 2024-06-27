@@ -87,9 +87,9 @@ minimal_requires = [
 
 jobseeking_requires = [
     "faiss-cpu==1.7.4",
-    "adapter-transformers==3.2.1",
-    "torch==2.3.1",
-    "transformers==4.41.2"
+    "transformers==4.39.3",
+    "adapters==0.2.1",
+    "tokenizers==0.15.2"
 ]
 
 distribute_requires = minimal_requires + rpc_requires + jobseeking_requires

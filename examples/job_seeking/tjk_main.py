@@ -47,13 +47,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--emb_model_path",
         type=str,
-        default="jingtao/DAM-bert_base-mlm-dureader",
+        # default="jingtao/DAM-bert_base-mlm-dureader",
+        default="/mnt/jiakai/Download/jingtao-DAM-bert_base-mlm-dureader",
         help="The path of embedding model.",
     )
     parser.add_argument(
         "--adapter_path",
         type=str,
-        default="https://huggingface.co/jingtao/REM-bert_base-dense-distil-dureader/resolve/main/lora192-pa4.zip",
+        # default="https://huggingface.co/jingtao/REM-bert_base-dense-distil-dureader/resolve/main/lora192-pa4.zip",
+        default="/mnt/jiakai/Download/jingtao-REM-bert_base-dense-distil-dureader",
         help="The path of adapter module.",
     )
     parser.add_argument(
@@ -204,7 +206,7 @@ def single_turn_make_decision_fun(seeker_agents, job_agents, id2seeker, id2job):
         
 
 def single_turn(args, all_seeker_agents, job_agents, company_agents, id2seeker, id2job, id2company, job_dense_index):
-    # Determine the status of seeker agents, and filter out the agents who are finding jobs
+
     seeker_agents=[]
     for seeker_agent in all_seeker_agents:
         seeker_agent.determine_status()
