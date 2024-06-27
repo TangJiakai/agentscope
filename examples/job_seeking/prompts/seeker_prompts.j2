@@ -11,6 +11,7 @@ Name: {{seeker.name}}
 Resume Description: {{seeker.cv}}
 Personal Trait: {{seeker.trait}}
 Current Status: {{seeker.status}}
+Job Condition: {{seeker.job_condition}}
 {% endmacro %}
 
 {# Prompt: Determine the number of job searches. #}
@@ -149,4 +150,13 @@ You should respond in the following format, which can be loaded by json.loads in
 我当前要进行的动作是：
 {{current_action}}
 根据当前要进行的动作，从最近的记忆中总结出有助于我进行决策的要点。
+{% endmacro %}
+{# Prompt: determine status #}
+
+{% macro determine_status_prompt() %}
+根据个人情况，请判断我是否会选择进行工作搜寻，请输出“yes” 或者 “no”。
+当我进行工作搜寻的期望效用大于不搜寻的效用时，我将进行工作搜寻，我进行工作搜寻的期望效用由以下方式决定：
+1. 根据我的记忆、经验与反思，我对我可能获取的工作有一定的预期，这种预期包括工资、工作强度等一系列影响效用的因素；
+2. 我目前的效用是当下这份工作带给我的效用(参考Job Condition)，如果我没有工作，则是可能的失业补贴或者最低工资保障带给我的；
+3. 我将在考虑工作搜寻、简历投递和面试成本的基础上，比较潜在工作机会带给我的效用和我目前的效用，如果进行工作搜寻我的期望效用更大，则我将进行工作搜寻。
 {% endmacro %}

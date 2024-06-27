@@ -174,17 +174,21 @@ def single_turn_make_decision_fun(seeker_agents, job_agents, id2seeker, id2job):
         print(f"{job_agent.name} offers {[id2seeker[x]['agent'].name for x in job_agent.offer_seeker_ids]}, waitlists {[id2seeker[x]['agent'].name for x in job_agent.wl_seeker_ids]}.")
         
 
-def single_turn(args, seeker_agents, job_agents, company_agents, id2seeker, id2job, id2company):
-    seeker_num, job_num, company_num = len(seeker_agents), len(job_agents), len(company_agents)
+def single_turn(args, all_seeker_agents, job_agents, company_agents, id2seeker, id2job, id2company):
 
     # TODO: 求职者状态转换，如果不准备找工作，此轮可以无视此人
-
+    seeker_agents=[]
+    for seeker_agent in all_seeker_agents:
+        seeker_agent.determine_status()
+        if seeker_agent.finding:
+            seeker_agents.append(seeker_agent)
+    seeker_num,all_seeker_num, job_num, company_num =len(seeker_agents), len(all_seeker_agents), len(job_agents), len(company_agents)
     # TODO: 需要找工作的求职者的 job_ids_pool 使用Faiss进行相似度搜索，找到若干工作作为当前大轮的初始职位池
     # Assign job pool to seeker agents
     for seeker_agent in seeker_agents:
         seeker_agent.job_ids_pool = random.sample(range(1, job_num + 1), args.pool_size)
     
-    print(f"Successfully initialized {seeker_num} seeker agents, {job_num} job agents, and {company_num} company agents.")
+    print(f"Successfully initialized a total of {all_seeker_num} seeker agents, {seeker_num} is finding job, {job_num} job agents, and {company_num} company agents.")
 
     # Start simulation
     # 1.1 [Seeker] Determine the number of job searches.
