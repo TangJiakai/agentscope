@@ -208,8 +208,8 @@ def single_turn(args, all_seeker_agents, job_agents, company_agents, id2seeker, 
             if seeker_agent.seeking:
                 seeker_agents.append(seeker_agent)
             else:
-                ## need for memory
-                pass
+                # add memory for agents who are on the job and do not seek jobs
+                seeker_agent.add_memory(seeking=False)
         else:
             seeker_agents.append(seeker_agent)
     seeker_num,all_seeker_num, job_num, company_num =len(seeker_agents), len(all_seeker_agents), len(job_agents), len(company_agents)
@@ -416,7 +416,7 @@ def calculate_embeddings(args, seeker_agents, job_agents, id2seeker, id2job):
     # calculate seekers' embeddings
     if len(seeker_cv_texts) > 0:
         seeker_dataset = TextDataset(seeker_cv_texts, tokenizer)
-        seeker_loader = torch.utils.data.DataLoader(seeker_dataset, batch_size=args.emb_batch_size, collate_fn=emb_collate_fn)
+        seeker_loader = torch.utils.data.DataLoader(seeker_dataset, batch_size=args.emb_batch_size, collate_fn=TextDataset.emb_collate_fn)
         for batch in tqdm(seeker_loader):
             with torch.no_grad():
                 output = emb_model(input_ids = batch[0].to(device),attention_mask = batch[1].to(device))
@@ -428,7 +428,7 @@ def calculate_embeddings(args, seeker_agents, job_agents, id2seeker, id2job):
     # calculate jobs' embeddings 
     if len(job_texts) > 0:
         job_dataset = TextDataset(job_texts, tokenizer)
-        job_loader = torch.utils.data.DataLoader(job_dataset, batch_size=args.emb_batch_size, collate_fn=emb_collate_fn)
+        job_loader = torch.utils.data.DataLoader(job_dataset, batch_size=args.emb_batch_size, collate_fn=TextDataset.emb_collate_fn)
         for batch in tqdm(job_loader):
             with torch.no_grad():
                 output = emb_model(input_ids = batch[0].to(device), attention_mask = batch[1].to(device))
