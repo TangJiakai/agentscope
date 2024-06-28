@@ -144,3 +144,4 @@ tmp*.json
 examples/job_seeking/configs/model_configs.json
 examples/old_job_seeking
 tmp*.py
+Downloads
