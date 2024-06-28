@@ -203,8 +203,14 @@ def single_turn(args, all_seeker_agents, job_agents, company_agents, id2seeker, 
     # TODO: 求职者状态转换，如果不准备找工作，此轮可以无视此人
     seeker_agents=[]
     for seeker_agent in all_seeker_agents:
-        seeker_agent.determine_status()
-        if seeker_agent.finding:
+        if seeker_agent.status == "在职":
+            seeker_agent.determine_status()
+            if seeker_agent.seeking:
+                seeker_agents.append(seeker_agent)
+            else:
+                ## need for memory
+                pass
+        else:
             seeker_agents.append(seeker_agent)
     seeker_num,all_seeker_num, job_num, company_num =len(seeker_agents), len(all_seeker_agents), len(job_agents), len(company_agents)
     # 需要找工作的求职者的 job_ids_pool 使用Faiss进行相似度搜索，找到若干工作作为当前大轮的初始职位池
@@ -218,7 +224,7 @@ def single_turn(args, all_seeker_agents, job_agents, company_agents, id2seeker, 
             job_ids_pool.append(job_agents[job_id].get_id())
         seeker_agent.job_ids_pool = job_ids_pool
     
-    print(f"Successfully initialized a total of {all_seeker_num} seeker agents, {seeker_num} is finding job, {job_num} job agents, and {company_num} company agents.")
+    print(f"Successfully initialized a total of {all_seeker_num} seeker agents, {seeker_num} is seeking job, {job_num} job agents, and {company_num} company agents.")
 
     # Start simulation
     # 1.1 [Seeker] Determine the number of job searches.

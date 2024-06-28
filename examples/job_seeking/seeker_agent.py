@@ -45,7 +45,7 @@ class SeekerAgent(AgentBase):
     reject_offer_job_ids: list  # Reject offer job ids
     reject_wl_job_ids: list  # Reject waitlist job ids
     update_variables: list  # Update variables
-    finding: bool  # Finding job or not
+    seeking: bool  # seeking job or not
 
     def __init__(
         self,
@@ -213,7 +213,7 @@ class SeekerAgent(AgentBase):
                 )
         
         response = self.model(prompt, parse_func=parse_func).raw
-        self.finding = response
+        self.seeking = response
         
     def update_fun(self):
         self.memory_info = {
