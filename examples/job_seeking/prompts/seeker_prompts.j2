@@ -16,7 +16,7 @@ Job Condition: {{seeker.job_condition}}
 
 {# Prompt: Determine the number of job searches. #}
 {% macro search_job_number_prompt() %}
-你现在要搜寻工作并考虑对这些职位进行申请投递，工作搜寻强度越高，我搜寻的职位数量就越多，找到合适我的工作的概率就更大，但同时我花在这件事上的精力也就越多，效用会相应降低。请根据个人目前的情况，请在[1-2]中选择一个整数以最大化我的各期总效用折现到当前时点的总值，不要给出多余的思考过程。
+你现在要搜寻工作并考虑对这些职位进行申请投递，工作搜寻强度越高，你搜寻的职位数量就越多，找到合适你的工作的概率就更大，但同时你花在这件事上的精力也就越多，效用会相应降低。请根据个人目前的情况，请在[1-2]中选择一个整数以最大化你的各期总效用折现到当前时点的总值，不要给出多余的思考过程。
 You should respond in the following format, which can be loaded by json.loads in Python:
 {
     "number": "an integer in the range of [1,2]"
@@ -31,15 +31,15 @@ You should respond in the following format, which can be loaded by json.loads in
 {{job.company}}
 {% endfor %}
 
-在决定是否投递职位申请时，你目的是最大化我的各期总效用折现到当前时点的总值，影响总效用的因素包括：
+在决定是否投递职位申请时，你目的是最大化你的各期总效用折现到当前时点的总值，影响总效用的因素包括：
 1.	工作稳定性越高，工作期间每期带来的效用越大
 2.	福利待遇越好，工作期间每期带来的效用越大
 3.	工资越高，工作期间每期带来的效用越大
 4.	通勤时间越短，工作期间每期带来的效用越大
 5.	工作时间越灵活，工作期间每期带来的效用越大
-6.	工作特征与我的工作偏好越契合，工作期间每期带来的效用越大
-7.	岗位风险程度与我的风险厌恶程度越契合，工作期间每期带来的效用越大
-8.	投递应聘申请会减少我的当期效用，每投递一份申请带来的效用减少相等
+6.	工作特征与你的工作偏好越契合，工作期间每期带来的效用越大
+7.	岗位风险程度与你的风险厌恶程度越契合，工作期间每期带来的效用越大
+8.	投递应聘申请会减少你的当期效用，每投递一份申请带来的效用减少相等
 
 根据目前自身的情况，请选择至少一个职位进行简历的投递申请，你不能选择全部都放弃。
 You should extract the id inside the '<>' and donot output '<>'. You need to form these ids into a list (even if applying for only one job) and respond in the following format, which can be loaded by json.loads in Python:
@@ -89,17 +89,17 @@ You should respond in the following format, which can be loaded by json.loads in
 
 {# MemoryTemplate: seeker memory. #}
 {% macro seeker_memory(memory_info) %}
-在当前求职季，我搜寻了{{memory_info["search_job_number"]}}个职位，分别如下：
+在当前求职季，你搜寻了{{memory_info["search_job_number"]}}个职位，分别如下：
 {% for job in memory_info["search_jobs"] %}
 - <{{job.id}}> 职位名称：{{job.name}}
 所属公司信息：{{job.company}}
 职位描述：{{job.jd}}
 {% endfor %}
-其中，我选择了{{memory_info["apply_job_ids"] | length}}个职位进行简历的投递申请，分别如下：
+其中，你选择了{{memory_info["apply_job_ids"] | length}}个职位进行简历的投递申请，分别如下：
 {% for job_id in memory_info["apply_job_ids"] %}
 - <{{job_id}}>
 {% endfor %}
-我收到了{{memory_info["cv_passed_job_ids"] | length}}个职位的面试机会，分别如下：
+你收到了{{memory_info["cv_passed_job_ids"] | length}}个职位的面试机会，分别如下：
 {% for job_id in memory_info["cv_passed_job_ids"] %}
 - <{{job_id}}>
 {% endfor %}
@@ -121,7 +121,7 @@ You should respond in the following format, which can be loaded by json.loads in
 {% else %}
 没有递补offer。
 {% endif %}
-最终，在当前求职季，我的决定是：
+最终，在当前求职季，你的决定是：
 {% if memory_info["final_decision"] == 0 %}
 一直等待递补offer，但最后没有拿到递补offer，本轮无offer。
 {% elif memory_info["final_decision"] == 1 %}
@@ -143,13 +143,18 @@ You should respond in the following format, which can be loaded by json.loads in
 {% endif %}
 {% endmacro %}
 
+{# MemoryTemplate: nonseeker memory. #}
+{% macro nonseeker_memory(seeker) %}
+在当前求职季，你根据当前的个人情况，决定不进行工作搜寻，你的工作信息仍为{{seeker.job_condition}}。
+{% endmacro %}
+
 {# ReflectionTemplate: reflection. #}
 {% macro reflection(recent_memories, current_action) %}
-最近的求职季中，我的记忆是：
+最近的求职季中，你的记忆是：
 {{recent_memories}}
-我当前要进行的动作是：
+你当前要进行的动作是：
 {{current_action}}
-根据当前要进行的动作，从最近的记忆中总结出有助于我进行决策的要点。
+根据当前要进行的动作，从最近的记忆中总结出有助于你进行决策的要点。
 {% endmacro %}
 {# Prompt: determine status #}
 

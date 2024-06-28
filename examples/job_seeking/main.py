@@ -212,8 +212,8 @@ def single_turn(args, all_seeker_agents, job_agents, company_agents, id2seeker, 
             if seeker_agent.seeking:
                 seeker_agents.append(seeker_agent)
             else:
-                ## need for memory
-                pass
+                # add memory for agents who are on the job and do not seek jobs
+                seeker_agent.add_memory(seeking=False)
         else:
             seeker_agents.append(seeker_agent)
     seeker_num, all_seeker_num, job_num, company_num = len(seeker_agents), len(all_seeker_agents), len(job_agents), len(company_agents)

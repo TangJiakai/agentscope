@@ -183,8 +183,11 @@ class SeekerAgent(AgentBase):
         
         self.offer_job_ids = list()
 
-    def add_memory(self):
-        mem = Msg("assistant", Template.seeker_memory(self.memory_info), role="assistant")
+    def add_memory(self, seeking=True):
+        if seeking:
+            mem = Msg("assistant", Template.seeker_memory(self.memory_info), role="assistant")
+        else: # agents who are on the job and do not seek jobs
+            mem = Msg("assistant", Template.nonseeker_memory(self.seeker), role="assistant")
         self.memory.add(mem)
 
     def reflect(self, current_action):
