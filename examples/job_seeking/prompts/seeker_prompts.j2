@@ -165,3 +165,11 @@ You should respond in the following format, which can be loaded by json.loads in
 2. 你目前的效用是当下这份工作带给你的效用(参考Job Condition)，如果你没有工作，则是可能的失业补贴或者最低工资保障带给你的；
 3. 你将在考虑工作搜寻、简历投递和面试成本的基础上，比较潜在工作机会带给你的效用和你目前的效用，如果进行工作搜寻你的期望效用更大，则你将进行工作搜寻。
 {% endmacro %}
+
+{# Template: Job Condition #}
+{% macro generate_job_condition(company_name,job) %}
+你当前的工作信息如下：
+公司名称：{{company_name}}
+职位名称：{{job.name}}
+职位描述：{{job.jd}}
+{% endmacro %}

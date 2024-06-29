@@ -104,7 +104,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def single_turn_make_decision_fun(seeker_agents, job_agents, id2seeker, id2job):
+def single_turn_make_decision_fun(seeker_agents, job_agents, id2seeker, id2job,id2company):
     # 6.1 [Seeker] Make decision
     print("6.1 [Seeker] Make decision.")
     for seeker_agent in seeker_agents:
@@ -148,6 +148,7 @@ def single_turn_make_decision_fun(seeker_agents, job_agents, id2seeker, id2job):
         elif seeker_agent.decision == 1:    # Accept the offer
             seeker_agent.memory_info["final_decision"] = 1 if seeker_agent.memory_info["waiting_time"] == 0 else 2
             seeker_agent.memory_info["final_offer"] = id2job[seeker_agent.final_offer_id]['agent'].job
+            seeker_agent.update_job_condition(id2company[id2job[final_offer_id]['agent'].job.company_id]['agent'].name,id2job[final_offer_id]['agent'].job)
             print(f"{seeker_agent.name} accepts the offer {id2job[seeker_agent.final_offer_id]['agent'].name}.")
         elif seeker_agent.decision == 2:    # Wait for the waitlist offer
             seeker_agent.memory_info["waiting_time"] += 1
@@ -203,7 +204,7 @@ def single_turn(args, all_seeker_agents, job_agents, company_agents, id2seeker, 
     # TODO: 求职者状态转换，如果不准备找工作，此轮可以无视此人
     seeker_agents=[]
     for seeker_agent in all_seeker_agents:
-        if seeker_agent.status == "在职":
+        if  seeker_agent.seeker.status == "在职":
             seeker_agent.determine_status()
             if seeker_agent.seeking:
                 seeker_agents.append(seeker_agent)
@@ -345,7 +346,7 @@ def single_turn(args, all_seeker_agents, job_agents, company_agents, id2seeker, 
     for i in range(args.make_decision_turn_n):
         print(f"Make decision turn {i+1}")
 
-        single_turn_make_decision_fun(cur_seeker_agents, job_agents, id2seeker, id2job)
+        single_turn_make_decision_fun(cur_seeker_agents, job_agents, id2seeker, id2job,id2company)
         cur_seeker_agents = [x for x in cur_seeker_agents if x.decision == 2]
 
         # Check if exists seeker agents that have offers

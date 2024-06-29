@@ -217,6 +217,9 @@ class SeekerAgent(AgentBase):
         
         response = self.model(prompt, parse_func=parse_func).raw
         self.seeking = response
+    
+    def update_job_condition(self,company_name,job):
+        self.seeker.job_condition = Template.generate_job_condition(company_name,job)
         
     def update_fun(self):
         self.memory_info = {
