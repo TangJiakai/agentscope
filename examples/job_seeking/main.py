@@ -207,7 +207,7 @@ def single_turn(args, all_seeker_agents, job_agents, company_agents, id2seeker, 
     # Determine the status of seeker agents, and filter out the agents who are seeking jobs
     seeker_agents=[]
     for seeker_agent in all_seeker_agents:
-        if seeker_agent.status == "在职":
+        if seeker_agent.seeker.status == "在职":
             seeker_agent.determine_status()
             if seeker_agent.seeking:
                 seeker_agents.append(seeker_agent)
