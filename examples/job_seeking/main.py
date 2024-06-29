@@ -170,8 +170,6 @@ def single_turn_make_decision_fun(seeker_agents, job_agents, id2seeker, id2job,i
         if seeker_agent.decision == 1: # Accept the offer
             job_agent = id2job[seeker_agent.final_offer_id]['agent']
             job_agent.hc -= 1
-            print(job_agent.offer_seeker_ids)
-            print(seeker_id)
             job_agent.offer_seeker_ids.remove(seeker_id)
             job_agent.memory_info["final_offer_seeker"].append(id2seeker[seeker_id]['agent'].seeker)
         for job_id in seeker_agent.reject_offer_job_ids:
@@ -394,6 +392,7 @@ def build_embedding_model(args):
     print("Successfully build the model")
     return model, tokenizer
 
+
 # calculate text embeddings for seekers and jobs
 def calculate_embeddings(args, seeker_agents, job_agents, id2seeker, id2job):
     # only calculate text embeddings for new agents
@@ -493,6 +492,7 @@ def main(args) -> None:
         # 考虑到每一轮过后简历和职位信息会变化，所以每一轮开始前都需要重新建立向量索引库
         job_dense_index = build_dense_index(args, seeker_agents, job_agents, id2seeker, id2job)
         single_turn(args, seeker_agents, job_agents, company_agents, id2seeker, id2job, id2company, job_dense_index)
+
 
 if __name__ == "__main__":
     args = parse_args()

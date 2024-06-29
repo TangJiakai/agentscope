@@ -86,7 +86,7 @@ minimal_requires = [
 ]
 
 jobseeking_requires = [
-    "faiss-cpu==1.7.4",
+    "faiss-cpu",
     "transformers==4.39.3",
     "adapters==0.2.1",
     "tokenizers==0.15.2"
