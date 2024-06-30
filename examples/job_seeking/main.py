@@ -3,17 +3,19 @@ import sys, os
 import random
 import argparse
 from copy import deepcopy
+from loguru import logger
+from tqdm import tqdm
+import faiss
+import numpy as np
+from transformers import AutoConfig, AutoTokenizer
+
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_dir, '../../src'))
 os.chdir(sys.path[0])
 
 import agentscope
-from embedding_model import *
-from transformers import AutoConfig, AutoTokenizer
-from tqdm import tqdm
-import faiss
-import numpy as np
 
+from embedding_model import *
 from utils.utils import *
 
 
@@ -111,7 +113,7 @@ def parse_args() -> argparse.Namespace:
 
 def single_turn_make_decision_fun(seeker_agents, job_agents, id2seeker, id2job,id2company):
     # 6.1 [Seeker] Make decision
-    print("6.1 [Seeker] Make decision.")
+    logger.info("6.1 [Seeker] Make decision.")
     for seeker_agent in seeker_agents:
         seeker_agent.make_decision_fun(id2job)
         # if len(seeker_agent.offer_job_ids) == 0 and len(seeker_agent.wl_jobs_dict) == 0:
@@ -149,22 +151,22 @@ def single_turn_make_decision_fun(seeker_agents, job_agents, id2seeker, id2job,i
     for seeker_agent in seeker_agents:
         if seeker_agent.decision == 0:  # No any offers, and continue to search for jobs
             seeker_agent.memory_info["final_decision"] = 3
-            print(f"{seeker_agent.name} has no any offers, and continues to search for jobs.")
+            logger.info(f"{seeker_agent.name} has no any offers, and continues to search for jobs.")
         elif seeker_agent.decision == 1:    # Accept the offer
             seeker_agent.memory_info["final_decision"] = 1 if seeker_agent.memory_info["waiting_time"] == 0 else 2
             seeker_agent.memory_info["final_offer"] = id2job[seeker_agent.final_offer_id]['agent'].job
             seeker_agent.update_job_condition(id2company[id2job[seeker_agent.final_offer_id]['agent'].job.company_id]['agent'].name,id2job[seeker_agent.final_offer_id]['agent'].job)
-            print(f"{seeker_agent.name} accepts the offer {id2job[seeker_agent.final_offer_id]['agent'].name}.")
+            logger.info(f"{seeker_agent.name} accepts the offer {id2job[seeker_agent.final_offer_id]['agent'].name}.")
         elif seeker_agent.decision == 2:    # Wait for the waitlist offer
             seeker_agent.memory_info["waiting_time"] += 1
-            print(f"{seeker_agent.name} rejects all offers, and waits for {[id2job[x]['agent'].name for x in seeker_agent.wl_jobs_dict]}.")
+            logger.info(f"{seeker_agent.name} rejects all offers, and waits for {[id2job[x]['agent'].name for x in seeker_agent.wl_jobs_dict]}.")
         elif seeker_agent.decision == 3:    # Reject all offers and waiting list, and continue to search for jobs
             seeker_agent.memory_info["final_decision"] = 4 if seeker_agent.memory_info["waiting_time"] == 0 else 5
-            print(f"{seeker_agent.name} rejects all offers and waiting list, and continues to search for jobs.")
+            logger.info(f"{seeker_agent.name} rejects all offers and waiting list, and continues to search for jobs.")
     
     # 6.2 [Job] Complete the handshake agreements or adjust the waitlist accordingly.
-    print("=" * 50)
-    print("6.2 [Job] Complete the handshake agreements and adjust the waitlist accordingly.")
+    logger.info("=" * 50)
+    logger.info("6.2 [Job] Complete the handshake agreements and adjust the waitlist accordingly.")
     for seeker_agent in seeker_agents:
         seeker_id = seeker_agent.get_id()
         if seeker_agent.decision == 1: # Accept the offer
@@ -199,7 +201,7 @@ def single_turn_make_decision_fun(seeker_agents, job_agents, id2seeker, id2job,i
             seeker_agent.wl_jobs_dict[job_id] = {"rank": i+1, "wl_n": wl_n}
         
     for job_agent in job_agents:
-        print(f"{job_agent.name} offers {[id2seeker[x]['agent'].name for x in job_agent.offer_seeker_ids]}, waitlists {[id2seeker[x]['agent'].name for x in job_agent.wl_seeker_ids]}.")
+        logger.info(f"{job_agent.name} offers {[id2seeker[x]['agent'].name for x in job_agent.offer_seeker_ids]}, waitlists {[id2seeker[x]['agent'].name for x in job_agent.wl_seeker_ids]}.")
         
 
 def single_turn(args, all_seeker_agents, job_agents, company_agents, id2seeker, id2job, id2company, job_dense_index):
@@ -227,42 +229,42 @@ def single_turn(args, all_seeker_agents, job_agents, company_agents, id2seeker, 
         seeker_agent.job_ids_pool = job_ids_pool
         # seeker_agent.job_ids_pool = random.sample(range(1, job_num + 1), args.pool_size)
     
-    print(f"Successfully initialized a total of {all_seeker_num} seeker agents, {seeker_num} is seeking job, {job_num} job agents, and {company_num} company agents.")
+    logger.info(f"Successfully initialized a total of {all_seeker_num} seeker agents, {seeker_num} is seeking job, {job_num} job agents, and {company_num} company agents.")
 
     # Start simulation
     # 1.1 [Seeker] Determine the number of job searches.
-    print("=" * 50)
-    print("1.1 [Seeker] Determine the number of job searches.")
+    logger.info("=" * 50)
+    logger.info("1.1 [Seeker] Determine the number of job searches.")
     for seeker_agent in seeker_agents:
         seeker_agent.search_job_number_fun()
         # seeker_agent.search_job_number = random.choice([1,2])
     for seeker_agent in seeker_agents:
         seeker_agent.memory_info["search_job_number"] = seeker_agent.search_job_number
-        print(f"{seeker_agent.name} wants to search {seeker_agent.search_job_number} jobs.")
+        logger.info(f"{seeker_agent.name} wants to search {seeker_agent.search_job_number} jobs.")
 
     # 1.2 [Seeker] Search for jobs.
-    print("=" * 50)
-    print("1.2 [Seeker] Search for jobs.")
+    logger.info("=" * 50)
+    logger.info("1.2 [Seeker] Search for jobs.")
     for seeker_agent in seeker_agents:
         seeker_agent.search_job_ids = random.sample(seeker_agent.job_ids_pool, seeker_agent.search_job_number)
     for seeker_agent in seeker_agents:
         seeker_agent.memory_info["search_jobs"] = [id2job[x]['agent'].job for x in seeker_agent.search_job_ids]
-        print(f"{seeker_agent.name} searches {[id2job[x]['agent'].name for x in seeker_agent.search_job_ids]} jobs.")
+        logger.info(f"{seeker_agent.name} searches {[id2job[x]['agent'].name for x in seeker_agent.search_job_ids]} jobs.")
 
     # 2. [Seeker] Apply for jobs.
-    print("=" * 50)
-    print("2. [Seeker] Apply for jobs.")
+    logger.info("=" * 50)
+    logger.info("2. [Seeker] Apply for jobs.")
     for seeker_agent in seeker_agents:
         jobs = [id2job[x]['agent'].job for x in seeker_agent.search_job_ids]
         seeker_agent.apply_job_fun(jobs)
         # seeker_agent.apply_job_ids = random.sample(seeker_agent.search_job_ids, random.choice(range(len(seeker_agent.search_job_ids)))+1 if len(seeker_agent.search_job_ids) > 0 else 0)
     for seeker_agent in seeker_agents:
         seeker_agent.memory_info["apply_job_ids"] = seeker_agent.apply_job_ids
-        print(f"{seeker_agent.name} applies {[id2job[x]['agent'].name for x in seeker_agent.apply_job_ids]} jobs.")
+        logger.info(f"{seeker_agent.name} applies {[id2job[x]['agent'].name for x in seeker_agent.apply_job_ids]} jobs.")
 
     # 3.1 [Job] Screen cv from job seekers.
-    print("=" * 50)
-    print("3.1 [Job] Screen cv from job seekers.")
+    logger.info("=" * 50)
+    logger.info("3.1 [Job] Screen cv from job seekers.")
     # Create apply_seekers list for every job agent
     for job_agent in job_agents:
         job_agent.apply_seeker_ids = list()
@@ -278,11 +280,11 @@ def single_turn(args, all_seeker_agents, job_agents, company_agents, id2seeker, 
         # job_agent.cv_passed_seeker_ids = random.sample(job_agent.apply_seeker_ids, random.choice(range(len(job_agent.apply_seeker_ids)))+1 if len(job_agent.apply_seeker_ids) > 0 else 0)
     
     for job_agent in job_agents:
-        print(f"{job_agent.name} passes the cv screening for {[id2seeker[x]['agent'].name for x in job_agent.cv_passed_seeker_ids]} seekers.")
+        logger.info(f"{job_agent.name} passes the cv screening for {[id2seeker[x]['agent'].name for x in job_agent.cv_passed_seeker_ids]} seekers.")
     
     # 3.2 [Seeker] Notify the result of cv screening.
-    print("=" * 50)
-    print("3.2 [Seeker] Notify the result of cv screening.")
+    logger.info("=" * 50)
+    logger.info("3.2 [Seeker] Notify the result of cv screening.")
     for seeker_agent in seeker_agents:
         seeker_agent.cv_passed_job_ids = list()
     for job_id in id2job:
@@ -293,18 +295,18 @@ def single_turn(args, all_seeker_agents, job_agents, company_agents, id2seeker, 
 
     for seeker_agent in seeker_agents:
         seeker_agent.memory_info["cv_passed_job_ids"] = seeker_agent.cv_passed_job_ids
-        print(f"{seeker_agent.name} passes the cv screening for {[id2job[x]['agent'].name for x in seeker_agent.cv_passed_job_ids]} jobs.")
+        logger.info(f"{seeker_agent.name} passes the cv screening for {[id2job[x]['agent'].name for x in seeker_agent.cv_passed_job_ids]} jobs.")
     
     # 4. [Job & Seeker] Interview
-    print("=" * 50)
-    print("4. [Job & Seeker] Interview.")
+    logger.info("=" * 50)
+    logger.info("4. [Job & Seeker] Interview.")
     # TODO: 目前简化面试流程，后续如果细化整个面试过程，需要再添加moderator类，执行面试交互QA的过程
     for job_agent in job_agents:
         job_agent.interview_fun([id2seeker[x]['agent'].seeker for x in job_agent.cv_passed_seeker_ids])
 
     # 5.1 [Job] Notify the result of interview.
-    print("=" * 50)
-    print("5.1 [Job] Decision the interview result.")
+    logger.info("=" * 50)
+    logger.info("5.1 [Job] Decision the interview result.")
     for job_agent in job_agents:
         job_agent.make_decision_fun([id2seeker[x]['agent'].seeker for x in job_agent.cv_passed_seeker_ids], args.wl_n)
         # offer_hc = min(job_agent.hc, len(job_agent.cv_passed_seeker_ids))
@@ -316,11 +318,11 @@ def single_turn(args, all_seeker_agents, job_agents, company_agents, id2seeker, 
     for job_agent in job_agents:
         job_agent.memory_info["offer_seeker_ids"] = deepcopy(job_agent.offer_seeker_ids)
         job_agent.memory_info["wl_seeker_ids"] = deepcopy(job_agent.wl_seeker_ids)
-        print(f"{job_agent.name} offers {[id2seeker[x]['agent'].name for x in job_agent.offer_seeker_ids]}, waitlists {[id2seeker[x]['agent'].name for x in job_agent.wl_seeker_ids]}, and rejects {[id2seeker[x]['agent'].name for x in job_agent.reject_seeker_ids]}.")
+        logger.info(f"{job_agent.name} offers {[id2seeker[x]['agent'].name for x in job_agent.offer_seeker_ids]}, waitlists {[id2seeker[x]['agent'].name for x in job_agent.wl_seeker_ids]}, and rejects {[id2seeker[x]['agent'].name for x in job_agent.reject_seeker_ids]}.")
 
     # 5.2 [Seeker] Notify the result of interview.
-    print("=" * 50)
-    print("5.2 [Seeker] Notify the result of interview.")
+    logger.info("=" * 50)
+    logger.info("5.2 [Seeker] Notify the result of interview.")
     for seeker_agent in seeker_agents:
         seeker_agent.offer_job_ids, seeker_agent.wl_jobs_dict, seeker_agent.fail_job_ids = list(), dict(), list()
         
@@ -340,13 +342,13 @@ def single_turn(args, all_seeker_agents, job_agents, company_agents, id2seeker, 
     for seeker_agent in seeker_agents:
         seeker_agent.memory_info["initial_offer_job_ids"] = deepcopy(seeker_agent.offer_job_ids)
         seeker_agent.memory_info["initial_wl_jobs_dict"] = deepcopy(seeker_agent.wl_jobs_dict)
-        print(f"{seeker_agent.name} receives {len(seeker_agent.offer_job_ids)} offers, {len(seeker_agent.wl_jobs_dict)} waiting list, and {len(seeker_agent.fail_job_ids)} failed jobs.")
+        logger.info(f"{seeker_agent.name} receives {len(seeker_agent.offer_job_ids)} offers, {len(seeker_agent.wl_jobs_dict)} waiting list, and {len(seeker_agent.fail_job_ids)} failed jobs.")
     
     # 6. [Seeker & Job] Make decision
-    print("=" * 50)
+    logger.info("=" * 50)
     cur_seeker_agents = seeker_agents
     for i in range(args.make_decision_turn_n):
-        print(f"Make decision turn {i+1}")
+        logger.info(f"Make decision turn {i+1}")
 
         single_turn_make_decision_fun(cur_seeker_agents, job_agents, id2seeker, id2job,id2company)
         cur_seeker_agents = [x for x in cur_seeker_agents if x.decision == 2]
@@ -361,23 +363,23 @@ def single_turn(args, all_seeker_agents, job_agents, company_agents, id2seeker, 
             break
 
     # [Seeker & Job] Add memory
-    print("=" * 50)
-    print("[Seeker & Job] Add memory.")
+    logger.info("=" * 50)
+    logger.info("[Seeker & Job] Add memory.")
     for agent in seeker_agents + job_agents:
         agent.add_memory()
 
     # 7. [Seeker & Job] The seekers and jobs refresh the information.
-    print("=" * 50)
+    logger.info("=" * 50)
     # 7.1 [Seeker] Refresh information
-    print("7.1 [Seeker] Refresh information.")
+    logger.info("7.1 [Seeker] Refresh information.")
     # TODO: 简历更新等
     for seeker_agent in seeker_agents:
         seeker_agent.update_fun()
 
     # 7.2 [Company] Refresh hc
-    print("=" * 50)
+    logger.info("=" * 50)
     # TODO: 企业动态发布职位，更新hc等，需要注意如果岗位新增或者减少，那job相关变量都需要重新定义，id2job需要重新映射
-    print("7.2 [Company] Refresh information.")
+    logger.info("7.2 [Company] Refresh information.")
     for company_agent in company_agents:
         company_agent.update_fun()
 
@@ -389,7 +391,7 @@ def build_embedding_model(args):
     model = BertDense.from_pretrained(args.emb_model_path, config=config)
     adapter_name = model.load_adapter(args.adapter_path)
     model.set_active_adapters(adapter_name)
-    print("Successfully build the model")
+    logger.info("Successfully build the model")
     return model, tokenizer
 
 
@@ -442,7 +444,7 @@ def calculate_embeddings(args, seeker_agents, job_agents, id2seeker, id2job):
         for i in range(len(need_embs_job_agents)):
             need_embs_job_agents[i].job.emb = job_embs[i].tolist()
         
-    print("Finish calculating text embeddings.")
+    logger.info("Finish calculating text embeddings.")
 
 
 def build_dense_index(args, seeker_agents, job_agents, id2seeker, id2job):
@@ -455,7 +457,7 @@ def build_dense_index(args, seeker_agents, job_agents, id2seeker, id2job):
     job_embs = np.array(job_embs)   
     job_dense_index = faiss.IndexFlatL2(hidden_dim)
     job_dense_index.add(job_embs)
-    print("Finish building faiss index.")
+    logger.info("Finish building faiss index.")
     return job_dense_index
 
 
@@ -488,7 +490,7 @@ def main(args) -> None:
         job_agent.job.company = id2company[job_agent.job.company_id]['agent'].company
 
     for i in range(args.turn_n):
-        print(f"Turn {i+1}")
+        logger.info(f"Turn {i+1}")
         # 考虑到每一轮过后简历和职位信息会变化，所以每一轮开始前都需要重新建立向量索引库
         job_dense_index = build_dense_index(args, seeker_agents, job_agents, id2seeker, id2job)
         single_turn(args, seeker_agents, job_agents, company_agents, id2seeker, id2job, id2company, job_dense_index)
