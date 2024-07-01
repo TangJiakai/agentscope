@@ -1,0 +1,532 @@
+# -*- coding: utf-8 -*-
+import sys, os
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(current_dir, '../../src'))
+os.chdir(sys.path[0])
+
+import random
+import argparse
+from copy import deepcopy
+from loguru import logger
+from tqdm import tqdm
+import faiss
+import numpy as np
+from transformers import AutoConfig, AutoTokenizer
+import concurrent.futures
+from functools import wraps
+
+import agentscope
+
+from embedding_model import *
+from utils.utils import *
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse arguments"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--model-configs",
+        type=str,
+        default="configs/model_configs.json",
+        help="The path of model configs file.",
+    )
+    parser.add_argument(
+        "--seeker_agent_configs_file",
+        type=str,
+        default="configs/seeker_agent_configs.json",
+        help="The path of seeker agent configs file.",
+    )
+    parser.add_argument(
+        "--job_agent_configs_file",
+        type=str,
+        default="configs/job_agent_configs.json",
+        help="The path of job agent configs file.",
+    )
+    parser.add_argument(
+        "--company_agent_configs_file",
+        type=str,
+        default="configs/company_agent_configs.json",
+        help="The path of company agent configs file.",
+    )
+    parser.add_argument(
+        "--emb_model_path",
+        type=str,
+        default="jingtao/DAM-bert_base-mlm-dureader",
+        help="The path of embedding model.",
+    )
+    parser.add_argument(
+        "--adapter_path",
+        type=str,
+        default="https://huggingface.co/jingtao/REM-bert_base-dense-distil-dureader/resolve/main/lora192-pa4.zip",
+        help="The path of adapter module.",
+    )
+    parser.add_argument(
+        "--gpu_id",
+        type=str,
+        default="0",
+        help="The id(s) of GPU.",
+    )
+
+    parser.add_argument(
+        "--turn-n",
+        type=int,
+        default=2,
+        help="The max number of turns.",
+    )
+    parser.add_argument(    # avoid infinite loop
+        "--make-decision-turn-n",
+        type=int,
+        default=2,
+        help="The max number of make decision turns.",
+    )
+    parser.add_argument(
+        "--pool-size",
+        type=int,
+        default=3,
+        help="The pool size of job for every seeker.",
+    )
+    parser.add_argument(
+        "--recent-n",
+        type=int,
+        default=5,
+        help="The number of recent memory for every prompt.",
+    )
+    parser.add_argument(
+        "--emb_batch_size",
+        type=int,
+        default=4,
+        help="The batch size of calculating text embeddings.",
+    )
+    
+    parser.add_argument(
+        "--excess-cv-passed-n",
+        type=int,
+        default=2,
+        help="The number of excess cv passed.",
+    )
+    parser.add_argument(
+        "--wl-n",
+        type=int,
+        default=2,
+        help="The number of waiting list.",
+    )
+    return parser.parse_args()
+
+
+def parallelize(return_results=False):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(items, *args, **kwargs):
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                futures = [executor.submit(func, item, *args, **kwargs) for item in items]
+                
+                if return_results:
+                    results = []
+                    for future in concurrent.futures.as_completed(futures):
+                        results.append(future.result())
+                    return results
+                else:
+                    for future in concurrent.futures.as_completed(futures):
+                        future.result()  
+        return wrapper
+    return decorator
+
+
+def single_turn_make_decision_fun(seeker_agents, job_agents, id2seeker, id2job,id2company):
+    # 6.1 [Seeker] Make decision
+    logger.info("6.1 [Seeker] Make decision.")
+    @parallelize(return_results=False)
+    def parallel_make_decision_fun(seeker_agent):
+        seeker_agent.make_decision_fun(id2job)
+        # if len(seeker_agent.offer_job_ids) == 0 and len(seeker_agent.wl_jobs_dict) == 0:
+        #     seeker_agent.decision = 0
+        #     seeker_agent.final_offer_id = None
+        #     seeker_agent.reject_offer_job_ids, seeker_agent.reject_wl_job_ids = list(), list()
+        # else:
+        #     if len(seeker_agent.offer_job_ids) > 0:
+        #         if len(seeker_agent.wl_jobs_dict) > 0:
+        #             decision = random.choice([1, 2, 3])
+        #         else:
+        #             decision = random.choice([1, 3])
+        #     else:
+        #         decision = 2
+        #     if decision == 1:
+        #         final_offer_id = random.choice(seeker_agent.offer_job_ids)
+        #         seeker_agent.decision = 1
+        #         seeker_agent.final_offer_id = final_offer_id
+        #         seeker_agent.reject_offer_job_ids = list(set(seeker_agent.offer_job_ids) - set([final_offer_id]))
+        #         seeker_agent.reject_wl_job_ids = [x for x in seeker_agent.wl_jobs_dict]
+        #     elif decision == 2:
+        #         seeker_agent.decision = 2
+        #         seeker_agent.final_offer_id = None
+        #         seeker_agent.offer_job_ids = list()
+        #         seeker_agent.reject_offer_job_ids = seeker_agent.offer_job_ids
+        #         seeker_agent.reject_wl_job_ids = list()
+        #     else:
+        #         seeker_agent.decision = 3
+        #         seeker_agent.final_offer_id = None
+        #         seeker_agent.offer_job_ids = list()
+        #         seeker_agent.wl_jobs_dict = dict()
+        #         seeker_agent.reject_offer_job_ids = seeker_agent.offer_job_ids
+        #         seeker_agent.reject_wl_job_ids = [x for x in seeker_agent.wl_jobs_dict]
+    parallel_make_decision_fun(seeker_agents)
+
+    for seeker_agent in seeker_agents:
+        if seeker_agent.decision == 0:  # No any offers, and continue to search for jobs
+            seeker_agent.memory_info["final_decision"] = 3
+            logger.info(f"{seeker_agent.name} has no any offers, and continues to search for jobs.")
+        elif seeker_agent.decision == 1:    # Accept the offer
+            seeker_agent.memory_info["final_decision"] = 1 if seeker_agent.memory_info["waiting_time"] == 0 else 2
+            seeker_agent.memory_info["final_offer"] = id2job[seeker_agent.final_offer_id]['agent'].job
+            seeker_agent.update_job_condition(id2company[id2job[seeker_agent.final_offer_id]['agent'].job.company_id]['agent'].name,id2job[seeker_agent.final_offer_id]['agent'].job)
+            logger.info(f"{seeker_agent.name} accepts the offer {id2job[seeker_agent.final_offer_id]['agent'].name}.")
+        elif seeker_agent.decision == 2:    # Wait for the waitlist offer
+            seeker_agent.memory_info["waiting_time"] += 1
+            logger.info(f"{seeker_agent.name} rejects all offers, and waits for {[id2job[x]['agent'].name for x in seeker_agent.wl_jobs_dict]}.")
+        elif seeker_agent.decision == 3:    # Reject all offers and waiting list, and continue to search for jobs
+            seeker_agent.memory_info["final_decision"] = 4 if seeker_agent.memory_info["waiting_time"] == 0 else 5
+            logger.info(f"{seeker_agent.name} rejects all offers and waiting list, and continues to search for jobs.")
+    
+    # 6.2 [Job] Complete the handshake agreements or adjust the waitlist accordingly.
+    logger.info("=" * 50)
+    logger.info("6.2 [Job] Complete the handshake agreements and adjust the waitlist accordingly.")
+    for seeker_agent in seeker_agents:
+        seeker_id = seeker_agent.get_id()
+        if seeker_agent.decision == 1: # Accept the offer
+            job_agent = id2job[seeker_agent.final_offer_id]['agent']
+            job_agent.hc -= 1
+            job_agent.offer_seeker_ids.remove(seeker_id)
+            job_agent.memory_info["final_offer_seeker"].append(id2seeker[seeker_id]['agent'].seeker)
+        for job_id in seeker_agent.reject_offer_job_ids:
+            job_agent = id2job[job_id]['agent']
+            job_agent.offer_seeker_ids.remove(seeker_id)
+            if len(job_agent.wl_seeker_ids) > 0:
+                wl_seeker_id = job_agent.wl_seeker_ids.pop(0)
+                job_agent.offer_seeker_ids.append(wl_seeker_id)
+        for job_id in seeker_agent.reject_wl_job_ids:
+            job_agent = id2job[job_id]['agent']
+            job_agent.wl_seeker_ids.remove(seeker_id)
+            if len(job_agent.wl_seeker_ids) > 0:
+                wl_seeker_id = job_agent.wl_seeker_ids.pop(0)
+                job_agent.offer_seeker_ids.append(wl_seeker_id)
+
+    for seeker_agent in seeker_agents:
+        seeker_agent.offer_job_ids, seeker_agent.wl_jobs_dict = list(), dict()
+    
+    for job_id in id2job:
+        job_agent = id2job[job_id]['agent']
+        for seeker_id in job_agent.offer_seeker_ids:
+            seeker_agent = id2seeker[seeker_id]['agent']
+            seeker_agent.offer_job_ids.append(job_id)
+        wl_n = len(job_agent.wl_seeker_ids)
+        for i, seeker_id in enumerate(job_agent.wl_seeker_ids):
+            seeker_agent = id2seeker[seeker_id]['agent']
+            seeker_agent.wl_jobs_dict[job_id] = {"rank": i+1, "wl_n": wl_n}
+        
+    for job_agent in job_agents:
+        logger.info(f"{job_agent.name} offers {[id2seeker[x]['agent'].name for x in job_agent.offer_seeker_ids]}, waitlists {[id2seeker[x]['agent'].name for x in job_agent.wl_seeker_ids]}.")
+        
+
+def single_turn(args, all_seeker_agents, job_agents, company_agents, id2seeker, id2job, id2company, job_dense_index):
+    # Determine the status of seeker agents, and filter out the agents who are seeking jobs
+    @parallelize(return_results=True)
+    def parallel_determine_status(seeker_agent):
+        if seeker_agent.seeker.status == "在职":
+            seeker_agent.determine_status()
+            if not seeker_agent.seeking:
+                # add memory for agents who are on the job and do not seek jobs
+                seeker_agent.add_memory(seeking=False)
+                return None
+        return seeker_agent
+    seeker_agents = [seeker_agent for seeker_agent in parallel_determine_status(all_seeker_agents) if seeker_agent is not None]
+    seeker_num, all_seeker_num, job_num, company_num = len(seeker_agents), len(all_seeker_agents), len(job_agents), len(company_agents)
+
+    # Assign job pool to seeker agents
+    @parallelize()
+    def parallel_assign_job_pool(seeker_agent):
+        seeker_emb = seeker_agent.seeker.emb
+        _, job_text_ids = job_dense_index.search(np.array([seeker_emb]), args.pool_size)
+        job_ids_pool = []
+        for i, job_id in enumerate(job_text_ids[0]):
+            job_ids_pool.append(job_agents[job_id].get_id())
+        seeker_agent.job_ids_pool = job_ids_pool
+        # seeker_agent.job_ids_pool = random.sample(range(1, job_num + 1), args.pool_size)
+    parallel_assign_job_pool(seeker_agents)
+    
+    logger.info(f"Successfully initialized a total of {all_seeker_num} seeker agents, {seeker_num} is seeking job, {job_num} job agents, and {company_num} company agents.")
+
+    # Start simulation
+    # 1.1 [Seeker] Determine the number of job searches.
+    logger.info("=" * 50)
+    logger.info("1.1 [Seeker] Determine the number of job searches.")
+    @parallelize()
+    def parallel_search_job_number_fun(seeker_agent):
+        seeker_agent.search_job_number_fun()
+        # seeker_agent.search_job_number = random.choice([1,2])
+        seeker_agent.memory_info["search_job_number"] = seeker_agent.search_job_number
+        logger.info(f"{seeker_agent.name} wants to search {seeker_agent.search_job_number} jobs.")
+    parallel_search_job_number_fun(seeker_agents)
+    
+    # 1.2 [Seeker] Search for jobs.
+    logger.info("=" * 50)
+    logger.info("1.2 [Seeker] Search for jobs.")
+    for seeker_agent in seeker_agents:
+        seeker_agent.search_job_ids = random.sample(seeker_agent.job_ids_pool, seeker_agent.search_job_number)
+    for seeker_agent in seeker_agents:
+        seeker_agent.memory_info["search_jobs"] = [id2job[x]['agent'].job for x in seeker_agent.search_job_ids]
+        logger.info(f"{seeker_agent.name} searches {[id2job[x]['agent'].name for x in seeker_agent.search_job_ids]} jobs.")
+
+    # 2. [Seeker] Apply for jobs.
+    logger.info("=" * 50)
+    logger.info("2. [Seeker] Apply for jobs.")
+    @parallelize()
+    def parallel_apply_job_fun(seeker_agent):
+        jobs = [id2job[x]['agent'].job for x in seeker_agent.search_job_ids]
+        seeker_agent.apply_job_fun(jobs)
+        # seeker_agent.apply_job_ids = random.sample(seeker_agent.search_job_ids, random.choice(range(len(seeker_agent.search_job_ids)))+1 if len(seeker_agent.search_job_ids) > 0 else 0)
+        seeker_agent.memory_info["apply_job_ids"] = seeker_agent.apply_job_ids
+        logger.info(f"{seeker_agent.name} applies {[id2job[x]['agent'].name for x in seeker_agent.apply_job_ids]} jobs.")
+    parallel_apply_job_fun(seeker_agents)
+
+    # 3.1 [Job] Screen cv from job seekers.
+    logger.info("=" * 50)
+    logger.info("3.1 [Job] Screen cv from job seekers.")
+    # Create apply_seekers list for every job agent
+    for job_agent in job_agents:
+        job_agent.apply_seeker_ids = list()
+    for seeker_id in id2seeker:
+        seeker_agent = id2seeker[seeker_id]['agent']
+        for job_id in seeker_agent.apply_job_ids:
+            job_agent = id2job[job_id]['agent']
+            job_agent.apply_seeker_ids.append(seeker_id)
+    @parallelize()
+    def parallel_cv_screening_fun(job_agent):
+        job_agent.cv_screening_fun([id2seeker[x]['agent'].seeker for x in job_agent.apply_seeker_ids], args.excess_cv_passed_n)
+        job_agent.memory_info["apply_seekers"] = [id2seeker[x]['agent'].seeker for x in job_agent.apply_seeker_ids]
+        job_agent.memory_info["cv_passed_seeker_ids"] = job_agent.cv_passed_seeker_ids
+        logger.info(f"{job_agent.name} passes the cv screening for {[id2seeker[x]['agent'].name for x in job_agent.cv_passed_seeker_ids]} seekers.")
+    parallel_cv_screening_fun(job_agents)
+
+
+    # 3.2 [Seeker] Notify the result of cv screening.
+    logger.info("=" * 50)
+    logger.info("3.2 [Seeker] Notify the result of cv screening.")
+    for seeker_agent in seeker_agents:
+        seeker_agent.cv_passed_job_ids = list()
+    for job_id in id2job:
+        job_agent = id2job[job_id]['agent']
+        for seeker_id in job_agent.cv_passed_seeker_ids:
+            seeker_agent = id2seeker[seeker_id]['agent']
+            seeker_agent.cv_passed_job_ids.append(job_id)
+
+    for seeker_agent in seeker_agents:
+        seeker_agent.memory_info["cv_passed_job_ids"] = seeker_agent.cv_passed_job_ids
+        logger.info(f"{seeker_agent.name} passes the cv screening for {[id2job[x]['agent'].name for x in seeker_agent.cv_passed_job_ids]} jobs.")
+    
+    # 4. [Job & Seeker] Interview
+    logger.info("=" * 50)
+    logger.info("4. [Job & Seeker] Interview.")
+    # TODO: 目前简化面试流程，后续如果细化整个面试过程，需要再添加moderator类，执行面试交互QA的过程
+    for job_agent in job_agents:
+        job_agent.interview_fun([id2seeker[x]['agent'].seeker for x in job_agent.cv_passed_seeker_ids])
+
+    # 5.1 [Job] Notify the result of interview.
+    logger.info("=" * 50)
+    logger.info("5.1 [Job] Decision the interview result.")
+
+    @parallelize()
+    def parallel_make_decision_fun(job_agent):
+        job_agent.make_decision_fun([id2seeker[x]['agent'].seeker for x in job_agent.cv_passed_seeker_ids], args.wl_n)
+        # offer_hc = min(job_agent.hc, len(job_agent.cv_passed_seeker_ids))
+        # wl_n = min(args.wl_n, len(job_agent.cv_passed_seeker_ids) - offer_hc)
+        # job_agent.offer_seeker_ids = random.sample(job_agent.cv_passed_seeker_ids, offer_hc)
+        # job_agent.wl_seeker_ids = random.sample(list(set(job_agent.cv_passed_seeker_ids) - set(job_agent.offer_seeker_ids)), wl_n)
+        # job_agent.reject_seeker_ids = list(set(job_agent.cv_passed_seeker_ids) - set(job_agent.offer_seeker_ids) - set(job_agent.wl_seeker_ids))
+        job_agent.memory_info["offer_seeker_ids"] = deepcopy(job_agent.offer_seeker_ids)
+        job_agent.memory_info["wl_seeker_ids"] = deepcopy(job_agent.wl_seeker_ids)
+        logger.info(f"{job_agent.name} offers {[id2seeker[x]['agent'].name for x in job_agent.offer_seeker_ids]}, waitlists {[id2seeker[x]['agent'].name for x in job_agent.wl_seeker_ids]}, and rejects {[id2seeker[x]['agent'].name for x in job_agent.reject_seeker_ids]}.")
+    parallel_make_decision_fun(job_agents)
+
+    # 5.2 [Seeker] Notify the result of interview.
+    logger.info("=" * 50)
+    logger.info("5.2 [Seeker] Notify the result of interview.")
+    for seeker_agent in seeker_agents:
+        seeker_agent.offer_job_ids, seeker_agent.wl_jobs_dict, seeker_agent.fail_job_ids = list(), dict(), list()
+        
+    for job_id in id2job:
+        job_agent = id2job[job_id]['agent']
+        for seeker_id in job_agent.offer_seeker_ids:
+            seeker_agent = id2seeker[seeker_id]['agent']
+            seeker_agent.offer_job_ids.append(job_id)
+        wl_n = len(job_agent.wl_seeker_ids)
+        for i, seeker_id in enumerate(job_agent.wl_seeker_ids):
+            seeker_agent = id2seeker[seeker_id]['agent']
+            seeker_agent.wl_jobs_dict[job_id] = {"rank": i+1, "wl_n": wl_n}
+        for seeker_id in job_agent.reject_seeker_ids:
+            seeker_agent = id2seeker[seeker_id]['agent']
+            seeker_agent.fail_job_ids.append(job_id)
+
+    for seeker_agent in seeker_agents:
+        seeker_agent.memory_info["initial_offer_job_ids"] = deepcopy(seeker_agent.offer_job_ids)
+        seeker_agent.memory_info["initial_wl_jobs_dict"] = deepcopy(seeker_agent.wl_jobs_dict)
+        logger.info(f"{seeker_agent.name} receives {len(seeker_agent.offer_job_ids)} offers, {len(seeker_agent.wl_jobs_dict)} waiting list, and {len(seeker_agent.fail_job_ids)} failed jobs.")
+    
+    # 6. [Seeker & Job] Make decision
+    logger.info("=" * 50)
+    cur_seeker_agents = seeker_agents
+    for i in range(args.make_decision_turn_n):
+        logger.info(f"Make decision turn {i+1}")
+
+        single_turn_make_decision_fun(cur_seeker_agents, job_agents, id2seeker, id2job,id2company)
+        cur_seeker_agents = [x for x in cur_seeker_agents if x.decision == 2]
+
+        # Check if exists seeker agents that have offers
+        stop_flag = True
+        for seeker_agent in cur_seeker_agents:
+            if len(seeker_agent.offer_job_ids) > 0:
+                stop_flag = False
+                break
+        if stop_flag:
+            break
+
+    # [Seeker & Job] Add memory
+    logger.info("=" * 50)
+    logger.info("[Seeker & Job] Add memory.")
+    for agent in seeker_agents + job_agents:
+        agent.add_memory()
+
+    # 7. [Seeker & Job] The seekers and jobs refresh the information.
+    logger.info("=" * 50)
+    # 7.1 [Seeker] Refresh information
+    logger.info("7.1 [Seeker] Refresh information.")
+    # TODO: 简历更新等
+    for seeker_agent in seeker_agents:
+        seeker_agent.update_fun()
+
+    # 7.2 [Company] Refresh hc
+    logger.info("=" * 50)
+    # TODO: 企业动态发布职位，更新hc等，需要注意如果岗位新增或者减少，那job相关变量都需要重新定义，id2job需要重新映射
+    logger.info("7.2 [Company] Refresh information.")
+    for company_agent in company_agents:
+        company_agent.update_fun()
+
+
+def build_embedding_model(args):
+    config = AutoConfig.from_pretrained(args.emb_model_path)
+    config.similarity_metric, config.pooling = "ip", "average"
+    tokenizer = AutoTokenizer.from_pretrained(args.emb_model_path, config=config)
+    model = BertDense.from_pretrained(args.emb_model_path, config=config)
+    adapter_name = model.load_adapter(args.adapter_path)
+    model.set_active_adapters(adapter_name)
+    logger.info("Successfully build the model")
+    return model, tokenizer
+
+
+# calculate text embeddings for seekers and jobs
+def calculate_embeddings(args, seeker_agents, job_agents, id2seeker, id2job):
+    # only calculate text embeddings for new agents
+    need_embs_seeker_agents, need_embs_job_agents = [], []
+    for seeker_agent in seeker_agents:
+        if seeker_agent.seeker.emb is None:
+            need_embs_seeker_agents.append(seeker_agent)
+    for job_agent in job_agents:
+        if job_agent.job.emb is None:
+            need_embs_job_agents.append(job_agent)
+
+    seeker_cv_texts, job_texts = [], []
+    for seeker_agent in need_embs_seeker_agents:
+        text = str(seeker_agent.seeker.cv) + "\n" + str(seeker_agent.seeker.trait)
+        seeker_cv_texts.append(text)
+    for job_agent in need_embs_job_agents:
+        text = job_agent.job.jd + "\n" + str(job_agent.job.jr)
+        job_texts.append(text)
+    
+    # init embedding model
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    emb_model, tokenizer = build_embedding_model(args)
+    emb_model.to(device)
+    emb_model.eval()
+    seeker_embs, job_embs = [], []
+    # calculate seekers' embeddings
+    if len(seeker_cv_texts) > 0:
+        seeker_dataset = TextDataset(seeker_cv_texts, tokenizer)
+        seeker_loader = torch.utils.data.DataLoader(seeker_dataset, batch_size=args.emb_batch_size, collate_fn=TextDataset.emb_collate_fn)
+        for batch in tqdm(seeker_loader):
+            with torch.no_grad():
+                output = emb_model(input_ids=batch[0].to(device), attention_mask = batch[1].to(device))
+            seeker_embs.append(output)
+        seeker_embs = torch.cat(seeker_embs, dim=0).cpu().numpy()
+        for i in range(len(need_embs_seeker_agents)):
+            need_embs_seeker_agents[i].seeker.emb = seeker_embs[i].tolist()
+
+    # calculate jobs' embeddings 
+    if len(job_texts) > 0:
+        job_dataset = TextDataset(job_texts, tokenizer)
+        job_loader = torch.utils.data.DataLoader(job_dataset, batch_size=args.emb_batch_size, collate_fn=TextDataset.emb_collate_fn)
+        for batch in tqdm(job_loader):
+            with torch.no_grad():
+                output = emb_model(input_ids = batch[0].to(device), attention_mask = batch[1].to(device))
+            job_embs.append(output)
+        job_embs = torch.cat(job_embs, dim=0).cpu().numpy()
+        for i in range(len(need_embs_job_agents)):
+            need_embs_job_agents[i].job.emb = job_embs[i].tolist()
+        
+    logger.info("Finish calculating text embeddings.")
+
+
+def build_dense_index(args, seeker_agents, job_agents, id2seeker, id2job):
+    calculate_embeddings(args, seeker_agents, job_agents, id2seeker, id2job)
+    # build faiss index
+    hidden_dim = len(seeker_agents[0].seeker.emb)
+    job_embs = []
+    for job_agent in job_agents:
+        job_embs.append(job_agent.job.emb)
+    job_embs = np.array(job_embs)   
+    job_dense_index = faiss.IndexFlatL2(hidden_dim)
+    job_dense_index.add(job_embs)
+    logger.info("Finish building faiss index.")
+    return job_dense_index
+
+
+def main(args) -> None:
+    agentscope.init(
+        project="Job Seeking Simulation",
+        name="main",
+        save_code=False,
+        save_api_invoke=False,
+        model_configs=args.model_configs,
+        use_monitor=False,
+    )
+
+    # Init agents
+    seeker_agents = setup_agents(args.seeker_agent_configs_file, recent_n=args.recent_n)
+    job_agents = setup_agents(args.job_agent_configs_file, recent_n=args.recent_n)
+    company_agents = setup_agents(args.company_agent_configs_file, recent_n=args.recent_n)
+
+    # Create id2agent mapping
+    id2seeker, id2job, id2company = {}, {}, {}
+    for seeker_agent in seeker_agents:
+        id2seeker[seeker_agent.get_id()] = {"agent": seeker_agent}
+    for job_agent in job_agents:
+        id2job[job_agent.get_id()] = {"agent": job_agent}
+    for company_agent in company_agents:
+        id2company[company_agent.get_id()] = {"agent": company_agent}
+
+    for job_agent in job_agents:
+        job_agent.init_system_prompt(id2company[job_agent.job.company_id]['agent'].company)
+        job_agent.job.company = id2company[job_agent.job.company_id]['agent'].company
+
+    for i in range(args.turn_n):
+        logger.info(f"Turn {i+1}")
+        # 考虑到每一轮过后简历和职位信息会变化，所以每一轮开始前都需要重新建立向量索引库
+        job_dense_index = build_dense_index(args, seeker_agents, job_agents, id2seeker, id2job)
+        single_turn(args, seeker_agents, job_agents, company_agents, id2seeker, id2job, id2company, job_dense_index)
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu_id
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=None)
+    main(args)
