@@ -1,0 +1,83 @@
+{# system prompt #}
+{% macro system_prompt(job, company) %}
+You are an interviewer for company {{company.name}}. The company's brief description is {{company.cd}}. Now, the company has entrusted you to recruit for position {{job.name}}. The specific information for the position is as follows:
+Position Title: {{job.name}}
+Position Description: {{job.jd}}
+Position Requirements: 
+{% for r in job.jr %}
+- {{r}}
+{% endfor %}
+{% endmacro %}
+
+{# Screen resumes for job seekers #}
+{% macro screen_resumes(cv_passed_hc, apply_seekers) %}
+目前共收到{{apply_seekers | length}}份简历，您需要筛选出符合公司要求的求职者。下面给出每位求职者的简历（注意'<>'内是求职者的编号）：
+{% for seeker in apply_seekers %}
+- <{{seeker.id}}> {{seeker.name}}的简历如下：
+{{seeker.cv}}
+{% endfor %}
+为了能够最大化公司利益，同时减少成本支出，您需要择优筛选出{{cv_passed_hc}}个求职者。
+You should extract the id inside the '<>'. You need to form these ids into a list (if there are no applicants, return an empty list) and respond in the following format, which can be loaded by json.loads in Python. Only output the json itself without any other text:
+{
+    "cv_passed_seeker_ids": "a list formed by id"
+}
+{% endmacro %}
+
+{# Issue offers and waitlist to job seekers #}
+{% macro make_decision(offer_hc, wl_hc, job_seekers)%}
+目前要招聘{{offer_hc}}人。下面给出{{job_seekers | length}}位求职者的简历（注意'<>'内是求职者的编号）：
+{% for seeker in job_seekers %}
+- <{{seeker.id}}> {{seeker.name}}的简历如下：
+{{seeker.cv}}
+{% endfor %}
+现在要决定对这些候选求职者做出选择，您需要分别给出{{offer_hc}}个offer和{{wl_hc}}个位于waitlist的求职者名单（注意如果没有求职者，返回空列表）。
+** Important Notes: **
+- 公司发放offer和递补名单要本着宁缺毋滥的录用原则，以保持公司最大利益。
+- 任何不符合公司要求或者技术水平欠缺的求职者都会被直接拒绝。
+- The returned list of wl_seekers should place job seeker IDs based on priority, with a smaller index indicating higher priority.
+- These are all job applicants who passed the initial resume screening. Therefore, if the applicants meet the company's conditions, you should first strive to fulfill the company's recruitment needs, i.e., consider filling the offer vacancies first, and then select the best from the remaining applicants for the waitlist. 
+- The sizes of the offer and waitlist should strictly meet the requirements.
+
+You should extract the id inside the '<>'. You need to form these ids into a list (if there are no applicants, return an empty list) and respond in the following format, which can be loaded by json.loads in Python:
+{
+    "offer_seeker_ids": "a list formed by id",
+    "wl_seeker_ids": "a list formed by id"
+}
+{% endmacro %}
+
+{# MemoryTemplate: job memory. #}
+{% macro job_memory(memory_info) %}
+在当前求职季，本职位共收到{{memory_info["apply_seekers"] | length}}份简历，求职者简历如下：
+{% for seeker in memory_info["apply_seekers"] %}
+- <{{seeker.id}}> {{seeker.name}}的简历如下：
+{{seeker.cv}}
+{% endfor %}
+经过初筛后，简历通过共{{memory_info["cv_passed_seeker_ids"] | length}}人，分别为：
+{% for seeker_id in memory_info["cv_passed_seeker_ids"] %}
+- <{{seeker_id}}>
+{% endfor %}
+本职位决定的offer，waiting list如下：
+offer：
+{% if memory_info["offer_seeker_ids"] | length > 0 %}
+{% for seeker_id in memory_info["offer_seeker_ids"] %}
+- <{{seeker_id}}>
+{% endfor %}
+{% else %}
+无。
+{% endif %}
+waiting list：
+{% if memory_info["wl_seeker_ids"] | length > 0 %}
+{% for seeker_id in memory_info["wl_seeker_ids"] %}
+- <{{seeker_id}}>
+{% endfor %}
+{% else %}
+无。
+{% endif %}
+最终，在当前求职季，本职位招{{memory_info["final_offer_seeker"] | length}}人。
+{% if memory_info["final_offer_seeker"] | length > 0 %}
+分别如下：{% for seeker in memory_info["final_offer_seeker"] %}
+- <{{seeker.id}}> {{seeker.name}}，简历如下：
+{{seeker.cv}}
+{% endfor %}
+{% endif %}
+{% endmacro %}

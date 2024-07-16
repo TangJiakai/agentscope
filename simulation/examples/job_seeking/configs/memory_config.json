@@ -1,0 +1,10 @@
+{
+    "class": "GenerativeMemory",
+    "args": {
+        "model": "Llama3",
+        "embedding_model": "chatgpt",
+        "recent_n": 5,
+        "reflection_threshold": 1.0,
+        "importance_weight": 0.15
+    }
+}

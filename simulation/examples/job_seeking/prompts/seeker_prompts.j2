@@ -1,0 +1,175 @@
+{# Prompt: system prompt. #}
+{% macro system_prompt(seeker) %}
+You are a job seeker.
+{% if seeker.status == "在职" %}
+Your current status is employed, and you want to seek a better job in the job market.
+{% else %}
+Your current status is unemployed, and you need to find a suitable and ideal job.
+{% endif %}
+Your basic information is as follows:
+Name: {{seeker.name}}
+Resume Description: {{seeker.cv}}
+Personal Trait: {{seeker.trait}}
+Current Status: {{seeker.status}}
+Job Condition: {{seeker.job_condition}}
+{% endmacro %}
+
+{# Prompt: Determine the number of job searches. #}
+{% macro search_job_number_prompt() %}
+你现在要搜寻工作并考虑对这些职位进行申请投递，工作搜寻强度越高，你搜寻的职位数量就越多，找到合适你的工作的概率就更大，但同时你花在这件事上的精力也就越多，效用会相应降低。请根据个人目前的情况，请在[1-2]中选择一个整数以最大化你的各期总效用折现到当前时点的总值，不要给出多余的思考过程。
+You should respond in the following format, which can be loaded by json.loads in Python:
+{
+    "number": "an integer in the range of [1,2]"
+}
+{% endmacro %}
+
+{# Prompt: apply for jobs #}
+{% macro apply_jobs_prompt(search_jobs) %}
+你已经搜寻到{{search_jobs | length}}个职位进行申请投递，分别如下
+{% for job in search_jobs %}
+- <{{job.id}}> {{job}}
+{{job.company}}
+{% endfor %}
+
+在决定是否投递职位申请时，你目的是最大化你的各期总效用折现到当前时点的总值，影响总效用的因素包括：
+1.	工作稳定性越高，工作期间每期带来的效用越大
+2.	福利待遇越好，工作期间每期带来的效用越大
+3.	工资越高，工作期间每期带来的效用越大
+4.	通勤时间越短，工作期间每期带来的效用越大
+5.	工作时间越灵活，工作期间每期带来的效用越大
+6.	工作特征与你的工作偏好越契合，工作期间每期带来的效用越大
+7.	岗位风险程度与你的风险厌恶程度越契合，工作期间每期带来的效用越大
+8.	投递应聘申请会减少你的当期效用，每投递一份申请带来的效用减少相等
+
+根据目前自身的情况，请选择至少一个职位进行简历的投递申请，你不能选择全部都放弃。
+You should extract the id inside the '<>' and donot output '<>'. You need to form these ids into a list (even if applying for only one job) and respond in the following format, which can be loaded by json.loads in Python:
+{
+    "apply_jobs": "a list formed by id"
+}
+{% endmacro %}
+
+{# Prompt: make decision #}
+{% macro make_decision_prompt(offer_job_ids, wl_jobs_dict, jobs) %}
+在当前求职季，获得的offer或者递补offer，下面将介绍这些offer的具体情况。
+
+{% if offer_job_ids | length > 0 %}
+总计得到{{offer_job_ids | length}}个Offer，分别如下：
+{% for job_id in offer_job_ids %}
+- <{{job_id}}> 职位名称：{{jobs[job_id]["agent"].job.name}}
+职位描述：{{jobs[job_id]["agent"].job.jd}}
+{{jobs[job_id]["agent"].job.company}}
+{% endfor %}
+{% else %}
+没有offer。
+{% endif %}
+
+{% if wl_jobs_dict | length > 0 %}
+总计得到{{wl_jobs_dict | length}}个递补Offer，分别如下：
+{% for wl_job_id, wl_job in wl_jobs_dict.items() %}
+- <{{wl_job_id}}> 职位名称：{{jobs[wl_job_id]["agent"].job.name}}
+职位描述：{{jobs[wl_job_id]["agent"].job.jd}}
+{{jobs[wl_job_id]["agent"].job.company}}
+当前递补排名：{{wl_job.rank}}/{{wl_job.wl_n}}
+{% endfor %}
+{% else %}
+没有递补offer。
+{% endif %}
+
+Based on the above circumstances, to maximize individual multi-period discounted expected utility, choose the optimal option from the following three choices:
+1. If you have at least one offer (not offers in waiting list), select the best offer (output the number of the final selected offer within '<>').
+2. Decline all received offers and 等待递补offer.
+3. Decline all offers and waiting opportunities, and continue searching for other positions.
+
+You should respond in the following format, which can be loaded by json.loads in Python:
+{
+    "decision": "choose the final integer number from [1,2,3] as the final decision",
+    "final_offer_id": "if you choose 1, please extract the id number of the final offer in the '<>' and just output 1, otherwise, you can omit it or set it to null"
+}
+{% endmacro %}
+
+{# MemoryTemplate: seeker memory. #}
+{% macro seeker_memory(memory_info) %}
+在当前求职季，你搜寻了{{memory_info["search_job_number"]}}个职位，分别如下：
+{% for job in memory_info["search_jobs"] %}
+- <{{job.id}}> 职位名称：{{job.name}}
+所属公司信息：{{job.company}}
+职位描述：{{job.jd}}
+{% endfor %}
+其中，你选择了{{memory_info["apply_job_ids"] | length}}个职位进行简历的投递申请，分别如下：
+{% for job_id in memory_info["apply_job_ids"] %}
+- <{{job_id}}>
+{% endfor %}
+你收到了{{memory_info["cv_passed_job_ids"] | length}}个职位的面试机会，分别如下：
+{% for job_id in memory_info["cv_passed_job_ids"] %}
+- <{{job_id}}>
+{% endfor %}
+面试结果收到的offer和递补offer如下：
+{% if memory_info["initial_offer_job_ids"] | length > 0 %}
+总计得到{{memory_info["initial_offer_job_ids"] | length}}个offer，分别如下：
+{% for job_id in memory_info["initial_offer_job_ids"] %}
+- <{{job_id}}>
+{% endfor %}
+{% else %}
+没有offer。
+{% endif %}
+{% if memory_info["initial_wl_jobs_dict"] | length > 0 %}
+总计得到{{memory_info["initial_wl_jobs_dict"] | length}}个递补offer，分别如下：
+{% for wl_job_id, wl_job in memory_info["initial_wl_jobs_dict"].items() %}
+- <{{wl_job_id}}>
+递补排名：{{wl_job.rank}}/{{wl_job.wl_n}}
+{% endfor %}
+{% else %}
+没有递补offer。
+{% endif %}
+最终，在当前求职季，你的决定是：
+{% if memory_info["final_decision"] == 0 %}
+一直等待递补offer，但最后没有拿到递补offer，本轮无offer。
+{% elif memory_info["final_decision"] == 1 %}
+直接接受了offer：<{{memory_info["final_offer"].id}}>
+职位名称：{{memory_info["final_offer"].name}}
+所属公司信息：{{memory_info["final_offer"].company}}
+职位描述：{{memory_info["final_offer"].jd}}
+{% elif memory_info["final_decision"] == 2 %}
+在等待了{{memory_info["waiting_time"]}}轮之后，接受了offer：<{{memory_info["final_offer"].id}}>
+职位名称：{{memory_info["final_offer"].name}}
+所属公司信息：{{memory_info["final_offer"].company}}
+职位描述：{{memory_info["final_offer"].jd}}
+{% elif memory_info["final_decision"] == 3 %}
+由于没有得到任何offer和递补offer，本轮无offer。
+{% elif memory_info["final_decision"] == 4 %}
+直接拒绝了所有的offer和递补机会，本轮无offer。
+{% elif memory_info["final_decision"] == 5 %}
+在等待了{{memory_info["waiting_time"]}}轮之后，拒绝了所有的offer和递补机会，本轮无offer。
+{% endif %}
+{% endmacro %}
+
+{# MemoryTemplate: nonseeker memory. #}
+{% macro nonseeker_memory(seeker) %}
+在当前求职季，你根据当前的个人情况，决定不进行工作搜寻，你的工作信息仍为{{seeker.job_condition}}。
+{% endmacro %}
+
+{# ReflectionTemplate: reflection. #}
+{% macro reflection(recent_memories, current_action) %}
+最近的求职季中，你的记忆是：
+{{recent_memories}}
+你当前要进行的动作是：
+{{current_action}}
+根据当前要进行的动作，从最近的记忆中总结出有助于你进行决策的要点。
+{% endmacro %}
+{# Prompt: determine status #}
+
+{% macro determine_status_prompt() %}
+根据个人情况，请判断你是否会选择进行工作搜寻，请输出“yes” 或者 “no”。
+当你进行工作搜寻的期望效用大于不搜寻的效用时，你将进行工作搜寻，你进行工作搜寻的期望效用由以下方式决定：
+1. 根据你的记忆、经验与反思，你对你可能获取的工作有一定的预期，这种预期包括工资、工作强度等一系列影响效用的因素；
+2. 你目前的效用是当下这份工作带给你的效用(参考Job Condition)，如果你没有工作，则是可能的失业补贴或者最低工资保障带给你的；
+3. 你将在考虑工作搜寻、简历投递和面试成本的基础上，比较潜在工作机会带给你的效用和你目前的效用，如果进行工作搜寻你的期望效用更大，则你将进行工作搜寻。
+{% endmacro %}
+
+{# Template: Job Condition #}
+{% macro generate_job_condition(company_name,job) %}
+你当前的工作信息如下：
+公司名称：{{company_name}}
+职位名称：{{job.name}}
+职位描述：{{job.jd}}
+{% endmacro %}
