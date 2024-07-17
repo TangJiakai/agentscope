@@ -38,9 +38,11 @@ class Simulator(BaseSimulator):
     def _from_scratch(self):
         self._init_agentscope()
 
+        config = self.config
         if self.config["restore_file_path"] is not None:
             with open(self.config["restore_file_path"], "rb") as f:
                 self = Simulator.load(f)
+            self.config = config
         else:
             self._init_agents()
 
@@ -193,13 +195,6 @@ class Simulator(BaseSimulator):
                 )
         check_pause()
 
-        # assign job_id_pool for all seekers
-        for seeker_agent in seeker_agents:
-            _, job_ids = job_dense_index.search(
-                np.array([seeker_agent.seeker.emb]), self.config["pool_size"]
-            )
-            seeker_agent.job_id_pool = list(job_ids[0] + len(seeker_agents))
-
         # determine search job number for all seekers
         for seeker_agent in seeker_agents:
             seeker_agent(Msg("assistant", None, fun="search_job_number"))
@@ -214,7 +209,7 @@ class Simulator(BaseSimulator):
         # search job ids for all seekers
         for seeker_agent in seeker_agents:
             seeker_agent.search_job_ids = random.sample(
-                seeker_agent.job_id_pool, seeker_agent.search_job_number
+                seeker_agent.job_ids_pool, seeker_agent.search_job_number
             )
             seeker_agent.memory_info["search_jobs"] = [
                 self.agents[x].job for x in seeker_agent.search_job_ids
@@ -233,13 +228,19 @@ class Simulator(BaseSimulator):
                     fun="apply_job",
                     params={
                         "search_jobs": [
-                            self.agents[job_id]
+                            self.agents[job_id].job
                             for job_id in seeker_agent.search_job_ids
                         ]
                     },
                 )
             )
             seeker_agent.memory_info["apply_job_ids"] = seeker_agent.apply_job_ids
+
+        for seeker_agent in seeker_agents:
+            seeker_id = seeker_agent.get_id()
+            for job_id in seeker_agent.apply_job_ids:
+                job_agent = self.agents[job_id]
+                job_agent.apply_seeker_ids.append(seeker_id)
         check_pause()
 
         # cv screening for all job agents
@@ -361,12 +362,18 @@ class Simulator(BaseSimulator):
         job_dense_index = build_dense_index(
             self.config, self.seeker_agents, self.job_agents
         )
+        
+        # assign job_ids_pool for all seekers
+        for seeker_agent in self.seeker_agents:
+            _, job_ids = job_dense_index.search(np.array([seeker_agent.seeker.emb]), self.config["pool_size"])
+            seeker_agent.job_ids_pool = list(job_ids[0] + len(self.seeker_agents))
+        
         message_manager.message_queue.put("Start simulation.")
         for r in range(self.cur_round, self.config["round_n"] + 1):
             logger.info(f"Round {r} started")
             self._one_round(job_dense_index)
             global CUR_ROUND
-            self.cur_round = CUR_ROUND = r + 1
+            self.cur_round = CUR_ROUND = r
             self.save()
             if stop_event.is_set():
                 message_manager.message_queue.put(f"Stop simulation by user at round {r}.")
@@ -379,12 +386,13 @@ class Simulator(BaseSimulator):
         with open(path, "rb") as f:
             simulator = pickle.load(f)
             global CUR_ROUND
+
             CUR_ROUND = simulator.cur_round
         logger.info(f"Loaded simulator from {path}")
         return simulator
 
     def save(self):
-        save_path = os.path.join(file_manager.dir_root, f"ROUND-{CUR_ROUND}.pkl")
+        save_path = os.path.join(file_manager.dir_root, f"ROUND-{self.cur_round}.pkl")
         with open(save_path, "wb") as f:
             pickle.dump(self, f)
         logger.info(f"Saved simulator to {save_path}")

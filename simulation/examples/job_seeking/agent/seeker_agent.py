@@ -82,6 +82,7 @@ class SeekerAgent(AgentBase):
 
     def set_id(self, id: int):
         self.id = id
+        self.seeker.id = id
 
     def get_id(self):
         return self.id

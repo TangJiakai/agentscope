@@ -10,17 +10,18 @@ Position Requirements:
 {% endmacro %}
 
 {# Screen resumes for job seekers #}
-{% macro screen_resumes(cv_passed_hc, apply_seekers) %}
+{% macro screen_resumes_prompt(cv_passed_hc, apply_seekers) %}
 目前共收到{{apply_seekers | length}}份简历，您需要筛选出符合公司要求的求职者。下面给出每位求职者的简历（注意'<>'内是求职者的编号）：
 {% for seeker in apply_seekers %}
 - <{{seeker.id}}> {{seeker.name}}的简历如下：
 {{seeker.cv}}
 {% endfor %}
 为了能够最大化公司利益，同时减少成本支出，您需要择优筛选出{{cv_passed_hc}}个求职者。
-You should extract the id inside the '<>'. You need to form these ids into a list (if there are no applicants, return an empty list) and respond in the following format, which can be loaded by json.loads in Python. Only output the json itself without any other text:
+You need to extract the numbers within the '<>', **but do not include the '<>' themselves in the output**. You need to respond in the following format, which can be loaded by json.loads in Python:
 {
-    "cv_passed_seeker_ids": "a list formed by id"
+    "cv_passed_seeker_ids": "list type, including the id numbers of the jobs you choose to pass the resume"
 }
+**Now, Please provide the answer directly, without including the thought process.**
 {% endmacro %}
 
 {# Issue offers and waitlist to job seekers #}
@@ -37,11 +38,12 @@ You should extract the id inside the '<>'. You need to form these ids into a lis
 - The returned list of wl_seekers should place job seeker IDs based on priority, with a smaller index indicating higher priority.
 - These are all job applicants who passed the initial resume screening. Therefore, if the applicants meet the company's conditions, you should first strive to fulfill the company's recruitment needs, i.e., consider filling the offer vacancies first, and then select the best from the remaining applicants for the waitlist. 
 - The sizes of the offer and waitlist should strictly meet the requirements.
+- **Please provide the answer directly, without including the thought process.**
 
-You should extract the id inside the '<>'. You need to form these ids into a list (if there are no applicants, return an empty list) and respond in the following format, which can be loaded by json.loads in Python:
+You need to extract the numbers within the '<>', **but do not include the '<>' themselves in the output**. You need to form these ids into a list (even if applying for only one job) and respond in the following format, which can be loaded by json.loads in Python:
 {
-    "offer_seeker_ids": "a list formed by id",
-    "wl_seeker_ids": "a list formed by id"
+    "offer_seeker_ids": "list type, including the id numbers of the jobs you choose to give offer",
+    "wl_seeker_ids": "list type, including the id numbers of the jobs you choose to give waitlist"
 }
 {% endmacro %}
 

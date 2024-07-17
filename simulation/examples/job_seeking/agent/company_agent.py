@@ -52,6 +52,7 @@ class CompanyAgent(AgentBase):
 
     def set_id(self, id: int):
         self.id = id
+        self.company.id = id
 
     def get_id(self):
         return self.id
