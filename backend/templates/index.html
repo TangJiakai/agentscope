@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>test</title>
+</head>
+
+<body>
+    <h1>test</h1>
+    <div style="width: 1400px; height: 500px; border: 1px solid black; overflow-y: auto;">
+        <table id="msgsTable" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th>turn</th>
+                    <th>name</th>
+                    <th>prompt</th>
+                    <th>completion</th>
+                    <th>agent_type</th>
+                    <th>agent_id</th>
+                </tr>
+            </thead>
+            <tbody id="msgs">
+            </tbody>
+        </table>
+    </div>
+    <div id="msgsText"
+        style="margin-top: 20px; width: 1400px; height: 200px; border: 1px solid black; overflow-y: auto;"></div>
+    <button id="startButton" style="margin-top: 20px; margin-right: 10px;">Start</button>
+    <button id="pauseButton" style="margin-top: 20px; margin-right: 10px;">Pause/Resume</button>
+    <button id="stopButton" style="margin-top: 20px;">Stop</button>
+    <script>
+        const msgsTbody = document.getElementById('msgs');
+        const msgsTextDiv = document.getElementById('msgsText');
+        const startButton = document.getElementById('startButton');
+        const pauseButton = document.getElementById('pauseButton');
+        const stopButton = document.getElementById('stopButton');
+        const ws = new WebSocket("ws://localhost:8000/ws");
+
+        ws.onmessage = function (event) {
+            const message = event.data;
+
+            try {
+                const jsonObj = JSON.parse(message);
+                const row = document.createElement('tr');
+                for (const key in jsonObj) {
+                    if (jsonObj.hasOwnProperty(key)) {
+                        const cell = document.createElement('td');
+                        cell.textContent = jsonObj[key];
+                        row.appendChild(cell);
+                    }
+                }
+                msgsTbody.appendChild(row);
+            } catch (e) {
+                console.error("Error parsing JSON message", e);
+                const msgElement = document.createElement('div');
+                msgElement.textContent = message;
+                msgsTextDiv.appendChild(msgElement);
+            }
+        };
+
+        ws.onopen = function (event) {
+            console.log("WebSocket connection established.");
+        };
+
+        ws.onclose = function (event) {
+            console.log("WebSocket connection closed.");
+        };
+
+        ws.onerror = function (event) {
+            console.log("WebSocket error:", event);
+        };
+
+        startButton.onclick = function () {
+            fetch('/start/job_seeking', {
+                method: 'POST'
+            }).then(response => {
+                if (response.ok) {
+                    console.log("Start request sent successfully.");
+                } else {
+                    console.log("Failed to send start request.");
+                }
+            }).catch(error => {
+                console.error("Error sending start request:", error);
+            });
+        };
+
+        pauseButton.onclick = function () {
+            fetch('/pause', {
+                method: 'POST'
+            }).then(response => {
+                if (response.ok) {
+                    console.log("Pause request sent successfully.");
+                } else {
+                    console.log("Failed to send pause request.");
+                }
+            }).catch(error => {
+                console.error("Error sending pause request:", error);
+            });
+        };
+
+        stopButton.onclick = function () {
+            fetch('/stop', {
+                method: 'POST'
+            }).then(response => {
+                if (response.ok) {
+                    console.log("Stop request sent successfully.");
+                } else {
+                    console.log("Failed to send stop request.");
+                }
+            }).catch(error => {
+                console.error("Error sending stop request:", error);
+            });
+        };
+    </script>
+</body>
+
+</html>
