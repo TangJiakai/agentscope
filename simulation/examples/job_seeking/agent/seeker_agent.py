@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 from jinja2 import Environment, FileSystemLoader
 from typing import Union
@@ -8,12 +9,14 @@ from agentscope.message import Msg
 from agentscope.models import ModelResponse
 from agentscope.models import load_model_by_config_name
 
-from utils.utils import extract_dict
+import simulation.examples.job_seeking.simulator as simulator
+from simulation.examples.job_seeking.utils.utils import extract_dict
 from simulation.helpers.message import message_manager, MessageUnit
 from simulation.helpers.utils import setup_memory
 
 
-file_loader = FileSystemLoader("prompts")
+scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+file_loader = FileSystemLoader(os.path.join(scene_path, "prompts"))
 env = Environment(loader=file_loader)
 Template = env.get_template('seeker_prompts.j2').module
 
@@ -111,9 +114,8 @@ class SeekerAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            from simulator import CUR_ROUND
             message_manager.add_message(MessageUnit(
-                round=CUR_ROUND, 
+                round=simulator.CUR_ROUND, 
                 name=self.name, 
                 prompt='\n'.join([p['content'] for p in prompt]), 
                 completion=response.text, 
@@ -140,9 +142,8 @@ class SeekerAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            from simulator import CUR_ROUND
             message_manager.add_message(MessageUnit(
-                round=CUR_ROUND, 
+                round=simulator.CUR_ROUND, 
                 name=self.name, 
                 prompt='\n'.join([p['content'] for p in prompt]), 
                 completion=response.text, 
@@ -175,9 +176,8 @@ class SeekerAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            from simulator import CUR_ROUND
             message_manager.add_message(MessageUnit(
-                round=CUR_ROUND, 
+                round=simulator.CUR_ROUND, 
                 name=self.name, 
                 prompt='\n'.join([p['content'] for p in prompt]), 
                 completion=response.text, 
@@ -251,9 +251,8 @@ class SeekerAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            from simulator import CUR_ROUND
             message_manager.add_message(MessageUnit(
-                round=CUR_ROUND, 
+                round=simulator.CUR_ROUND, 
                 name=self.name, 
                 prompt='\n'.join([p['content'] for p in prompt]), 
                 completion=response.text, 

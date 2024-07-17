@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 from jinja2 import Environment, FileSystemLoader
 from typing import Union
@@ -7,7 +8,8 @@ from agentscope.agents import AgentBase
 from agentscope.message import Msg
 from agentscope.models import load_model_by_config_name
 
-file_loader = FileSystemLoader("prompts")
+scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+file_loader = FileSystemLoader(os.path.join(scene_path, "prompts"))
 env = Environment(loader=file_loader)
 Template = env.get_template('company_prompts.j2').module
 
