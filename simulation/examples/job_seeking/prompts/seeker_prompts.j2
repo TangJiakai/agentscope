@@ -16,7 +16,8 @@ Job Condition: {{seeker.job_condition}}
 
 {# Prompt: Determine the number of job searches. #}
 {% macro search_job_number_prompt() %}
-你现在要搜寻工作并考虑对这些职位进行申请投递，工作搜寻强度越高，你搜寻的职位数量就越多，找到合适你的工作的概率就更大，但同时你花在这件事上的精力也就越多，效用会相应降低。请根据个人目前的情况，请在[1-2]中选择一个整数以最大化你的各期总效用折现到当前时点的总值，不要给出多余的思考过程。
+{# 你现在要搜寻工作并考虑对这些职位进行申请投递，工作搜寻强度越高，你搜寻的职位数量就越多，找到合适你的工作的概率就更大，但同时你花在这件事上的精力也就越多，效用会相应降低。请根据个人目前的情况，请在1-2中选择一个整数以最大化你的各期总效用折现到当前时点的总值，不要给出多余的思考过程。 #}
+Now you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. However, the more effort you invest in this, the more your utility will decrease accordingly. Based on your current personal situation, please choose an integer between 1 and 2 to maximize the total discounted utility to the present value across all periods. Do not provide any additional thought process.
 You should respond in the following format, which can be loaded by json.loads in Python:
 {
     "number": "an integer in the range of [1,2]"

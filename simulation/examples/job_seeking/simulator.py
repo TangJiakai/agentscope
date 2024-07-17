@@ -142,7 +142,7 @@ class Simulator(BaseSimulator):
         # assign job_id_pool for all seekers
         for seeker_agent in seeker_agents:
             _, job_ids = job_dense_index.search(np.array([seeker_agent.seeker.emb]), self.config["pool_size"])
-            seeker_agent.job_id_pool = job_ids[0] + len(seeker_agents)
+            seeker_agent.job_id_pool = list(job_ids[0] + len(seeker_agents))
 
         # determine search job number for all seekers
         for seeker_agent in seeker_agents:
@@ -157,16 +157,12 @@ class Simulator(BaseSimulator):
             logger.info(f"{seeker_agent.name} searches {[self.agents[x].name for x in seeker_agent.search_job_ids]} jobs.")
 
         # apply job for all seekers
+        logger.info("[Seeker] Apply for jobs.")
         for seeker_agent in seeker_agents:
             seeker_agent(Msg("assistant", None, fun="apply_job", params={
                 "search_jobs": [self.agents[job_id] for job_id in seeker_agent.search_job_ids]
             }))
-
-        # update job status for all job agents
-        logger.info("[Seeker] Apply for jobs.")
-        for seeker_agent in seeker_agents:
-            for job_id in seeker_agent.apply_job_ids:
-                self.agents[job_id].apply_seeker_ids.append(seeker_agent.get_id())
+            seeker_agent.memory_info["apply_job_ids"] = seeker_agent.apply_job_ids
 
         # cv screening for all job agents
         logger.info("[Job] Screen cv from job seekers.")
@@ -193,10 +189,13 @@ class Simulator(BaseSimulator):
         # make decision for all job agents
         logger.info("[Job] Decision the interview result.")
         for job_agent in job_agents:
-            job_agent(Msg("assistant", None, fun="make_decision"), params={
-                "interview_seekers": [self.agents[seeker_id].seeker for seeker_id in job_agent.interview_seeker_ids],
+            job_agent(Msg("assistant", None, fun="make_decision", params={
+                "interview_seekers": [self.agents[seeker_id].seeker for seeker_id in job_agent.cv_passed_seeker_ids],
                 "wl_n": self.config["wl_n"],
-            })
+            }))
+            job_agent.memory_info["offer_seeker_ids"] = deepcopy(job_agent.offer_seeker_ids)
+            job_agent.memory_info["wl_seeker_ids"] = deepcopy(job_agent.wl_seeker_ids)
+            logger.info(f"{job_agent.name} offers {[self.agents[x].name for x in job_agent.offer_seeker_ids]}, waitlists {[self.agents[x].name for x in job_agent.wl_seeker_ids]}, and rejects {[self.agents[x].name for x in job_agent.reject_seeker_ids]}.")
 
         # update offer, wl, reject for all seeker agents
         for job_agent in job_agents:
@@ -229,7 +228,7 @@ class Simulator(BaseSimulator):
 
         logger.info("[Seeker + Job] Add memory & Refresh information.")
         # update memory for all agents
-        for agent in seeker_agent+job_agents:
+        for agent in seeker_agents+job_agents:
             agent(Msg("assistant", None, fun="add_memory"))
             agent(Msg("assistant", None, fun="update"))
 

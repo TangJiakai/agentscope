@@ -39,12 +39,14 @@ class SeekerAgent(AgentBase):
     search_job_number: int  # Search job number
     job_ids_pool: list  # Job ids pool
     apply_job_ids: list  # Apply job ids
+    cv_passed_job_ids: list  # CV passed job ids
     offer_job_ids: list  # Offer job ids
     wl_jobs_dict: dict  # Waitlist jobs dict
     decision: int  # Decision, 0: no any (wl) offer, 1: accept offer, 2: reject offer and wait jobs in waitlist, 3: reject offer and waitlist jobs, prepare for next round
     final_offer_id: int  # Final offer id
     reject_offer_job_ids: list  # Reject offer job ids
     reject_wl_job_ids: list  # Reject waitlist job ids
+    fail_job_ids: list  # Fail job ids
     update_variables: list  # Update variables
     seeking: bool  # seeking job or not
 
@@ -71,7 +73,8 @@ class SeekerAgent(AgentBase):
             "final_decision": 0,
             "waiting_time": 0,
         }
-        self.job_ids_pool, self.apply_job_ids, self.offer_job_ids, self.wl_jobs_dict = list(), list(), list(), dict()
+        self.job_ids_pool, self.apply_job_ids, self.cv_passed_job_ids, self.offer_job_ids, self.wl_jobs_dict = list(), list(), list(), list(), dict()
+        self.fail_job_ids = list()
         self.update_variables = [self.job_ids_pool, self.apply_job_ids, self.offer_job_ids, self.wl_jobs_dict]
 
     def set_id(self, id: int):
@@ -127,7 +130,7 @@ class SeekerAgent(AgentBase):
         # print(prompt)
         response = self.model(prompt, parse_func=parse_func).raw
         # print(response)
-        self.search_job_number = min(response, len(self.job_ids_pool))
+        self.search_job_number = max(min(response, len(self.job_ids_pool)), 1)
 
     def apply_job_fun(self, search_jobs: list):
         """Apply job."""

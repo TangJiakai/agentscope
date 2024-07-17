@@ -48,6 +48,7 @@ class JobAgent(AgentBase):
     offer_seeker_ids: list  # Offer seeker ids
     wl_seeker_ids: list  # Waitlist seeker ids
     reject_seeker_ids: list  # Reject seeker ids
+    apply_seeker_ids: list  # Apply seeker ids
     update_variables: list  # Update variables
 
     def __init__(
@@ -74,7 +75,8 @@ class JobAgent(AgentBase):
         }
 
         self.cv_passed_seeker_ids, self.offer_seeker_ids, self.wl_seeker_ids, self.reject_seeker_ids = list(), list(), list(), list()
-        self.update_variables = [self.cv_passed_seeker_ids, self.offer_seeker_ids, self.wl_seeker_ids, self.reject_seeker_ids]
+        self.apply_seeker_ids = list()
+        self.update_variables = [self.cv_passed_seeker_ids, self.offer_seeker_ids, self.wl_seeker_ids, self.reject_seeker_ids, self.apply_seeker_ids]
 
     def set_id(self, id: int):
         self.id = id
@@ -106,7 +108,7 @@ class JobAgent(AgentBase):
         self.system_prompt = Msg("system", Template.system_prompt(self.job, company), role="system")
 
     def cv_screening_fun(self, apply_seekers: list, excess_cv_passed_n: int):
-        cv_passed_hc = min(self.hc+excess_cv_passed_n, len(apply_seekers))
+        cv_passed_hc = min(self.job.hc+excess_cv_passed_n, len(apply_seekers))
         if cv_passed_hc == 0:
             self.cv_passed_seeker_ids = list()
             return
@@ -137,7 +139,7 @@ class JobAgent(AgentBase):
         self.cv_passed_seeker_ids = response
 
     def make_decision_fun(self, interview_seekers: list, wl_n: int):
-        offer_hc = min(self.hc, len(interview_seekers))
+        offer_hc = min(self.job.hc, len(interview_seekers))
         wl_n = min(wl_n, len(interview_seekers) - offer_hc)
         if offer_hc == 0:
             self.offer_seeker_ids = list()
@@ -175,7 +177,7 @@ class JobAgent(AgentBase):
         self.wl_seeker_ids = response["wl_seeker_ids"]
         self.reject_seeker_ids = list(set([seeker.id for seeker in interview_seekers]) - set(self.offer_seeker_ids) - set(self.wl_seeker_ids))
 
-    def add_memory(self):
+    def add_memory_fun(self):
         mem = Msg("assistant", Template.job_memory(self.memory_info), role="assistant")
         self.memory.add(mem)
 
@@ -188,5 +190,8 @@ class JobAgent(AgentBase):
 
     def reply(self, x: Optional[Union[Msg, Sequence[Msg]]] = None) -> Msg:
         fun = getattr(self, f"{x.fun}_fun")
-        fun(**x.params)
+        if hasattr(x, "params"):
+            fun(**x.params)
+        else:
+            fun()
         return Msg(self.name, None, role="assistant")
