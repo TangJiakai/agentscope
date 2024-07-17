@@ -80,6 +80,7 @@ class JobAgent(AgentBase):
 
     def set_id(self, id: int):
         self.id = id
+        self.job.id = id
 
     def get_id(self):
         return self.id
@@ -113,13 +114,13 @@ class JobAgent(AgentBase):
             self.cv_passed_seeker_ids = list()
             return
         
-        msg = Msg("user", Template.screen_resumes(cv_passed_hc, apply_seekers), role="user")
-        prompt = self.model.format(self.system_prompt, self.memory.get_memory(self.recent_n), msg)
+        msg = Msg("user", Template.screen_resumes_prompt(cv_passed_hc, apply_seekers), role="user")
+        prompt = self.model.format(self.system_prompt, self.memory.get_memory(), msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            from simulator import CUR_TURN
+            from simulator import CUR_ROUND
             message_manager.add_message(MessageUnit(
-                round=CUR_TURN, 
+                round=CUR_ROUND, 
                 name=self.name, 
                 prompt='\n'.join([p['content'] for p in prompt]), 
                 completion=response.text, 
@@ -134,8 +135,9 @@ class JobAgent(AgentBase):
                     f"Invalid response format in parse_func "
                     f"with response: {response.text}",
                 )
-
+        # print(prompt)
         response = self.model(prompt, parse_func=parse_func).raw
+        # print(response)
         self.cv_passed_seeker_ids = response
 
     def make_decision_fun(self, interview_seekers: list, wl_n: int):
@@ -148,12 +150,12 @@ class JobAgent(AgentBase):
             return
         
         msg = Msg("user", Template.make_decision(offer_hc, wl_n, interview_seekers), role="user")
-        prompt = self.model.format(self.system_prompt, self.memory.get_memory(self.recent_n), msg)
+        prompt = self.model.format(self.system_prompt, self.memory.get_memory(), msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            from simulator import CUR_TURN
+            from simulator import CUR_ROUND
             message_manager.add_message(MessageUnit(
-                round=CUR_TURN, 
+                round=CUR_ROUND, 
                 name=self.name, 
                 prompt='\n'.join([p['content'] for p in prompt]), 
                 completion=response.text, 
@@ -171,8 +173,9 @@ class JobAgent(AgentBase):
                     f"Invalid response format in parse_func "
                     f"with response: {response.text}",
                 )
-            
+        # print(prompt)
         response = self.model(prompt, parse_func=parse_func).raw
+        # print(response)
         self.offer_seeker_ids = response["offer_seeker_ids"]
         self.wl_seeker_ids = response["wl_seeker_ids"]
         self.reject_seeker_ids = list(set([seeker.id for seeker in interview_seekers]) - set(self.offer_seeker_ids) - set(self.wl_seeker_ids))

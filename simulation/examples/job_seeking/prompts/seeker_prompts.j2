@@ -17,10 +17,10 @@ Job Condition: {{seeker.job_condition}}
 {# Prompt: Determine the number of job searches. #}
 {% macro search_job_number_prompt() %}
 {# 你现在要搜寻工作并考虑对这些职位进行申请投递，工作搜寻强度越高，你搜寻的职位数量就越多，找到合适你的工作的概率就更大，但同时你花在这件事上的精力也就越多，效用会相应降低。请根据个人目前的情况，请在1-2中选择一个整数以最大化你的各期总效用折现到当前时点的总值，不要给出多余的思考过程。 #}
-Now you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. However, the more effort you invest in this, the more your utility will decrease accordingly. Based on your current personal situation, please choose an integer between 1 and 2 to maximize the total discounted utility to the present value across all periods. Do not provide any additional thought process.
+Now you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. However, the more effort you invest in this, the more your utility will decrease accordingly. Based on your current personal situation, please choose an integer between 1-5 to maximize the total discounted utility to the present value across all periods. Do not provide any additional thought process.
 You should respond in the following format, which can be loaded by json.loads in Python:
 {
-    "number": "an integer in the range of [1,2]"
+    "number": "an integer in the range of [1,5]"
 }
 {% endmacro %}
 
@@ -32,21 +32,23 @@ You should respond in the following format, which can be loaded by json.loads in
 {{job.company}}
 {% endfor %}
 
-在决定是否投递职位申请时，你目的是最大化你的各期总效用折现到当前时点的总值，影响总效用的因素包括：
-1.	工作稳定性越高，工作期间每期带来的效用越大
-2.	福利待遇越好，工作期间每期带来的效用越大
-3.	工资越高，工作期间每期带来的效用越大
-4.	通勤时间越短，工作期间每期带来的效用越大
-5.	工作时间越灵活，工作期间每期带来的效用越大
-6.	工作特征与你的工作偏好越契合，工作期间每期带来的效用越大
-7.	岗位风险程度与你的风险厌恶程度越契合，工作期间每期带来的效用越大
-8.	投递应聘申请会减少你的当期效用，每投递一份申请带来的效用减少相等
+When deciding whether to submit a job application, your goal is to maximize the total discounted utility to the present value across all periods. Factors influencing your total utility include:
 
-根据目前自身的情况，请选择至少一个职位进行简历的投递申请，你不能选择全部都放弃。
-You should extract the id inside the '<>' and donot output '<>'. You need to form these ids into a list (even if applying for only one job) and respond in the following format, which can be loaded by json.loads in Python:
+The higher the job stability, the greater the utility generated in each period during employment.
+The better the benefits, the greater the utility generated in each period during employment.
+The higher the salary, the greater the utility generated in each period during employment.
+The shorter the commute time, the greater the utility generated in each period during employment.
+The more flexible the working hours, the greater the utility generated in each period during employment.
+The more the job characteristics match your work preferences, the greater the utility generated in each period during employment.
+The more the job risk level matches your risk aversion, the greater the utility generated in each period during employment.
+Submitting a job application will reduce your utility in the current period, with each application reducing utility equally.
+Based on your current situation, please choose to submit an application for at least one job. You cannot choose to forgo all applications.
+
+You need to extract the numbers within the '<>', **but do not include the '<>' themselves in the output**. You need to respond in the following format, which can be loaded by json.loads in Python:
 {
-    "apply_jobs": "a list formed by id"
+    "apply_jobs": "list type, including the id numbers of the jobs you choose to apply for"
 }
+**Now, please provide the answer directly, without including the thought process.**
 {% endmacro %}
 
 {# Prompt: make decision #}
@@ -56,20 +58,20 @@ You should extract the id inside the '<>' and donot output '<>'. You need to for
 {% if offer_job_ids | length > 0 %}
 总计得到{{offer_job_ids | length}}个Offer，分别如下：
 {% for job_id in offer_job_ids %}
-- <{{job_id}}> 职位名称：{{jobs[job_id]["agent"].job.name}}
-职位描述：{{jobs[job_id]["agent"].job.jd}}
-{{jobs[job_id]["agent"].job.company}}
+- <{{job_id}}> 职位名称：{{jobs[job_id].job.name}}
+职位描述：{{jobs[job_id].job.jd}}
+{{jobs[job_id].job.company}}
 {% endfor %}
 {% else %}
 没有offer。
 {% endif %}
 
 {% if wl_jobs_dict | length > 0 %}
-总计得到{{wl_jobs_dict | length}}个递补Offer，分别如下：
+总计得到{{wl_jobs_dict | length}}个递补offer，分别如下：
 {% for wl_job_id, wl_job in wl_jobs_dict.items() %}
-- <{{wl_job_id}}> 职位名称：{{jobs[wl_job_id]["agent"].job.name}}
-职位描述：{{jobs[wl_job_id]["agent"].job.jd}}
-{{jobs[wl_job_id]["agent"].job.company}}
+- <{{wl_job_id}}> 职位名称：{{jobs[wl_job_id].job.name}}
+职位描述：{{jobs[wl_job_id].job.jd}}
+{{jobs[wl_job_id].job.company}}
 当前递补排名：{{wl_job.rank}}/{{wl_job.wl_n}}
 {% endfor %}
 {% else %}
@@ -81,10 +83,13 @@ Based on the above circumstances, to maximize individual multi-period discounted
 2. Decline all received offers and 等待递补offer.
 3. Decline all offers and waiting opportunities, and continue searching for other positions.
 
-You should respond in the following format, which can be loaded by json.loads in Python:
+** Important Notes: **
+1. You cannot choose an offer from 递补offer as the final_offer_id.
+
+Respond in the following format, which can be loaded by json.loads in Python:
 {
     "decision": "choose the final integer number from [1,2,3] as the final decision",
-    "final_offer_id": "if you choose 1, please extract the id number of the final offer in the '<>' and just output 1, otherwise, you can omit it or set it to null"
+    "final_offer_id": "list type. If you choose 1, please extract the id number of the final offer in the '<>' (**but do not include the '<>' themselves in the output**), otherwise, you can omit it or set it to null"
 }
 {% endmacro %}
 
