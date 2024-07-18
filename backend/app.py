@@ -150,7 +150,7 @@ def get_agents(query: Optional[str] = None):
 
 
 @app.get("/agent/{id}")
-def get_agent(id: str):
+def get_agent(id: int):
     agents = simulator.agents
     try:
         return agents[id]
@@ -159,7 +159,7 @@ def get_agent(id: str):
 
 
 @app.put("/agent/{id}")
-def put_agent(id: str, new_agent):
+def put_agent(id: int, new_agent):
     agents = simulator.agents
     try:
         agent = agents[id]
