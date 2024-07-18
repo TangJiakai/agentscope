@@ -272,7 +272,6 @@ async def start(scene: str = "job_seeking"):
     simulator = Simulator()
     simulation_thread = Thread(target=simulator.run)
     simulation_thread.start()
-    play_event.set()
     return {"status": "success"}
 
 

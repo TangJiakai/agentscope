@@ -14,7 +14,7 @@ from agentscope.message import Msg
 
 from simulation.helpers.simulator import BaseSimulator
 from simulation.helpers.utils import load_yaml, load_json, save_configs
-from simulation.helpers.events import check_pause, stop_event
+from simulation.helpers.events import check_pause, play_event, stop_event
 from simulation.helpers.message import message_manager
 from simulation.helpers.constants import *
 
@@ -359,6 +359,7 @@ class Simulator(BaseSimulator):
         check_pause()
 
     def run(self):
+        play_event.set()
         job_dense_index = build_dense_index(
             self.config, self.seeker_agents, self.job_agents
         )
