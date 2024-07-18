@@ -146,3 +146,4 @@ chatgpt_model_configs.json
 tmp*.py
 Downloads
 .vscode/
+.pid

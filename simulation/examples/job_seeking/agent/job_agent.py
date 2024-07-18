@@ -5,11 +5,11 @@ from typing import Union
 from typing import Sequence
 
 from agentscope.agents import AgentBase
+from agentscope.agents.agent import DistConf
 from agentscope.message import Msg
 from agentscope.models.response import ModelResponse
 from agentscope.models import load_model_by_config_name
 
-import simulation.examples.job_seeking.simulator as simulator
 from simulation.examples.job_seeking.utils.utils import extract_dict
 from simulation.helpers.message import MessageUnit, message_manager
 from simulation.helpers.utils import setup_memory
@@ -67,7 +67,8 @@ class JobAgent(AgentBase):
     ) -> None:
         super().__init__(
             name=name,
-            model_config_name=model_config_name
+            model_config_name=model_config_name,
+            to_dist=DistConf(host=kwargs["host"], port=kwargs["port"]) if kwargs["distributed"] else None
         )
         self.model_config_name = model_config_name
         self.memory_config = memory_config
@@ -121,6 +122,7 @@ class JobAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, self.memory.get_memory(), msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
+            import simulation.examples.job_seeking.simulator as simulator
             message_manager.add_message(MessageUnit(
                 round=simulator.CUR_ROUND,
                 name=self.name,
@@ -155,6 +157,7 @@ class JobAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, self.memory.get_memory(), msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
+            import simulation.examples.job_seeking.simulator as simulator
             message_manager.add_message(MessageUnit(
                 round=simulator.CUR_ROUND,
                 name=self.name,

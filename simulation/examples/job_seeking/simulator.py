@@ -1,6 +1,5 @@
 import os
 import sys
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 import pickle
 from loguru import logger
@@ -66,15 +65,15 @@ class Simulator(BaseSimulator):
 
         # Init agents
         self.seeker_agents = [
-            SeekerAgent(**config["args"], memory_config=memory_config)
+            SeekerAgent(**config["args"], memory_config=memory_config, distributed=self.config["distributed"])
             for config in seeker_configs
         ]
         self.job_agents = [
-            JobAgent(**config["args"], memory_config=memory_config)
+            JobAgent(**config["args"], memory_config=memory_config, distributed=self.config["distributed"])
             for config in job_configs
         ]
         self.company_agents = [
-            CompanyAgent(**config["args"], memory_config=memory_config)
+            CompanyAgent(**config["args"], memory_config=memory_config, distributed=self.config["distributed"])
             for config in company_configs
         ]
         self.agents = self.seeker_agents + self.job_agents + self.company_agents
@@ -175,7 +174,7 @@ class Simulator(BaseSimulator):
                 f"{job_agent.name} offers {[self.agents[x].name for x in job_agent.offer_seeker_ids]}, waitlists {[self.agents[x].name for x in job_agent.wl_seeker_ids]}."
             )
 
-    def _one_round(self, job_dense_index):
+    def _one_round(self):
         job_agents = self.job_agents
         seeker_agents = []
         # determine status for all seekers
@@ -193,7 +192,7 @@ class Simulator(BaseSimulator):
                         fun="add_memory",
                     )
                 )
-        check_pause()
+        # check_pause()
 
         # determine search job number for all seekers
         for seeker_agent in seeker_agents:
@@ -204,7 +203,7 @@ class Simulator(BaseSimulator):
             logger.info(
                 f"{seeker_agent.name} wants to search {seeker_agent.search_job_number} jobs."
             )
-        check_pause()
+        # check_pause()
 
         # search job ids for all seekers
         for seeker_agent in seeker_agents:
@@ -241,7 +240,7 @@ class Simulator(BaseSimulator):
             for job_id in seeker_agent.apply_job_ids:
                 job_agent = self.agents[job_id]
                 job_agent.apply_seeker_ids.append(seeker_id)
-        check_pause()
+        # check_pause()
 
         # cv screening for all job agents
         logger.info("[Job] Screen cv from job seekers.")
@@ -284,7 +283,7 @@ class Simulator(BaseSimulator):
             logger.info(
                 f"{seeker_agent.name} passes the cv screening for {[self.agents[x].name for x in seeker_agent.cv_passed_job_ids]} jobs."
             )
-        check_pause()
+        # check_pause()
 
         # make decision for all job agents
         logger.info("[Job] Decision the interview result.")
@@ -334,7 +333,7 @@ class Simulator(BaseSimulator):
             logger.info(
                 f"{seeker_agent.name} receives {len(seeker_agent.offer_job_ids)} offers, {len(seeker_agent.wl_jobs_dict)} waiting list, and {len(seeker_agent.fail_job_ids)} failed jobs."
             )
-        check_pause()
+        # check_pause()
 
         cur_seeker_agents = seeker_agents
         for r in range(1, self.config["make_decision_round_n"] + 1):
@@ -349,14 +348,14 @@ class Simulator(BaseSimulator):
                     break
             if stop_flag:
                 break
-            check_pause()
+            # check_pause()
 
         logger.info("[Seeker + Job] Add memory & Refresh information.")
         # update memory for all agents
         for agent in seeker_agents + job_agents:
             agent(Msg("assistant", None, fun="add_memory"))
             agent(Msg("assistant", None, fun="update"))
-        check_pause()
+        # check_pause()
 
     def run(self):
         job_dense_index = build_dense_index(
@@ -371,7 +370,7 @@ class Simulator(BaseSimulator):
         message_manager.message_queue.put("Start simulation.")
         for r in range(self.cur_round, self.config["round_n"] + 1):
             logger.info(f"Round {r} started")
-            self._one_round(job_dense_index)
+            self._one_round()
             global CUR_ROUND
             self.cur_round = CUR_ROUND = r
             self.save()
