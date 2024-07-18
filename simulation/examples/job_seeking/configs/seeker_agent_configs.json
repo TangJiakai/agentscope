@@ -3,6 +3,8 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
+            "embedding_model_config_name": "chatgpt",
+            "id": 1,
             "name": "李华",
             "cv": {
                 "学历": "北京大学计算机科学与技术专业本科",
@@ -18,7 +20,13 @@
                         "时间": "2021-至今"
                     }
                 ],
-                "技能": ["Python", "R", "SQL", "机器学习", "深度学习"]
+                "技能": [
+                    "Python",
+                    "R",
+                    "SQL",
+                    "机器学习",
+                    "深度学习"
+                ]
             },
             "trait": {
                 "年龄": 30,
@@ -30,13 +38,17 @@
                 "利他": "高",
                 "信任": "中等偏高"
             },
-            "status": "unemployed"
+            "status": "unemployed",
+            "host": "localhost",
+            "port": 12010
         }
     },
     {
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
+            "embedding_model_config_name": "chatgpt",
+            "id": 2,
             "name": "王敏",
             "cv": {
                 "学历": "复旦大学环境工程专业硕士",
@@ -52,7 +64,12 @@
                         "时间": "2020-至今"
                     }
                 ],
-                "技能": ["AutoCAD", "PKPM", "废水处理", "空气净化"]
+                "技能": [
+                    "AutoCAD",
+                    "PKPM",
+                    "废水处理",
+                    "空气净化"
+                ]
             },
             "trait": {
                 "年龄": 32,
@@ -64,13 +81,17 @@
                 "利他": "中等偏高",
                 "信任": "高"
             },
-            "status": "unemployed"
+            "status": "unemployed",
+            "host": "localhost",
+            "port": 12010
         }
     },
     {
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
+            "embedding_model_config_name": "chatgpt",
+            "id": 3,
             "name": "张强",
             "cv": {
                 "学历": "清华大学土木工程专业本科",
@@ -86,7 +107,12 @@
                         "时间": "2018-2023"
                     }
                 ],
-                "技能": ["项目管理", "工程管理", "团队领导", "AutoCAD"]
+                "技能": [
+                    "项目管理",
+                    "工程管理",
+                    "团队领导",
+                    "AutoCAD"
+                ]
             },
             "trait": {
                 "年龄": 40,
@@ -98,13 +124,17 @@
                 "利他": "中等偏高",
                 "信任": "中等"
             },
-            "status": "unemployed"
+            "status": "unemployed",
+            "host": "localhost",
+            "port": 12011
         }
     },
     {
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
+            "embedding_model_config_name": "chatgpt",
+            "id": 4,
             "name": "赵丽",
             "cv": {
                 "学历": "南京大学市场营销专业本科",
@@ -120,7 +150,12 @@
                         "时间": "2020-至今"
                     }
                 ],
-                "技能": ["市场分析", "品牌推广", "活动策划", "沟通协调"]
+                "技能": [
+                    "市场分析",
+                    "品牌推广",
+                    "活动策划",
+                    "沟通协调"
+                ]
             },
             "trait": {
                 "年龄": 28,
@@ -132,7 +167,9 @@
                 "利他": "中等",
                 "信任": "中等偏高"
             },
-            "status": "unemployed"
+            "status": "unemployed",
+            "host": "localhost",
+            "port": 12012
         }
     }
 ]

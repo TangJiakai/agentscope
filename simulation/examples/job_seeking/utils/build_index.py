@@ -1,5 +1,6 @@
 # The following code is adopted from RETA-LLM: https://github.com/RUC-GSAI/YuLan-IR/blob/main/RETA-LLM/dense_model.py
-
+import os
+import sys
 import torch
 from torch import Tensor
 import torch.nn.functional as F
@@ -10,6 +11,7 @@ from loguru import logger
 import faiss
 import numpy as np
 
+scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SIMILARITY_METRIC_IP = "ip"
 SIMILARITY_METRIC_COS = "cos"
@@ -90,11 +92,13 @@ class TextDataset(torch.utils.data.Dataset):
 
 
 def build_embedding_model(configs):
-    config = AutoConfig.from_pretrained(configs["emb_model_path"])
+    emb_model_path = os.path.join(scene_path, configs["emb_model_path"])
+    adapter_path = os.path.join(scene_path, configs["adapter_path"])
+    config = AutoConfig.from_pretrained(emb_model_path)
     config.similarity_metric, config.pooling = "ip", "average"
-    tokenizer = AutoTokenizer.from_pretrained(configs["emb_model_path"], config=config)
-    model = BertDense.from_pretrained(configs["emb_model_path"], config=config)
-    adapter_name = model.load_adapter(configs["adapter_path"])
+    tokenizer = AutoTokenizer.from_pretrained(emb_model_path, config=config)
+    model = BertDense.from_pretrained(emb_model_path, config=config)
+    adapter_name = model.load_adapter(adapter_path)
     model.set_active_adapters(adapter_name)
     logger.info("Successfully build the model")
     return model, tokenizer

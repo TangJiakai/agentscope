@@ -13,7 +13,9 @@
                 "具有深度学习和机器学习算法经验"
             ],
             "hc": 1,
-            "company_name": "盛世科技有限公司"
+            "company_name": "盛世科技有限公司",
+            "host": "localhost",
+            "port": 12010
         }
     },
     {
@@ -30,7 +32,9 @@
                 "具备良好的团队协作和沟通能力"
             ],
             "hc": 2,
-            "company_name": "盛世科技有限公司"
+            "company_name": "盛世科技有限公司",
+            "host": "localhost",
+            "port": 12011
         }
     },
     {
@@ -47,7 +51,9 @@
                 "PMP认证优先"
             ],
             "hc": 1,
-            "company_name": "盛世科技有限公司"
+            "company_name": "盛世科技有限公司",
+            "host": "localhost",
+            "port": 12011
         }
     },
     {
@@ -64,7 +70,9 @@
                 "具备良好的代码编写和问题解决能力"
             ],
             "hc": 2,
-            "company_name": "未来医疗科技有限公司"
+            "company_name": "未来医疗科技有限公司",
+            "host": "localhost",
+            "port": 12012
         }
     },
     {
@@ -81,7 +89,9 @@
                 "优秀的市场分析和产品规划能力"
             ],
             "hc": 1,
-            "company_name": "未来医疗科技有限公司"
+            "company_name": "未来医疗科技有限公司",
+            "host": "localhost",
+            "port": 12013
         }
     },
     {
@@ -98,7 +108,9 @@
                 "能够适应出差"
             ],
             "hc": 3,
-            "company_name": "未来医疗科技有限公司"
+            "company_name": "未来医疗科技有限公司",
+            "host": "localhost",
+            "port": 12013
         }
     },
     {
@@ -115,7 +127,9 @@
                 "具有良好的项目管理和沟通能力"
             ],
             "hc": 1,
-            "company_name": "绿源环保科技有限公司"
+            "company_name": "绿源环保科技有限公司",
+            "host": "localhost",
+            "port": 12014
         }
     },
     {
@@ -132,7 +146,9 @@
                 "具备创新思维和团队合作精神"
             ],
             "hc": 1,
-            "company_name": "绿源环保科技有限公司"
+            "company_name": "绿源环保科技有限公司",
+            "host": "localhost",
+            "port": 12014
         }
     },
     {
@@ -149,7 +165,9 @@
                 "优秀的市场分析和客户拓展能力"
             ],
             "hc": 1,
-            "company_name": "绿源环保科技有限公司"
+            "company_name": "绿源环保科技有限公司",
+            "host": "localhost",
+            "port": 12014
         }
     },
     {
@@ -166,7 +184,9 @@
                 "具备优秀的分析能力和团队协作精神"
             ],
             "hc": 2,
-            "company_name": "天瑞建筑工程有限公司"
+            "company_name": "天瑞建筑工程有限公司",
+            "host": "localhost",
+            "port": 12015
         }
     },
     {
@@ -183,7 +203,9 @@
                 "具有良好的领导力和沟通能力"
             ],
             "hc": 1,
-            "company_name": "天瑞建筑工程有限公司"
+            "company_name": "天瑞建筑工程有限公司",
+            "host": "localhost",
+            "port": 12015
         }
     },
     {
@@ -200,7 +222,9 @@
                 "具备细致、负责的工作态度"
             ],
             "hc": 1,
-            "company_name": "天瑞建筑工程有限公司"
+            "company_name": "天瑞建筑工程有限公司",
+            "host": "localhost",
+            "port": 12015
         }
     },
     {
@@ -217,7 +241,9 @@
                 "具备优秀的团队管理和沟通能力"
             ],
             "hc": 1,
-            "company_name": "悦味餐饮管理有限公司"
+            "company_name": "悦味餐饮管理有限公司",
+            "host": "localhost",
+            "port": 12015
         }
     },
     {
@@ -234,7 +260,9 @@
                 "优秀的沟通和协调能力"
             ],
             "hc": 1,
-            "company_name": "悦味餐饮管理有限公司"
+            "company_name": "悦味餐饮管理有限公司",
+            "host": "localhost",
+            "port": 12016
         }
     },
     {
@@ -251,7 +279,9 @@
                 "能够有效处理突发事件和顾客投诉"
             ],
             "hc": 1,
-            "company_name": "悦味餐饮管理有限公司"
+            "company_name": "悦味餐饮管理有限公司",
+            "host": "localhost",
+            "port": 12016
         }
     },
     {
@@ -268,7 +298,9 @@
                 "具备良好的沟通能力和亲和力"
             ],
             "hc": 2,
-            "company_name": "阳光教育培训机构"
+            "company_name": "阳光教育培训机构",
+            "host": "localhost",
+            "port": 12016
         }
     },
     {
@@ -285,7 +317,9 @@
                 "具有耐心和责任感"
             ],
             "hc": 1,
-            "company_name": "阳光教育培训机构"
+            "company_name": "阳光教育培训机构",
+            "host": "localhost",
+            "port": 12016
         }
     },
     {
@@ -302,7 +336,9 @@
                 "优秀的沟通和协调能力"
             ],
             "hc": 1,
-            "company_name": "阳光教育培训机构"
+            "company_name": "阳光教育培训机构",
+            "host": "localhost",
+            "port": 12017
         }
     },
     {
@@ -319,7 +355,9 @@
                 "具有团队协作和自我管理能力"
             ],
             "hc": 1,
-            "company_name": "康泰保险有限公司"
+            "company_name": "康泰保险有限公司",
+            "host": "localhost",
+            "port": 12017
         }
     },
     {
@@ -336,7 +374,9 @@
                 "具有耐心和细致的工作态度"
             ],
             "hc": 2,
-            "company_name": "康泰保险有限公司"
+            "company_name": "康泰保险有限公司",
+            "host": "localhost",
+            "port": 12017
         }
     },
     {
@@ -353,7 +393,9 @@
                 "具有相关专业资格证书优先"
             ],
             "hc": 1,
-            "company_name": "康泰保险有限公司"
+            "company_name": "康泰保险有限公司",
+            "host": "localhost",
+            "port": 12017
         }
     }
 ]

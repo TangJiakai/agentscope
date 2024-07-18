@@ -89,7 +89,7 @@ Based on the above circumstances, to maximize individual multi-period discounted
 Respond in the following format, which can be loaded by json.loads in Python:
 {
     "decision": "choose the final integer number from [1,2,3] as the final decision",
-    "final_offer_id": "list type. If you choose 1, please extract the id number of the final offer in the '<>' (**but do not include the '<>' themselves in the output**), otherwise, you can omit it or set it to null"
+    "final_offer_id": "list type. If you choose "decision"=1, please extract one id number from offers in the '<>' **but do not include the '<>' themselves in the output**, otherwise, you should omit it or set it to null"
 }
 {% endmacro %}
 
