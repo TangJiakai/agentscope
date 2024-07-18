@@ -192,7 +192,7 @@ class Simulator(BaseSimulator):
                         fun="add_memory",
                     )
                 )
-        # check_pause()
+        check_pause()
 
         # determine search job number for all seekers
         for seeker_agent in seeker_agents:
@@ -203,7 +203,7 @@ class Simulator(BaseSimulator):
             logger.info(
                 f"{seeker_agent.name} wants to search {seeker_agent.search_job_number} jobs."
             )
-        # check_pause()
+        check_pause()
 
         # search job ids for all seekers
         for seeker_agent in seeker_agents:
@@ -240,7 +240,7 @@ class Simulator(BaseSimulator):
             for job_id in seeker_agent.apply_job_ids:
                 job_agent = self.agents[job_id]
                 job_agent.apply_seeker_ids.append(seeker_id)
-        # check_pause()
+        check_pause()
 
         # cv screening for all job agents
         logger.info("[Job] Screen cv from job seekers.")
@@ -283,7 +283,7 @@ class Simulator(BaseSimulator):
             logger.info(
                 f"{seeker_agent.name} passes the cv screening for {[self.agents[x].name for x in seeker_agent.cv_passed_job_ids]} jobs."
             )
-        # check_pause()
+        check_pause()
 
         # make decision for all job agents
         logger.info("[Job] Decision the interview result.")
@@ -333,7 +333,7 @@ class Simulator(BaseSimulator):
             logger.info(
                 f"{seeker_agent.name} receives {len(seeker_agent.offer_job_ids)} offers, {len(seeker_agent.wl_jobs_dict)} waiting list, and {len(seeker_agent.fail_job_ids)} failed jobs."
             )
-        # check_pause()
+        check_pause()
 
         cur_seeker_agents = seeker_agents
         for r in range(1, self.config["make_decision_round_n"] + 1):
@@ -348,14 +348,14 @@ class Simulator(BaseSimulator):
                     break
             if stop_flag:
                 break
-            # check_pause()
+            check_pause()
 
         logger.info("[Seeker + Job] Add memory & Refresh information.")
         # update memory for all agents
         for agent in seeker_agents + job_agents:
             agent(Msg("assistant", None, fun="add_memory"))
             agent(Msg("assistant", None, fun="update"))
-        # check_pause()
+        check_pause()
 
     def run(self):
         play_event.set()
