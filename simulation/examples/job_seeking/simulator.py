@@ -18,7 +18,7 @@ from simulation.helpers.utils import load_yaml, load_json, save_configs
 from simulation.helpers.events import check_pause, play_event, stop_event
 from simulation.helpers.message import message_manager
 from simulation.helpers.constants import *
-from agentscope.models import load_model_by_config_name
+from agentscope.constants import _DEFAULT_DIR
 
 from simulation.examples.job_seeking.agent import SeekerAgent, JobAgent, CompanyAgent
 from simulation.helpers.utils import setup_memory
@@ -33,8 +33,13 @@ scene_path = os.path.dirname(os.path.abspath(__file__))
 
 class Simulator(BaseSimulator):
     def __init__(self):
+        super().__init__()
         self.config = load_yaml(os.path.join(scene_path, CONFIG_DIR, SIMULATION_CONFIG))
+        
+        global CUR_ROUND, _DEFAULT_DIR
         self.cur_round = CUR_ROUND
+        _DEFAULT_DIR = file_manager.dir = self.config["save_dir"]
+
         self._from_scratch()
 
     def __getstate__(self) -> object:
