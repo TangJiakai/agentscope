@@ -46,7 +46,7 @@ Based on your current situation, please choose to submit an application for at l
 
 You need to extract the numbers within the '<>', **but do not include the '<>' themselves in the output**. You need to respond in the following format, which can be loaded by json.loads in Python:
 {
-    "apply_jobs": "list type, including the id numbers of the jobs you choose to apply for"
+    "apply_jobs": "list type, including the id numbers of the jobs you choose to apply for, e.g., [3, 5, 10]"
 }
 **Now, please provide the answer directly, without including the thought process.**
 {% endmacro %}
@@ -155,7 +155,7 @@ Respond in the following format, which can be loaded by json.loads in Python:
 {% endmacro %}
 
 {# ReflectionTemplate: reflection. #}
-{% macro reflection(recent_memories, current_action) %}
+{% macro reflection_prompt(recent_memories, current_action) %}
 最近的求职季中，你的记忆是：
 {{recent_memories}}
 你当前要进行的动作是：
