@@ -22,8 +22,8 @@ Template = env.get_template('prompts.j2').module
 
 class ShortLongMemory(ShortMemory):
     def __init__(
-        self, 
-        embedding_size,
+        self, *,
+        embedding_size: int = 768,
         importance_weight: Optional[float] = 0.15,
         stm_K: int = 5,
         ltm_K: int = 5,

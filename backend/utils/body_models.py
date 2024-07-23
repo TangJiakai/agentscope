@@ -24,7 +24,7 @@ class ModelConfig(BaseModel):
 
 class MemoryConfig(BaseModel):
     cls: str = Field(..., alias="class")
-    args: Dict
+    args: Optional[Dict] = None
 
 
 class AgentConfig(BaseModel):
@@ -37,8 +37,14 @@ class CheckpointResp(BaseModel):
     pkls: List[str]
 
 
-class CheckpointReq(BaseModel):
-    path: str
+class PathReq(BaseModel):
+    path: Optional[str] = None
+
+
+class DistributedConfig(BaseModel):
+    host: Optional[str] = "localhost"
+    base_port: int = 12010
+    server_num_per_host: int = 1
 
 
 class FilterCondition(BaseModel):

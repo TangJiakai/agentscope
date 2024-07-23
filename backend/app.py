@@ -2,8 +2,8 @@ import asyncio
 import json
 import os
 import random
-import threading
 import importlib
+import inspect
 from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread, Event
@@ -24,11 +24,17 @@ from backend.utils.body_models import (
     ModelConfig,
     AgentConfig,
     MemoryConfig,
-    CheckpointReq,
-    CheckpointResp,
+    PathReq,
     FilterCondition,
+    DistributedConfig,
 )
 from backend.utils.utils import try_serialize_dict
+from simulation.memory import (
+    NoneMemory,
+    ShortMemory,
+    ShortLongMemory,
+    ShortLongReflectionMemory,
+)
 
 
 app = FastAPI()
@@ -196,9 +202,13 @@ def put_agent_config(req: List[AgentConfig], scene: str = "job_seeking"):
             agent_configs = json.load(f)
             agent_num = req[agent_configs[0]["class"]]
             agent_configs = random.choices(agent_configs, k=agent_num)
-            agent_configs_path = os.path.join(configs_path, all_agent_config.name.removeprefix("all_"))
+            agent_configs_path = os.path.join(
+                configs_path, all_agent_config.name.removeprefix("all_")
+            )
             with open(agent_configs_path, "w") as agent_config_file:
-                json.dump(agent_configs, agent_config_file, ensure_ascii=False, indent=4)
+                json.dump(
+                    agent_configs, agent_config_file, ensure_ascii=False, indent=4
+                )
     return {"status": "success"}
 
 
@@ -227,16 +237,21 @@ async def put_model_configs(
     return {"status": "success"}
 
 
-@app.get("/memory/{scene}", response_model=MemoryConfig) # TODO
-async def get_memory_config(scene: str = "job_seeking"):
-    config_file = os.path.join(
-        proj_path, "simulation", "examples", scene, "configs", "memory_configs.json"
-    )
-    logger.info(f"Get memory config from {config_file}")
-    async with aiofiles.open(config_file, "r") as f:
-        memory_configs = await f.read()
-        memory_configs = json.loads(memory_configs)
-        return memory_configs
+@app.get("/memory", response_model=List[MemoryConfig])
+async def get_memory_config():
+    all_memory_configs = [
+        {
+            "class": memory.__name__,
+            "args": inspect.getfullargspec(memory.__init__).kwonlydefaults,
+        }
+        for memory in [
+            NoneMemory,
+            ShortMemory,
+            ShortLongMemory,
+            ShortLongReflectionMemory,
+        ]
+    ]
+    return all_memory_configs
 
 
 @app.put("/memory/{scene}")
@@ -279,8 +294,8 @@ async def put_memory_config(memory_config: MemoryConfig, scene: str = "job_seeki
 #     return resp
 
 
-@app.post("/checkpoint/{scene}", response_model=CheckpointReq)
-def load_checkpoint(checkpoint_req: CheckpointReq, scene: str = "job_seeking"):
+@app.post("/checkpoint/{scene}")
+def load_checkpoint(checkpoint_req: PathReq, scene: str = "job_seeking"):
     logger.info(f"Load checkpoint from {checkpoint_req.path}")
     checkpoint_path = checkpoint_req.path
     simulation_config_path = os.path.join(
@@ -288,9 +303,41 @@ def load_checkpoint(checkpoint_req: CheckpointReq, scene: str = "job_seeking"):
     )
     with open(simulation_config_path, "r") as f:
         simulation_config = yaml.safe_load(f)
-    simulation_config["restore_file_path"] = checkpoint_path
+    simulation_config["load_simulator_path"] = checkpoint_path
     with open(simulation_config_path, "w") as f:
         yaml.safe_dump(simulation_config, f)
+    return {"status": "success"}
+
+
+@app.get("/savedir/{scene}", response_model=PathReq)
+def get_savedir(scene: str = "job_seeking"):
+    simulation_config_path = os.path.join(
+        proj_path, "simulation", "examples", scene, "configs", "simulation_config.yml"
+    )
+    with open(simulation_config_path, "r") as f:
+        simulation_config = yaml.safe_load(f)
+    return PathReq(path=simulation_config["save_dir"])
+
+
+@app.put("/savedir/{scene}")
+def put_savedir(req: PathReq, scene: str = "job_seeking"):
+    savedir = req.path
+    simulation_config_path = os.path.join(
+        proj_path, "simulation", "examples", scene, "configs", "simulation_config.yml"
+    )
+    with open(simulation_config_path, "r") as f:
+        simulation_config = yaml.safe_load(f)
+    simulation_config["save_dir"] = savedir
+    with open(simulation_config_path, "w") as f:
+        yaml.safe_dump(simulation_config, f)
+    return {"status": "success"}
+
+
+@app.post("/distributed/{scene}")
+def configure_distributed(req: DistributedConfig, scene: str = "job_seeking"):
+    module_path = f"simulation.examples.{scene}.assign_host_port"
+    assign_host_port = importlib.import_module(module_path).main
+    assign_host_port(req)
     return {"status": "success"}
 
 
