@@ -25,12 +25,21 @@
     </div>
     <div id="msgsText"
         style="margin-top: 20px; width: 1400px; height: 200px; border: 1px solid black; overflow-y: auto;"></div>
+    
+    <div style="margin-top: 20px;">
+        <input type="text" id="inputText" style="width: 1200px;"/>
+        <button id="sendButton">Send</button>
+    </div>
+    
     <button id="startButton" style="margin-top: 20px; margin-right: 10px;">Start</button>
     <button id="pauseButton" style="margin-top: 20px; margin-right: 10px;">Pause/Resume</button>
     <button id="stopButton" style="margin-top: 20px;">Stop</button>
+    
     <script>
         const msgsTbody = document.getElementById('msgs');
         const msgsTextDiv = document.getElementById('msgsText');
+        const inputText = document.getElementById('inputText');
+        const sendButton = document.getElementById('sendButton');
         const startButton = document.getElementById('startButton');
         const pauseButton = document.getElementById('pauseButton');
         const stopButton = document.getElementById('stopButton');
@@ -110,6 +119,18 @@
             }).catch(error => {
                 console.error("Error sending stop request:", error);
             });
+        };
+
+        sendButton.onclick = function () {
+            const message = inputText.value;
+            if (message) {
+                // 清空msgsTbody中的条目
+                msgsTbody.innerHTML = '';
+                // 通过websocket发送用户输入的内容
+                ws.send(message);
+                // 清空输入框
+                inputText.value = '';
+            }
         };
     </script>
 </body>

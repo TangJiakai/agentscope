@@ -4,13 +4,13 @@ from pydantic import BaseModel, Field
 
 
 class _ClientArgs(BaseModel):
+    max_retries: int
     base_url: str
-    max_reties: int
 
 
 class _GenerateArgs(BaseModel):
     temperature: float = Field(ge=0, le=1)
-    max_tokens: int
+    max_tokens: Optional[int] = None
 
 
 class ModelConfig(BaseModel):
@@ -19,16 +19,17 @@ class ModelConfig(BaseModel):
     model_name: str
     api_key: str
     client_args: _ClientArgs
-    generate_args: Optional[_GenerateArgs]
-
-
-class ModelConfigs(BaseModel):
-    model_configs: List[ModelConfig]
+    generate_args: Optional[_GenerateArgs] = None
 
 
 class MemoryConfig(BaseModel):
     cls: str = Field(..., alias="class")
     args: Dict
+
+
+class AgentConfig(BaseModel):
+    cls: str = Field(..., alias="class")
+    num_agents: int
 
 
 class CheckpointResp(BaseModel):
@@ -37,12 +38,11 @@ class CheckpointResp(BaseModel):
 
 
 class CheckpointReq(BaseModel):
-    run_name: str
-    pkl: str
+    path: str
 
 
 class FilterCondition(BaseModel):
     type: Literal["None", "turn", "id", "name"]
-    turns: Optional[List[int]]
-    ids: Optional[List[int]]
-    names: Optional[List[str]]
+    turns: Optional[List[int]] = None
+    ids: Optional[List[int]] = None
+    names: Optional[List[str]] = None

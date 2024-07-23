@@ -380,6 +380,7 @@ class Simulator(BaseSimulator):
                 message_manager.message_queue.put(f"Stop simulation by user at round {r}.")
                 logger.info(f"Stop simulation by user at round {r}.")
                 break
+        message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 
     @classmethod

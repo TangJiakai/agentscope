@@ -1,6 +1,8 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 from fastapi import WebSocket
+
+from simulation.helpers.message import MessageUnit
 
 
 class ConnectionManager:
@@ -22,7 +24,9 @@ class ConnectionManager:
             self.msg_connection = None
         await websocket.close()
 
-    async def send(self, msg: str):
+    async def send(self, msg: Union[MessageUnit, str]):
+        if isinstance(msg, MessageUnit):
+            msg = msg.model_dump_json()
         await self.msg_connection.send_text(msg)
 
     async def send_to_agent(self, agent_id: int, msg: str):

@@ -3,7 +3,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 1,
             "name": "李华",
             "cv": {
                 "学历": "北京大学计算机科学与技术专业本科",
@@ -38,7 +37,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 2,
             "name": "王敏",
             "cv": {
                 "学历": "复旦大学环境工程专业硕士",
@@ -73,7 +71,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 3,
             "name": "张强",
             "cv": {
                 "学历": "清华大学土木工程专业本科",
@@ -108,7 +105,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 4,
             "name": "赵丽",
             "cv": {
                 "学历": "南京大学市场营销专业本科",
@@ -143,7 +139,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 5,
             "name": "刘杰",
             "cv": {
                 "学历": "上海交通大学机械工程专业本科",
@@ -178,7 +173,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 6,
             "name": "陈晓",
             "cv": {
                 "学历": "浙江大学教育学专业硕士",
@@ -213,7 +207,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 7,
             "name": "黄伟",
             "cv": {
                 "学历": "上海财经大学金融学专业本科",
@@ -248,7 +241,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 8,
             "name": "李佳",
             "cv": {
                 "学历": "华东师范大学汉语言文学专业本科",
@@ -283,7 +275,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 9,
             "name": "张伟",
             "cv": {
                 "学历": "武汉大学计算机科学与技术专业本科",
@@ -315,7 +306,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 10,
             "name": "刘洋",
             "cv": {
                 "学历": "同济大学建筑学专业本科",
@@ -350,7 +340,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 11,
             "name": "王芳",
             "cv": {
                 "学历": "四川大学化学工程与工艺专业本科",
@@ -385,7 +374,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 12,
             "name": "赵勇",
             "cv": {
                 "学历": "哈尔滨工业大学机械工程专业硕士",
@@ -420,7 +408,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 13,
             "name": "陈刚",
             "cv": {
                 "学历": "南京大学经济学专业本科",
@@ -455,7 +442,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 14,
             "name": "周莉",
             "cv": {
                 "学历": "中山大学生物技术专业本科",
@@ -485,7 +471,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 15,
             "name": "吴鹏",
             "cv": {
                 "学历": "北京航空航天大学飞行器设计专业硕士",
@@ -520,7 +505,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 16,
             "name": "孙丽",
             "cv": {
                 "学历": "东南大学建筑学专业硕士",
@@ -555,7 +539,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 17,
             "name": "刘畅",
             "cv": {
                 "学历": "复旦大学软件工程专业本科",
@@ -590,7 +573,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 18,
             "name": "李明",
             "cv": {
                 "学历": "武汉理工大学材料科学与工程专业硕士",
@@ -625,7 +607,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 19,
             "name": "王玲",
             "cv": {
                 "学历": "中国人民大学新闻传播学专业本科",
@@ -660,7 +641,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 20,
             "name": "徐志",
             "cv": {
                 "学历": "上海交通大学电气工程专业本科",
@@ -695,7 +675,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 21,
             "name": "赵燕",
             "cv": {
                 "学历": "北京师范大学心理学专业硕士",
@@ -730,7 +709,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 22,
             "name": "李强",
             "cv": {
                 "学历": "浙江大学电子工程专业本科",
@@ -765,7 +743,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 23,
             "name": "王红",
             "cv": {
                 "学历": "厦门大学会计学专业本科",
@@ -805,7 +782,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 24,
             "name": "张健",
             "cv": {
                 "学历": "北京理工大学信息管理与信息系统专业本科",
@@ -840,7 +816,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 25,
             "name": "李娜",
             "cv": {
                 "学历": "南京理工大学化学工程与工艺专业本科",
@@ -875,7 +850,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 26,
             "name": "杨杰",
             "cv": {
                 "学历": "中国矿业大学矿业工程专业本科",
@@ -910,7 +884,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 27,
             "name": "张丽",
             "cv": {
                 "学历": "上海外国语大学英语专业本科",
@@ -945,7 +918,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 28,
             "name": "刘海",
             "cv": {
                 "学历": "华南理工大学化学工程专业本科",
@@ -980,7 +952,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 29,
             "name": "赵明",
             "cv": {
                 "学历": "北京航空航天大学航空工程专业本科",
@@ -1015,7 +986,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 30,
             "name": "王云",
             "cv": {
                 "学历": "清华大学计算机科学与技术专业本科",
@@ -1050,7 +1020,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 31,
             "name": "陈强",
             "cv": {
                 "学历": "四川大学会计学专业本科",
@@ -1085,7 +1054,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 32,
             "name": "李芳",
             "cv": {
                 "学历": "武汉科技大学市场营销专业本科",
@@ -1120,7 +1088,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 33,
             "name": "赵军",
             "cv": {
                 "学历": "安徽农业大学农业机械化专业专科",
@@ -1155,7 +1122,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 34,
             "name": "刘红",
             "cv": {
                 "学历": "江西财经大学人力资源管理专业本科",
@@ -1190,7 +1156,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 35,
             "name": "王伟",
             "cv": {
                 "学历": "某职业技术学院电气工程专业专科",
@@ -1225,7 +1190,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 36,
             "name": "张丽丽",
             "cv": {
                 "学历": "南昌师范学院学前教育专业本科",
@@ -1260,7 +1224,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 37,
             "name": "李伟",
             "cv": {
                 "学历": "湖南科技大学土木工程专业本科",
@@ -1295,7 +1258,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 38,
             "name": "赵敏",
             "cv": {
                 "学历": "山东大学信息管理与信息系统专业本科",
@@ -1330,7 +1292,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 39,
             "name": "孙浩",
             "cv": {
                 "学历": "某职业技术学院汽车维修专业专科",
@@ -1365,7 +1326,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 40,
             "name": "周芳",
             "cv": {
                 "学历": "湖北师范大学中文系本科",
@@ -1400,7 +1360,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 41,
             "name": "陈涛",
             "cv": {
                 "学历": "某职业技术学院机电一体化专业专科",
@@ -1435,7 +1394,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 42,
             "name": "李娜",
             "cv": {
                 "学历": "陕西师范大学小学教育专业本科",
@@ -1470,7 +1428,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 43,
             "name": "张强",
             "cv": {
                 "学历": "广西大学物流管理专业本科",
@@ -1505,7 +1462,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 44,
             "name": "黄梅",
             "cv": {
                 "学历": "某职业技术学院计算机应用技术专业专科",
@@ -1540,7 +1496,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 45,
             "name": "周林",
             "cv": {
                 "学历": "某职业技术学院电气自动化专业专科",
@@ -1575,7 +1530,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 46,
             "name": "孙燕",
             "cv": {
                 "学历": "重庆师范大学教育学专业本科",
@@ -1610,7 +1564,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 47,
             "name": "刘辉",
             "cv": {
                 "学历": "河南农业大学农学专业本科",
@@ -1647,7 +1600,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 48,
             "name": "赵伟",
             "cv": {
                 "学历": "某职业技术学院汽车工程专业专科",
@@ -1682,7 +1634,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 49,
             "name": "张梅",
             "cv": {
                 "学历": "某职业技术学院护理专业专科",
@@ -1717,7 +1668,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 50,
             "name": "王强",
             "cv": {
                 "学历": "某职业技术学院机械制造专业专科",
@@ -1752,7 +1702,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 51,
             "name": "李英",
             "cv": {
                 "学历": "某职业技术学院财务管理专业专科",
@@ -1787,7 +1736,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "id": 52,
             "name": "赵明",
             "cv": {
                 "学历": "某职业技术学院电子信息工程技术专业专科",
