@@ -5,14 +5,13 @@ from typing import Union
 from typing import Sequence
 
 from agentscope.agents import AgentBase
+from agentscope.agents.agent import DistConf
 from agentscope.message import Msg
 from agentscope.models import ModelResponse
 from agentscope.models import load_model_by_config_name
 
-import simulation.examples.job_seeking.simulator as simulator
 from simulation.examples.job_seeking.utils.utils import extract_dict
 from simulation.helpers.message import message_manager, MessageUnit
-from simulation.helpers.utils import setup_memory
 
 
 scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -28,7 +27,12 @@ class Seeker(object):
         self.trait = trait
         self.status = status
         self.job_condition = "unemployed"
-        self.emb = None
+
+    def __str__(self):
+        return (
+            f"Seeker Name: {self.name}\n"
+            f"Seeker CV: {self.cv}\n"
+        )
 
 
 class SeekerAgent(AgentBase):
@@ -36,7 +40,6 @@ class SeekerAgent(AgentBase):
 
     name: str   # Name of the seeker
     model_config_name: str  # Model config name
-    memory_config: dict  # Memory config
     seeker: Seeker  # Seeker object
     system_prompt: Msg  # System prompt
     search_job_number: int  # Search job number
@@ -60,15 +63,13 @@ class SeekerAgent(AgentBase):
         cv: str,
         trait: str,
         status: str,
-        memory_config: dict,
         **kwargs,
     ) -> None:
         super().__init__(
             name=name,
             model_config_name=model_config_name,
+            to_dist=DistConf(host=kwargs["host"], port=kwargs["port"]) if kwargs["distributed"] else None
         )
-        self.memory_config = memory_config
-        self.memory = setup_memory(memory_config)
         self.model_config_name = model_config_name
         self.seeker = Seeker(name, cv, trait, status)
         self.system_prompt = Msg("system", Template.system_prompt(self.seeker), role="system")
@@ -79,13 +80,6 @@ class SeekerAgent(AgentBase):
         self.job_ids_pool, self.apply_job_ids, self.cv_passed_job_ids, self.offer_job_ids, self.wl_jobs_dict = list(), list(), list(), list(), dict()
         self.fail_job_ids = list()
         self.update_variables = [self.job_ids_pool, self.apply_job_ids, self.offer_job_ids, self.wl_jobs_dict]
-
-    def set_id(self, id: int):
-        self.id = id
-        self.seeker.id = id
-
-    def get_id(self):
-        return self.id
 
     def __getstate__(self) -> object:
         state = self.__dict__.copy()
@@ -98,14 +92,20 @@ class SeekerAgent(AgentBase):
             pass
         state['memory'] = memory_state
         return state
-
+    
     def __setstate__(self, state: object) -> None:
         self.__dict__.update(state)
         self.model = load_model_by_config_name(self.model_config_name)
-        if getattr(self.model, "model"):
-            self.memory.model = load_model_by_config_name(self.memory_config["model_config_name"])
-        if getattr(self.model, "embedding_model"):
-            self.memory.embedding_model = load_model_by_config_name(self.memory_config["embedding_model_config_name"])
+
+    def set_id(self, id: int):
+        self.id = id
+        self.seeker.id = id
+
+    def get_id(self):
+        return self.id
+    
+    def set_embedding(self, embedding_model):
+        self.embedding = embedding_model.encode(str(self.seeker), normalize_embeddings=True)
 
     def search_job_number_fun(self):
         """Set search job number."""
@@ -114,6 +114,7 @@ class SeekerAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
+            import simulation.examples.job_seeking.simulator as simulator
             message_manager.add_message(MessageUnit(
                 round=simulator.CUR_ROUND, 
                 name=self.name, 
@@ -142,6 +143,7 @@ class SeekerAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
+            import simulation.examples.job_seeking.simulator as simulator
             message_manager.add_message(MessageUnit(
                 round=simulator.CUR_ROUND, 
                 name=self.name, 
@@ -176,6 +178,7 @@ class SeekerAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
+            import simulation.examples.job_seeking.simulator as simulator
             message_manager.add_message(MessageUnit(
                 round=simulator.CUR_ROUND, 
                 name=self.name, 
@@ -239,7 +242,11 @@ class SeekerAgent(AgentBase):
 
     def reflect(self, current_action):
         """Reflect from memories."""
-        msg = Msg("user", Template.reflection([x["content"] for x in self.memory.get_memory()], current_action), role="user")
+        query_msg = Msg("assistant", current_action, role="assistant")
+        retrived_memories = self.memory.get_memory(query_msg)
+        if retrived_memories is None or len(retrived_memories) == 0:
+            return Msg("assistant", None, role="assistant")
+        msg = Msg("user", Template.reflection_prompt([x["content"] for x in retrived_memories], current_action), role="user")
         prompt = self.model.format(self.system_prompt, msg)
 
         response = self.model(prompt).text
@@ -251,6 +258,7 @@ class SeekerAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
+            import simulation.examples.job_seeking.simulator as simulator
             message_manager.add_message(MessageUnit(
                 round=simulator.CUR_ROUND, 
                 name=self.name, 

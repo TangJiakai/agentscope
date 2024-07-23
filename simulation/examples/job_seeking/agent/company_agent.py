@@ -5,6 +5,7 @@ from typing import Union
 from typing import Sequence
 
 from agentscope.agents import AgentBase
+from agentscope.agents.agent import DistConf
 from agentscope.message import Msg
 from agentscope.models import load_model_by_config_name
 
@@ -44,11 +45,28 @@ class CompanyAgent(AgentBase):
     ) -> None:
         super().__init__(
             name=name,
-            model_config_name=model_config_name
+            model_config_name=model_config_name,
+            to_dist=DistConf(host=kwargs["host"], port=kwargs["port"]) if kwargs["distributed"] else None
         )
         self.model_config_name = model_config_name
         self.company = Company(name, cd)
         self.system_prompt = Msg("system", Template.system_prompt(self.company), role="system")
+
+    def __getstate__(self) -> object:
+        state = self.__dict__.copy()
+        state.pop("model")
+        memory_state = self.memory.__dict__.copy()
+        try:
+            memory_state["model"] = None
+            memory_state["embedding_model"] = None
+        except:
+            pass
+        state['memory'] = memory_state
+        return state
+    
+    def __setstate__(self, state: object) -> None:
+        self.__dict__.update(state)
+        self.model = load_model_by_config_name(self.model_config_name)
 
     def set_id(self, id: int):
         self.id = id
@@ -56,11 +74,6 @@ class CompanyAgent(AgentBase):
 
     def get_id(self):
         return self.id
-
-    def __getstate__(self) -> object:
-        state = self.__dict__.copy()
-        state.pop("model")
-        return state
 
     def __setstate__(self, state: object) -> None:
         self.__dict__.update(state)

@@ -2,14 +2,15 @@
 model_configs_path: "model_configs.json"  
 project_name: "job_seeking"
 round_n: 2
+distributed: True
+save_dir: "/data/tangjiakai/general_simulation/simulation/examples/job_seeking/runs"
 
 # custom settings
 seeker_agent_configs_path: "seeker_agent_configs.json"
 job_agent_configs_path: "job_agent_configs.json"
 company_agent_configs_path: "company_agent_configs.json"
-emb_model_path: "Downloads/DAM-bert_base-mlm-dureader"
-adapter_path: "Downloads/REM-bert_base-dense-distil-dureader"
-restore_file_path: 
+embedding_model_path: "Downloads/m3e-base"
+load_simulator_path: "/data/tangjiakai/general_simulation/simulation/examples/job_seeking/runs/run_20240720-164820_409lgn/ROUND-1.pkl"
 gpu: 0
 make_decision_round_n: 2
 pool_size: 3

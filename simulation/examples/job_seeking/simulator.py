@@ -1,12 +1,13 @@
 import os
 import sys
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
-import pickle
+import dill
 from loguru import logger
 import numpy as np
 from copy import deepcopy
 import random
+from sentence_transformers import SentenceTransformer
+import faiss
 
 import agentscope
 from agentscope.file_manager import file_manager
@@ -17,9 +18,10 @@ from simulation.helpers.utils import load_yaml, load_json, save_configs
 from simulation.helpers.events import check_pause, play_event, stop_event
 from simulation.helpers.message import message_manager
 from simulation.helpers.constants import *
+from agentscope.constants import _DEFAULT_DIR
 
-from simulation.examples.job_seeking.utils.build_index import build_dense_index
 from simulation.examples.job_seeking.agent import SeekerAgent, JobAgent, CompanyAgent
+from simulation.helpers.utils import setup_memory
 
 CUR_ROUND = 1
 SEEKER_AGENT_CONFIG = "seeker_agent_configs.json"
@@ -31,21 +33,36 @@ scene_path = os.path.dirname(os.path.abspath(__file__))
 
 class Simulator(BaseSimulator):
     def __init__(self):
+        super().__init__()
         self.config = load_yaml(os.path.join(scene_path, CONFIG_DIR, SIMULATION_CONFIG))
+        
+        global CUR_ROUND, _DEFAULT_DIR
         self.cur_round = CUR_ROUND
+        _DEFAULT_DIR = file_manager.dir = self.config["save_dir"]
+
         self._from_scratch()
+
+    def __getstate__(self) -> object:
+        state = self.__dict__.copy()
+        state["embedding_model"] = None
+        return state
+    
+    def __setstate__(self, state: object) -> None:
+        self.__dict__.update(state)
+        self._init_embedding_model()
+        self._set_agent_models()
 
     def _from_scratch(self):
         self._init_agentscope()
 
-        config = self.config
-        if self.config["restore_file_path"] is not None:
-            with open(self.config["restore_file_path"], "rb") as f:
-                self = Simulator.load(f)
+        if self.config["load_simulator_path"] is not None:
+            config = self.config
+            self = Simulator.load(self.config["load_simulator_path"])
             self.config = config
         else:
+            self._init_embedding_model()
             self._init_agents()
-
+        
         save_configs(self.config)
 
     def _init_agentscope(self):
@@ -57,24 +74,51 @@ class Simulator(BaseSimulator):
             use_monitor=False,
         )
 
+    def _init_embedding_model(self):
+        self.embedding_model = SentenceTransformer(
+            os.path.join(scene_path, "../../", self.config["embedding_model_path"]), 
+            device=f"cuda:{self.config['gpu']}" if self.config["gpu"] else "cpu",
+        )
+
+    def _set_agent_models(self):
+        for agent in self.agents:
+            if hasattr(agent.memory, "model"):
+                agent.memory.model = agent.model
+            if hasattr(agent.memory, "embedding_model"):
+                agent.memory.embedding_model = self.embedding_model
+
+    @staticmethod
+    def load(file_path):
+        with open(file_path, "rb") as f:
+            return dill.load(f)
+
     def _init_agents(self):
         # Load configs
-        memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
         seeker_configs = load_json(os.path.join(scene_path, CONFIG_DIR, SEEKER_AGENT_CONFIG))
         job_configs = load_json(os.path.join(scene_path, CONFIG_DIR, JOB_AGENT_CONFIG))
         company_configs = load_json(os.path.join(scene_path, CONFIG_DIR, COMPANY_AGENT_CONFIG))
 
         # Init agents
         self.seeker_agents = [
-            SeekerAgent(**config["args"], memory_config=memory_config)
+            SeekerAgent(
+                **config["args"],
+                distributed=self.config["distributed"], 
+                **({"embedding_model_path": self.config["embedding_model_path"]} if self.config["embedding_model_path"] else {})
+            )
             for config in seeker_configs
         ]
         self.job_agents = [
-            JobAgent(**config["args"], memory_config=memory_config)
+            JobAgent(**config["args"], 
+                    distributed=self.config["distributed"],
+                    **({"embedding_model_path": self.config["embedding_model_path"]} if self.config["embedding_model_path"] else {})
+            )
             for config in job_configs
         ]
         self.company_agents = [
-            CompanyAgent(**config["args"], memory_config=memory_config)
+            CompanyAgent(
+                **config["args"], 
+                distributed=self.config["distributed"],
+            )
             for config in company_configs
         ]
         self.agents = self.seeker_agents + self.job_agents + self.company_agents
@@ -85,6 +129,20 @@ class Simulator(BaseSimulator):
         name2company_agent = {agent.name: agent for agent in self.company_agents}
         for job_agent in self.job_agents:
             job_agent.init_system_prompt(name2company_agent[job_agent.job.company_name])
+
+        for agent in self.seeker_agents + self.job_agents:
+            memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
+            agent.memory = setup_memory(memory_config)
+            agent.set_embedding(self.embedding_model)
+
+        # assign job_ids_pool for all seekers
+        index = faiss.IndexFlatL2(self.embedding_model.get_sentence_embedding_dimension())
+        index.add(np.array([agent.embedding for agent in self.job_agents]))
+        for seeker_agent in self.seeker_agents:
+            _, job_ids = index.search(np.array([seeker_agent.embedding]), self.config["pool_size"])
+            seeker_agent.job_ids_pool = list(job_ids[0] + len(self.seeker_agents))
+
+        self._set_agent_models()
 
     def _make_decision_round(self, seeker_agents):
         job_agents = self.job_agents
@@ -175,7 +233,7 @@ class Simulator(BaseSimulator):
                 f"{job_agent.name} offers {[self.agents[x].name for x in job_agent.offer_seeker_ids]}, waitlists {[self.agents[x].name for x in job_agent.wl_seeker_ids]}."
             )
 
-    def _one_round(self, job_dense_index):
+    def _one_round(self):
         job_agents = self.job_agents
         seeker_agents = []
         # determine status for all seekers
@@ -360,21 +418,11 @@ class Simulator(BaseSimulator):
 
     def run(self):
         play_event.set()
-        job_dense_index = build_dense_index(
-            self.config, self.seeker_agents, self.job_agents
-        )
-        
-        # assign job_ids_pool for all seekers
-        for seeker_agent in self.seeker_agents:
-            _, job_ids = job_dense_index.search(np.array([seeker_agent.seeker.emb]), self.config["pool_size"])
-            seeker_agent.job_ids_pool = list(job_ids[0] + len(self.seeker_agents))
         
         message_manager.message_queue.put("Start simulation.")
         for r in range(self.cur_round, self.config["round_n"] + 1):
             logger.info(f"Round {r} started")
-            self._one_round(job_dense_index)
-            global CUR_ROUND
-            self.cur_round = CUR_ROUND = r
+            self._one_round()
             self.save()
             if stop_event.is_set():
                 message_manager.message_queue.put(f"Stop simulation by user at round {r}.")
@@ -383,20 +431,13 @@ class Simulator(BaseSimulator):
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 
-    @classmethod
-    def load(cls, path):
-        with open(path, "rb") as f:
-            simulator = pickle.load(f)
-            global CUR_ROUND
-
-            CUR_ROUND = simulator.cur_round
-        logger.info(f"Loaded simulator from {path}")
-        return simulator
-
     def save(self):
+        global CUR_ROUND
         save_path = os.path.join(file_manager.dir_root, f"ROUND-{self.cur_round}.pkl")
+        self.cur_round = CUR_ROUND + 1
+        CUR_ROUND = self.cur_round
         with open(save_path, "wb") as f:
-            pickle.dump(self, f)
+            dill.dump(self, f)
         logger.info(f"Saved simulator to {save_path}")
 
 

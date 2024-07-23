@@ -5,14 +5,13 @@ from typing import Union
 from typing import Sequence
 
 from agentscope.agents import AgentBase
+from agentscope.agents.agent import DistConf
 from agentscope.message import Msg
 from agentscope.models.response import ModelResponse
 from agentscope.models import load_model_by_config_name
 
-import simulation.examples.job_seeking.simulator as simulator
 from simulation.examples.job_seeking.utils.utils import extract_dict
 from simulation.helpers.message import MessageUnit, message_manager
-from simulation.helpers.utils import setup_memory
 
 
 scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -28,7 +27,6 @@ class Job(object):
         self.jd = jd
         self.jr = jr
         self.hc = hc
-        self.emb = None
 
     def __str__(self):
         jr_string = "\n".join([f"- {r}" for r in self.jr])
@@ -62,16 +60,14 @@ class JobAgent(AgentBase):
         jd: str,
         jr: list,
         hc: int,
-        memory_config: dict,
         **kwargs,
     ) -> None:
         super().__init__(
             name=name,
-            model_config_name=model_config_name
+            model_config_name=model_config_name,
+            to_dist=DistConf(host=kwargs["host"], port=kwargs["port"]) if kwargs["distributed"] else None
         )
         self.model_config_name = model_config_name
-        self.memory_config = memory_config
-        self.memory = setup_memory(memory_config)
         self.job = Job(name, company_name, jd, jr, hc)
         self.memory_info = {
             "final_offer_seeker":[],
@@ -81,6 +77,21 @@ class JobAgent(AgentBase):
         self.apply_seeker_ids = list()
         self.update_variables = [self.cv_passed_seeker_ids, self.offer_seeker_ids, self.wl_seeker_ids, self.reject_seeker_ids, self.apply_seeker_ids]
 
+    def __getstate__(self) -> object:
+        state = self.__dict__.copy()
+        state.pop("model")
+        memory_state = self.memory.__dict__.copy()
+        if "model" in memory_state:
+            memory_state["model"] = None
+        if "embedding_model" in memory_state:
+            memory_state["embedding_model"] = None
+        state['memory'] = memory_state
+        return state
+    
+    def __setstate__(self, state: object) -> None:
+        self.__dict__.update(state)
+        self.model = load_model_by_config_name(self.model_config_name)
+
     def set_id(self, id: int):
         self.id = id
         self.job.id = id
@@ -88,26 +99,9 @@ class JobAgent(AgentBase):
     def get_id(self):
         return self.id
     
-    def __getstate__(self) -> object:
-        state = self.__dict__.copy()
-        state.pop("model")
-        memory_state = self.memory.__dict__.copy()
-        try:
-            memory_state["model"] = None
-            memory_state["embedding_model"] = None
-        except:
-            pass
-        state['memory'] = memory_state
-        return state
-
-    def __setstate__(self, state: object) -> None:
-        self.__dict__.update(state)
-        self.model = load_model_by_config_name(self.model_config_name)
-        if getattr(self.model, "model"):
-            self.memory.model = load_model_by_config_name(self.memory_config["model_config_name"])
-        if getattr(self.model, "embedding_model"):
-            self.memory.embedding_model = load_model_by_config_name(self.memory_config["embedding_model_config_name"])
-
+    def set_embedding(self, embedding_model):
+        self.embedding = embedding_model.encode(str(self.job), normalize_embeddings=True)
+    
     def init_system_prompt(self, company):
         self.system_prompt = Msg("system", Template.system_prompt(self.job, company), role="system")
 
@@ -118,9 +112,10 @@ class JobAgent(AgentBase):
             return
         
         msg = Msg("user", Template.screen_resumes_prompt(cv_passed_hc, apply_seekers), role="user")
-        prompt = self.model.format(self.system_prompt, self.memory.get_memory(), msg)
+        prompt = self.model.format(self.system_prompt, self.memory.get_memory(msg), msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
+            import simulation.examples.job_seeking.simulator as simulator
             message_manager.add_message(MessageUnit(
                 round=simulator.CUR_ROUND,
                 name=self.name,
@@ -152,9 +147,10 @@ class JobAgent(AgentBase):
             return
         
         msg = Msg("user", Template.make_decision(offer_hc, wl_n, interview_seekers), role="user")
-        prompt = self.model.format(self.system_prompt, self.memory.get_memory(), msg)
+        prompt = self.model.format(self.system_prompt, self.memory.get_memory(msg), msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
+            import simulation.examples.job_seeking.simulator as simulator
             message_manager.add_message(MessageUnit(
                 round=simulator.CUR_ROUND,
                 name=self.name,
