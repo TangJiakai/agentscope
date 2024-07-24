@@ -23,6 +23,7 @@ from backend.utils.connection import manager
 from simulation.helpers.message import message_manager, MessageUnit
 from simulation.helpers.events import play_event, stop_event
 from backend.utils.body_models import (
+    Scene,
     ModelConfig,
     AgentConfig,
     MemoryConfig,
@@ -167,6 +168,29 @@ async def websocket_endpoint(websocket: WebSocket):
 #     manager.disconnect(websocket)
 
 
+@app.get("/scene", response_model=List[Scene])
+def get_scenes():
+    assets_path = os.path.join(proj_path, "assets")
+    scenes = []
+    for scene in os.listdir(assets_path):
+        scene_path = os.path.join(assets_path, scene)
+        if os.path.isdir(scene_path):
+            with open(os.path.join(scene_path, "desc.txt"), "r") as f:
+                desc = f.read()
+            pic_path = os.path.join(scene_path, "pic.png")
+            print(desc)
+            print(pic_path)
+            scenes.append(Scene(name=scene, desc=desc, pic_path=pic_path))
+    return scenes
+
+
+@app.put("/scene")
+def put_scene(scene_name: str):
+    global _scene
+    _scene = scene_name
+    return {"status": "success"}
+
+
 @app.get("/agents")
 def get_agents(query: Optional[str] = None):
     agents = simulator.agents
@@ -199,10 +223,10 @@ def put_agent(id: int, new_agent):
         return HTMLResponse(content="Agent not found.", status_code=404)
 
 
-@app.get("/agent/config/{scene}", response_model=List[AgentConfig])
-def get_agent_config(scene: str = "job_seeking"):
+@app.get("/agent/config", response_model=List[AgentConfig])
+def get_agent_config():
     configs_path = Path(
-        os.path.join(proj_path, "simulation", "examples", scene, "configs")
+        os.path.join(proj_path, "simulation", "examples", _scene, "configs")
     )
     all_agent_configs = configs_path.glob("all_*_agent_configs.json")
     resp = []
@@ -217,11 +241,11 @@ def get_agent_config(scene: str = "job_seeking"):
     return resp
 
 
-@app.put("/agent/config/{scene}")
-def put_agent_config(req: List[AgentConfig], scene: str = "job_seeking"):
+@app.put("/agent/config")
+def put_agent_config(req: List[AgentConfig]):
     req = {agent.cls: agent.num_agents for agent in req}
     configs_path = Path(
-        os.path.join(proj_path, "simulation", "examples", scene, "configs")
+        os.path.join(proj_path, "simulation", "examples", _scene, "configs")
     )
     all_agent_configs = configs_path.glob("all_*_agent_configs.json")
     for all_agent_config in all_agent_configs:
@@ -239,10 +263,10 @@ def put_agent_config(req: List[AgentConfig], scene: str = "job_seeking"):
     return {"status": "success"}
 
 
-@app.get("/model/{scene}", response_model=List[ModelConfig])
-async def get_model_configs(scene: str = "job_seeking"):
+@app.get("/model", response_model=List[ModelConfig])
+async def get_model_configs():
     config_file = os.path.join(
-        proj_path, "simulation", "examples", scene, "configs", "model_configs.json"
+        proj_path, "simulation", "examples", _scene, "configs", "model_configs.json"
     )
     logger.info(f"Get model config from {config_file}")
     async with aiofiles.open(config_file, "r") as f:
@@ -251,12 +275,10 @@ async def get_model_configs(scene: str = "job_seeking"):
         return model_configs
 
 
-@app.put("/model/{scene}", response_model=List[ModelConfig])
-async def put_model_configs(
-    model_configs: List[ModelConfig], scene: str = "job_seeking"
-):
+@app.put("/model", response_model=List[ModelConfig])
+async def put_model_configs(model_configs: List[ModelConfig]):
     config_file = os.path.join(
-        proj_path, "simulation", "examples", scene, "configs", "model_configs.json"
+        proj_path, "simulation", "examples", _scene, "configs", "model_configs.json"
     )
     logger.info(f"Put model config to {config_file}")
     async with aiofiles.open(config_file, "w") as f:
@@ -281,10 +303,10 @@ async def get_memory_config():
     return all_memory_configs
 
 
-@app.put("/memory/{scene}")
-async def put_memory_config(memory_config: MemoryConfig, scene: str = "job_seeking"):
+@app.put("/memory")
+async def put_memory_config(memory_config: MemoryConfig):
     config_file = os.path.join(
-        proj_path, "simulation", "examples", scene, "configs", "memory_configs.json"
+        proj_path, "simulation", "examples", _scene, "configs", "memory_configs.json"
     )
     logger.info(f"Put memory config to {config_file}")
     async with aiofiles.open(config_file, "w") as f:
@@ -321,12 +343,12 @@ async def put_memory_config(memory_config: MemoryConfig, scene: str = "job_seeki
 #     return resp
 
 
-@app.post("/checkpoint/{scene}")
-def load_checkpoint(checkpoint_req: PathReq, scene: str = "job_seeking"):
+@app.post("/checkpoint")
+def load_checkpoint(checkpoint_req: PathReq):
     logger.info(f"Load checkpoint from {checkpoint_req.path}")
     checkpoint_path = checkpoint_req.path
     simulation_config_path = os.path.join(
-        proj_path, "simulation", "examples", scene, "configs", "simulation_config.yml"
+        proj_path, "simulation", "examples", _scene, "configs", "simulation_config.yml"
     )
     with open(simulation_config_path, "r") as f:
         simulation_config = yaml.safe_load(f)
@@ -336,21 +358,21 @@ def load_checkpoint(checkpoint_req: PathReq, scene: str = "job_seeking"):
     return {"status": "success"}
 
 
-@app.get("/savedir/{scene}", response_model=PathReq)
-def get_savedir(scene: str = "job_seeking"):
+@app.get("/savedir", response_model=PathReq)
+def get_savedir():
     simulation_config_path = os.path.join(
-        proj_path, "simulation", "examples", scene, "configs", "simulation_config.yml"
+        proj_path, "simulation", "examples", _scene, "configs", "simulation_config.yml"
     )
     with open(simulation_config_path, "r") as f:
         simulation_config = yaml.safe_load(f)
     return PathReq(path=simulation_config["save_dir"])
 
 
-@app.put("/savedir/{scene}")
-def put_savedir(req: PathReq, scene: str = "job_seeking"):
+@app.put("/savedir")
+def put_savedir(req: PathReq):
     savedir = req.path
     simulation_config_path = os.path.join(
-        proj_path, "simulation", "examples", scene, "configs", "simulation_config.yml"
+        proj_path, "simulation", "examples", _scene, "configs", "simulation_config.yml"
     )
     with open(simulation_config_path, "r") as f:
         simulation_config = yaml.safe_load(f)
@@ -360,11 +382,11 @@ def put_savedir(req: PathReq, scene: str = "job_seeking"):
     return {"status": "success"}
 
 
-@app.post("/distributed/{scene}")
-def configure_distributed(req: DistributedConfig, scene: str = "job_seeking"):
+@app.post("/distributed")
+def configure_distributed(req: DistributedConfig):
     global distributed, distributed_args
     simulation_config_path = os.path.join(
-        proj_path, "simulation", "examples", scene, "configs", "simulation_config.yml"
+        proj_path, "simulation", "examples", _scene, "configs", "simulation_config.yml"
     )
     with open(simulation_config_path, "r") as f:
         simulation_config = yaml.safe_load(f)
@@ -382,18 +404,18 @@ async def get_messages(filter_condition: Optional[FilterCondition] = None):
     return filter_messages(msgs, filter_condition)
 
 
-@app.post("/start/{scene}")
-async def start(scene: str = "job_seeking"):
+@app.post("/start")
+async def start():
     # Distributed setup
     if distributed:
         # assign host and port for agents
-        module_path = f"simulation.examples.{scene}.assign_host_port"
+        module_path = f"simulation.examples.{_scene}.assign_host_port"
         assign_host_port = importlib.import_module(module_path).main
         assign_host_port(distributed_args)
 
         # launch server
         launch_server_sh_path = os.path.join(
-            proj_path, "simulation", "examples", scene, "launch_server.sh"
+            proj_path, "simulation", "examples", _scene, "launch_server.sh"
         )
         command = [
             "bash",
@@ -410,10 +432,9 @@ async def start(scene: str = "job_seeking"):
             logger.error("Launch server script failed with return code:", e.returncode)
             logger.error("Launch server script error output:\n", e.stderr.decode())
 
-    global _scene, simulator
-    _scene = scene
-    module_path = f"simulation.examples.{scene}.simulator"
+    module_path = f"simulation.examples.{_scene}.simulator"
     Simulator = importlib.import_module(module_path).Simulator
+    global simulator
     simulator = Simulator()
     simulation_thread = Thread(target=simulator.run)
     simulation_thread.start()

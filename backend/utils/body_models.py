@@ -3,6 +3,12 @@ from typing import Dict, List, Literal, Optional
 from pydantic import BaseModel, Field
 
 
+class Scene(BaseModel):
+    name: str
+    desc: str
+    pic_path: str
+
+
 class _ClientArgs(BaseModel):
     max_retries: int
     base_url: str
