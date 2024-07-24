@@ -6,12 +6,14 @@ import importlib
 import inspect
 from pathlib import Path
 from queue import Empty, Queue
+import subprocess
 from threading import Thread, Event
 from typing import Dict, List, Optional
 
 import aiofiles
 import uvicorn
 import yaml
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -26,6 +28,7 @@ from backend.utils.body_models import (
     MemoryConfig,
     PathReq,
     FilterCondition,
+    DistributedArgs,
     DistributedConfig,
 )
 from backend.utils.utils import try_serialize_dict
@@ -37,16 +40,40 @@ from simulation.memory import (
 )
 
 
-app = FastAPI()
 proj_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 templates = Jinja2Templates(directory=os.path.join(proj_path, "backend", "templates"))
 
 
+_scene = "job_seeking"
 simulation_thread: Thread
 events: Dict[str, Event] = {}
 queue = Queue()
 simulator = None
 lock = asyncio.Lock()
+distributed: bool = False
+distributed_args: DistributedArgs = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    # clean distributed servers
+    if distributed:
+        kill_server_sh_path = os.path.join(
+            proj_path, "simulation", "examples", _scene, "kill_all_server.sh"
+        )
+        command = ["bash", kill_server_sh_path]
+        try:
+            result = subprocess.run(
+                command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+            logger.info("Kill server script output:\n", result.stdout.decode())
+        except subprocess.CalledProcessError as e:
+            logger.error("Kill server script failed with return code:", e.returncode)
+            logger.error("Kill server script error output:\n", e.stderr.decode())
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 # async def fetch_msg(websocket: WebSocket):
@@ -335,9 +362,16 @@ def put_savedir(req: PathReq, scene: str = "job_seeking"):
 
 @app.post("/distributed/{scene}")
 def configure_distributed(req: DistributedConfig, scene: str = "job_seeking"):
-    module_path = f"simulation.examples.{scene}.assign_host_port"
-    assign_host_port = importlib.import_module(module_path).main
-    assign_host_port(req)
+    global distributed, distributed_args
+    simulation_config_path = os.path.join(
+        proj_path, "simulation", "examples", scene, "configs", "simulation_config.yml"
+    )
+    with open(simulation_config_path, "r") as f:
+        simulation_config = yaml.safe_load(f)
+    simulation_config["distributed"] = distributed = req.distributed
+    with open(simulation_config_path, "w") as f:
+        yaml.safe_dump(simulation_config, f)
+    distributed_args = req.args
     return {"status": "success"}
 
 
@@ -350,9 +384,36 @@ async def get_messages(filter_condition: Optional[FilterCondition] = None):
 
 @app.post("/start/{scene}")
 async def start(scene: str = "job_seeking"):
+    # Distributed setup
+    if distributed:
+        # assign host and port for agents
+        module_path = f"simulation.examples.{scene}.assign_host_port"
+        assign_host_port = importlib.import_module(module_path).main
+        assign_host_port(distributed_args)
+
+        # launch server
+        launch_server_sh_path = os.path.join(
+            proj_path, "simulation", "examples", scene, "launch_server.sh"
+        )
+        command = [
+            "bash",
+            launch_server_sh_path,
+            distributed_args.server_num_per_host,
+            distributed_args.base_port,
+        ]
+        try:
+            result = subprocess.run(
+                command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+            logger.info("Launch server script output:\n", result.stdout.decode())
+        except subprocess.CalledProcessError as e:
+            logger.error("Launch server script failed with return code:", e.returncode)
+            logger.error("Launch server script error output:\n", e.stderr.decode())
+
+    global _scene, simulator
+    _scene = scene
     module_path = f"simulation.examples.{scene}.simulator"
     Simulator = importlib.import_module(module_path).Simulator
-    global simulator
     simulator = Simulator()
     simulation_thread = Thread(target=simulator.run)
     simulation_thread.start()

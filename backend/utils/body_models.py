@@ -41,10 +41,15 @@ class PathReq(BaseModel):
     path: Optional[str] = None
 
 
-class DistributedConfig(BaseModel):
+class DistributedArgs(BaseModel):
     host: Optional[str] = "localhost"
     base_port: int = 12010
     server_num_per_host: int = 1
+
+
+class DistributedConfig(BaseModel):
+    distributed: bool = False
+    args: Optional[DistributedArgs] = None
 
 
 class FilterCondition(BaseModel):
