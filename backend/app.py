@@ -203,26 +203,6 @@ def get_agents(query: Optional[str] = None):
     return [try_serialize_dict(agent.__dict__) for agent in agents]
 
 
-@app.get("/agent/{id}")
-def get_agent(id: int):
-    agents = simulator.agents
-    try:
-        return try_serialize_dict(agents[id].__dict__)
-    except IndexError:
-        return HTMLResponse(content="Agent not found.", status_code=404)
-
-
-@app.put("/agent/{id}")
-def put_agent(id: int, new_agent):
-    agents = simulator.agents
-    try:
-        agent = agents[id]
-        agent.update_from_dict(new_agent)
-        return {"status": "success"}
-    except IndexError:
-        return HTMLResponse(content="Agent not found.", status_code=404)
-
-
 @app.get("/agent/config", response_model=List[AgentConfig])
 def get_agent_config():
     configs_path = Path(
@@ -237,6 +217,7 @@ def get_agent_config():
                 "class": agent_config[0]["class"],
                 "num_agents": len(agent_config),
             }
+            print(agent_cls)
             resp.append(AgentConfig(**agent_cls))
     return resp
 
@@ -261,6 +242,26 @@ def put_agent_config(req: List[AgentConfig]):
                     agent_configs, agent_config_file, ensure_ascii=False, indent=4
                 )
     return {"status": "success"}
+
+
+@app.get("/agent/{id}")
+def get_agent(id: int):
+    agents = simulator.agents
+    try:
+        return try_serialize_dict(agents[id].__dict__)
+    except IndexError:
+        return HTMLResponse(content="Agent not found.", status_code=404)
+
+
+@app.put("/agent/{id}")
+def put_agent(id: int, new_agent):
+    agents = simulator.agents
+    try:
+        agent = agents[id]
+        agent.update_from_dict(new_agent)
+        return {"status": "success"}
+    except IndexError:
+        return HTMLResponse(content="Agent not found.", status_code=404)
 
 
 @app.get("/model", response_model=List[ModelConfig])
