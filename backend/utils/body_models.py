@@ -63,3 +63,7 @@ class FilterCondition(BaseModel):
     turns: Optional[List[int]] = None
     ids: Optional[List[int]] = None
     names: Optional[List[str]] = None
+
+
+class InterventionMsg(BaseModel):
+    msg: str

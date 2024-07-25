@@ -3,7 +3,9 @@ from agentscope.message import Msg
 
 
 class ShortMemory:
-    def __init__(self, *,
+    def __init__(
+        self,
+        *,
         stm_K: int = 5,
         **kwargs,
     ) -> None:
@@ -18,6 +20,3 @@ class ShortMemory:
 
     def get_memory(self, query: Msg):
         return self.stm_memory
-
-
-        

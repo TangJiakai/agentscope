@@ -12,7 +12,8 @@ from typing import Dict, List, Optional
 
 import aiofiles
 import uvicorn
-import yaml
+from ruamel.yaml import YAML
+from agentscope.message import Msg
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
@@ -32,6 +33,7 @@ from backend.utils.body_models import (
     FilterCondition,
     DistributedArgs,
     DistributedConfig,
+    InterventionMsg,
 )
 from backend.utils.utils import try_serialize_dict
 from simulation.memory import (
@@ -42,6 +44,7 @@ from simulation.memory import (
 )
 
 
+yaml = YAML()
 proj_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 templates = Jinja2Templates(directory=os.path.join(proj_path, "backend", "templates"))
 
@@ -82,7 +85,7 @@ app.add_middleware(
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 
@@ -273,6 +276,18 @@ def put_agent(id: int, new_agent):
         return HTMLResponse(content="Agent not found.", status_code=404)
 
 
+@app.post("/intervention")
+def post_intervention(intervention: InterventionMsg):
+    global simulator
+    map(
+        lambda agent: agent.memory.add(
+            Msg("assistant", intervention.msg, role="assistant")
+        ),
+        simulator.agents,
+    )
+    return {"status": "success"}
+
+
 @app.get("/model", response_model=List[ModelConfig])
 async def get_model_configs():
     config_file = os.path.join(
@@ -353,7 +368,17 @@ async def put_memory_config(memory_config: MemoryConfig):
 #     return resp
 
 
-@app.post("/checkpoint")
+@app.get("/checkpoint")
+def get_current_checkpoint():
+    simulation_config_path = os.path.join(
+        proj_path, "simulation", "examples", _scene, "configs", "simulation_config.yml"
+    )
+    with open(simulation_config_path, "r") as f:
+        simulation_config = yaml.load(f)
+    return PathReq(path=simulation_config["load_simulator_path"])
+
+
+@app.put("/checkpoint")
 def load_checkpoint(checkpoint_req: PathReq):
     logger.info(f"Load checkpoint from {checkpoint_req.path}")
     checkpoint_path = checkpoint_req.path
@@ -361,10 +386,10 @@ def load_checkpoint(checkpoint_req: PathReq):
         proj_path, "simulation", "examples", _scene, "configs", "simulation_config.yml"
     )
     with open(simulation_config_path, "r") as f:
-        simulation_config = yaml.safe_load(f)
+        simulation_config = yaml.load(f)
     simulation_config["load_simulator_path"] = checkpoint_path
     with open(simulation_config_path, "w") as f:
-        yaml.safe_dump(simulation_config, f)
+        yaml.dump(simulation_config, f)
     return {"status": "success"}
 
 
@@ -374,7 +399,7 @@ def get_savedir():
         proj_path, "simulation", "examples", _scene, "configs", "simulation_config.yml"
     )
     with open(simulation_config_path, "r") as f:
-        simulation_config = yaml.safe_load(f)
+        simulation_config = yaml.load(f)
     return PathReq(path=simulation_config["save_dir"])
 
 
@@ -385,10 +410,10 @@ def put_savedir(req: PathReq):
         proj_path, "simulation", "examples", _scene, "configs", "simulation_config.yml"
     )
     with open(simulation_config_path, "r") as f:
-        simulation_config = yaml.safe_load(f)
+        simulation_config = yaml.load(f)
     simulation_config["save_dir"] = savedir
     with open(simulation_config_path, "w") as f:
-        yaml.safe_dump(simulation_config, f)
+        yaml.dump(simulation_config, f)
     return {"status": "success"}
 
 
@@ -399,10 +424,10 @@ def configure_distributed(req: DistributedConfig):
         proj_path, "simulation", "examples", _scene, "configs", "simulation_config.yml"
     )
     with open(simulation_config_path, "r") as f:
-        simulation_config = yaml.safe_load(f)
+        simulation_config = yaml.load(f)
     simulation_config["distributed"] = distributed = req.distributed
     with open(simulation_config_path, "w") as f:
-        yaml.safe_dump(simulation_config, f)
+        yaml.dump(simulation_config, f)
     distributed_args = req.args
     return {"status": "success"}
 

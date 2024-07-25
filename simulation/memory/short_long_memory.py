@@ -15,21 +15,24 @@ from agentscope.service import cos_sim
 
 from simulation.memory import ShortMemory
 
-file_loader = FileSystemLoader(os.path.join(os.path.dirname(os.path.abspath(__file__)), "prompts"))
+file_loader = FileSystemLoader(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "prompts")
+)
 env = Environment(loader=file_loader)
-Template = env.get_template('prompts.j2').module
+Template = env.get_template("prompts.j2").module
 
 
 class ShortLongMemory(ShortMemory):
     def __init__(
-        self, *,
+        self,
+        *,
         embedding_size: int = 768,
         importance_weight: Optional[float] = 0.15,
         stm_K: int = 5,
         ltm_K: int = 5,
         **kwargs,
     ) -> None:
-        super().__init__(stm_K, **kwargs)
+        super().__init__(stm_K=stm_K, **kwargs)
         self.importance_weight = importance_weight
         self.ltm_K = ltm_K
 
@@ -58,12 +61,14 @@ class ShortLongMemory(ShortMemory):
 
         response = self.model(prompt, parse_func=parse_func).raw
         return response
-    
+
     def add_ltm_memory(self, ltm_memory_unit: Msg):
         memory_content = ltm_memory_unit.content
         ltm_memory_unit.importance_score = self._score_memory_importance(memory_content)
         self.ltm_memory.append(ltm_memory_unit)
-        self.retriever.add([self.embedding_model.encode(memory_content, normalize_embeddings=True)])
+        self.retriever.add(
+            [self.embedding_model.encode(memory_content, normalize_embeddings=True)]
+        )
 
     def get_salient_docs(self, query: Msg, k=100):
         def relevance_score_fn(score: float) -> float:
@@ -75,14 +80,17 @@ class ShortLongMemory(ShortMemory):
             # (0 is most similar, sqrt(2) most dissimilar)
             # to a similarity function (0 to 1)
             return 1.0 - score / math.sqrt(2)
+
         scores, indices = self.retriever.search(np.atleast_2d(query.embedding), k)
         docs_and_scores = {}
         for j, i in enumerate(indices[0]):
-            if i==-1:
+            if i == -1:
                 continue
-            docs_and_scores[i].append((self.ltm_memory[i], relevance_score_fn(scores[0][j])))
+            docs_and_scores[i].append(
+                (self.ltm_memory[i], relevance_score_fn(scores[0][j]))
+            )
         return docs_and_scores
-    
+
     def _get_combined_score(self, query, doc, relevance_score):
         def score_func(m1: Msg, m2: Msg) -> float:
             time_gap = (
@@ -91,13 +99,13 @@ class ShortLongMemory(ShortMemory):
             ).total_seconds() / 3600
             recency = 0.99**time_gap
             return recency
-        
+
         score = score_func(query, doc)
         score += relevance_score
         score += doc.importance_score
 
         return score
-    
+
     def _get_rescored_docs(self, query, docs_and_scores):
         rescored_docs = [
             (doc, self._get_combined_score(query, doc, relevance_score))
@@ -115,7 +123,7 @@ class ShortLongMemory(ShortMemory):
         query.embedding = self.embedding_model.encode(query.content)
         docs_and_scores = {
             len(self.ltm_memory) - self.ltm_K + i: (doc, 0.0)
-            for i, doc in enumerate(self.ltm_memory[-self.ltm_K:])
+            for i, doc in enumerate(self.ltm_memory[-self.ltm_K :])
         }
 
         docs_and_scores.update(self.get_salient_docs(query))
@@ -124,6 +132,3 @@ class ShortLongMemory(ShortMemory):
     def get_memory(self, query: Msg):
         stm_memory = super().get_memory(query)
         return self.get_ltm_memory(query) + stm_memory
-
-
-        
