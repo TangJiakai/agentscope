@@ -9,6 +9,8 @@ from agentscope.agents.agent import DistConf
 from agentscope.message import Msg
 from agentscope.models import load_model_by_config_name
 
+from simulation.helpers.utils import setup_memory
+
 scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 file_loader = FileSystemLoader(os.path.join(scene_path, "prompts"))
 env = Environment(loader=file_loader)
@@ -66,6 +68,8 @@ class CompanyAgent(AgentBase):
     
     def __setstate__(self, state: object) -> None:
         self.__dict__.update(state)
+        self.memory = setup_memory(self.memory_config)
+        self.memory.__dict__.update(state['memory'])
         self.model = load_model_by_config_name(self.model_config_name)
 
     def set_id(self, id: int):

@@ -12,6 +12,7 @@ from agentscope.models import load_model_by_config_name
 
 from simulation.examples.job_seeking.utils.utils import extract_dict
 from simulation.helpers.message import message_manager, MessageUnit
+from simulation.helpers.utils import setup_memory
 
 
 scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -95,6 +96,8 @@ class SeekerAgent(AgentBase):
     
     def __setstate__(self, state: object) -> None:
         self.__dict__.update(state)
+        self.memory = setup_memory(self.memory_config)
+        self.memory.__dict__.update(state['memory'])
         self.model = load_model_by_config_name(self.model_config_name)
 
     def set_id(self, id: int):
