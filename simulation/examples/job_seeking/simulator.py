@@ -36,9 +36,10 @@ class Simulator(BaseSimulator):
         super().__init__()
         self.config = load_yaml(os.path.join(scene_path, CONFIG_DIR, SIMULATION_CONFIG))
         
-        global CUR_ROUND, _DEFAULT_DIR
+        global CUR_ROUND
         self.cur_round = CUR_ROUND
-        _DEFAULT_DIR = file_manager.dir = self.config["save_dir"]
+        from agentscope import constants
+        constants._DEFAULT_DIR = file_manager.dir = self.config["save_dir"]
 
         self._from_scratch()
 
@@ -58,6 +59,8 @@ class Simulator(BaseSimulator):
         if self.config["load_simulator_path"] is not None:
             loaded_simulator = Simulator.load(self.config["load_simulator_path"])
             self.__dict__.update(loaded_simulator.__dict__)
+            global CUR_ROUND
+            CUR_ROUND = self.cur_round
         else:
             self._init_embedding_model()
             self._init_agents()
@@ -71,6 +74,7 @@ class Simulator(BaseSimulator):
             save_api_invoke=False,
             model_configs=os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"]),
             use_monitor=False,
+            save_dir=self.config["save_dir"] if self.config["save_dir"] else _DEFAULT_DIR,
         )
 
     def _init_embedding_model(self):

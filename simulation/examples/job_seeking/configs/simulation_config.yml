@@ -4,12 +4,12 @@ embedding_model_path: Downloads/m3e-base
 excess_cv_passed_n: 2
 gpu: 0
 job_agent_configs_path: job_agent_configs.json
-load_simulator_path: /data/tangjiakai/general_simulation/simulation/examples/job_seeking/runs/run_20240725-200518_beeeeb/ROUND-1.pkl
+load_simulator_path: 
 make_decision_round_n: 2
 model_configs_path: model_configs.json
 pool_size: 3
 project_name: job_seeking
 round_n: 2
-save_dir: /data/tangjiakai/general_simulation/simulation/examples/job_seeking/runs
+save_dir: /data/tangjiakai/general_simulation/simulation/examples/recagent
 seeker_agent_configs_path: seeker_agent_configs.json
 wl_n: 2
