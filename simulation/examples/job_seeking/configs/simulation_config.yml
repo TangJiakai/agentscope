@@ -1,15 +1,18 @@
-company_agent_configs_path: company_agent_configs.json
-distributed: true
-embedding_model_path: Downloads/m3e-base
-excess_cv_passed_n: 2
-gpu: 0
-job_agent_configs_path: job_agent_configs.json
-load_simulator_path: 
-make_decision_round_n: 2
+# general settings
 model_configs_path: model_configs.json
-pool_size: 3
 project_name: job_seeking
 round_n: 2
-save_dir: /data/tangjiakai/general_simulation/simulation/examples/recagent
+distributed: true
+save_dir: /data/gaoheyang/GeneralSimulation/simulation/examples/job_seeking/runs
+
+# custom settings
 seeker_agent_configs_path: seeker_agent_configs.json
+job_agent_configs_path: job_agent_configs.json
+company_agent_configs_path: company_agent_configs.json
+embedding_model_path: Downloads/m3e-base
+load_simulator_path:
+gpu: 0
+make_decision_round_n: 2
+pool_size: 3
+excess_cv_passed_n: 2
 wl_n: 2
