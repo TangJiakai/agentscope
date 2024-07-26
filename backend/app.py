@@ -34,8 +34,8 @@ from backend.utils.body_models import (
     DistributedArgs,
     DistributedConfig,
     InterventionMsg,
+    AgentInfo,
 )
-from backend.utils.utils import try_serialize_dict
 from simulation.memory import (
     NoneMemory,
     ShortMemory,
@@ -57,6 +57,8 @@ simulator = None
 lock = asyncio.Lock()
 distributed: bool = False
 distributed_args: DistributedArgs = None
+cur_msgs: List[MessageUnit] = None
+cur_msgs_index: List[int] = None
 
 
 @asynccontextmanager
@@ -109,12 +111,14 @@ def check_msg_filter(
 ) -> bool:
     if filter_condition is None:
         return True
-    elif filter_condition.type == "turn":
-        return msg.turn in filter_condition.turns
-    elif filter_condition.type == "id":
+    elif filter_condition.condition == "id":
         return msg.agent_id in filter_condition.ids
-    elif filter_condition.type == "name":
+    elif filter_condition.condition == "name":
         return msg.name.lower() in [name.lower() for name in filter_condition.names]
+    elif filter_condition.condition == "type":
+        return msg.agent_type.lower() in [
+            type.lower() for type in filter_condition.types
+        ]
     return False
 
 
@@ -150,7 +154,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 filter_condition = json.loads(data)
                 logger.info(f"Receive new filter condition: {filter_condition}")
                 filter_condition = FilterCondition(**filter_condition)
-                if filter_condition.type == "None":
+                if filter_condition.condition == "None":
                     filter_condition = None
                 await send_filtered_history(filter_condition)
             except asyncio.TimeoutError:
@@ -222,16 +226,23 @@ def put_scene(scene_name: str):
     return {"status": "success"}
 
 
-@app.get("/agents")
+@app.get("/agents", response_model=List[AgentInfo])
 def get_agents(query: Optional[str] = None):
     agents = simulator.agents
 
     def fuzzy_search(agents, query):
-        return [agent for agent in agents if query.lower() in agent.name.lower()]
+        return [
+            agent
+            for agent in agents
+            if query.lower() in agent.name.lower() or query == str(agent.id)
+        ]
 
     if query:
         agents = fuzzy_search(agents, query)
-    return [try_serialize_dict(agent.__dict__) for agent in agents]
+    return [
+        AgentInfo(name=agent.name, id=agent.id, profile=agent.system_prompt["content"])
+        for agent in agents
+    ]
 
 
 @app.get("/agent/config", response_model=List[AgentConfig])
@@ -279,20 +290,23 @@ def put_agent_config(req: List[AgentConfig]):
 def get_agent(id: int):
     agents = simulator.agents
     try:
-        return try_serialize_dict(agents[id].__dict__)
-    except IndexError:
-        return HTMLResponse(content="Agent not found.", status_code=404)
-
-
-@app.put("/agent/{id}")
-def put_agent(id: int, new_agent):
-    agents = simulator.agents
-    try:
         agent = agents[id]
-        agent.update_from_dict(new_agent)
-        return {"status": "success"}
+        return AgentInfo(
+            name=agent.name, id=agent.id, profile=agent.system_prompt["content"]
+        )
     except IndexError:
         return HTMLResponse(content="Agent not found.", status_code=404)
+
+
+# @app.put("/agent/{id}")
+# def put_agent(id: int, new_agent):
+#     agents = simulator.agents
+#     try:
+#         agent = agents[id]
+#         agent.update_from_dict(new_agent)
+#         return {"status": "success"}
+#     except IndexError:
+#         return HTMLResponse(content="Agent not found.", status_code=404)
 
 
 @app.post("/intervention")
@@ -452,10 +466,32 @@ def configure_distributed(req: DistributedConfig):
 
 
 @app.get("/messages", response_model=List[MessageUnit])
-async def get_messages(filter_condition: Optional[FilterCondition] = None):
+async def get_messages(
+    filter_condition: Optional[FilterCondition] = None,
+    offset: Optional[int] = 0,
+    limit: Optional[int] = 10,
+):
+    global cur_msgs, cur_msgs_index
+    if cur_msgs is None:
+        async with lock:
+            cur_msgs = message_manager.messages.copy()
+        cur_msgs_index = list(range(len(cur_msgs)))
+    msgs = filter_messages(cur_msgs, filter_condition)
+    return msgs[offset : offset + limit]
+
+
+@app.get("/messages/random")
+async def random_selection_messages(num: int):
+    global cur_msgs, cur_msgs_index
     async with lock:
-        msgs = message_manager.messages.copy()
-    return filter_messages(msgs, filter_condition)
+        cur_msgs = message_manager.messages.copy()
+    cur_msgs_index = list(range(len(cur_msgs)))
+    indexed_cur_msgs = list(enumerate(cur_msgs))
+    indexed_chosen_cur_msgs = random.choices(indexed_cur_msgs, k=num)
+    cur_msgs_index, cur_msgs = zip(*indexed_chosen_cur_msgs)
+    cur_msgs_index = list(cur_msgs_index)
+    cur_msgs = list(cur_msgs)
+    return {"status": "success"}
 
 
 @app.post("/start")
@@ -496,11 +532,14 @@ async def start():
 
 
 @app.post("/pause")
-def pause_and_resume():
+async def pause_and_resume():
     if play_event.is_set():
         message_manager.message_queue.put("Pause simulation.")
         play_event.clear()
     else:
+        global cur_msgs
+        cur_msgs = None
+        await message_manager.clear()
         message_manager.message_queue.put("Resume simulation.")
         play_event.set()
     return {"status": "success"}

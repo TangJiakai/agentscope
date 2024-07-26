@@ -59,11 +59,17 @@ class DistributedConfig(BaseModel):
 
 
 class FilterCondition(BaseModel):
-    type: Literal["None", "turn", "id", "name"]
-    turns: Optional[List[int]] = None
+    condition: Literal["None", "id", "name", "type"]
     ids: Optional[List[int]] = None
     names: Optional[List[str]] = None
+    types: Optional[List[str]] = None
 
 
 class InterventionMsg(BaseModel):
     msg: str
+
+
+class AgentInfo(BaseModel):
+    name: str
+    id: int
+    profile: str

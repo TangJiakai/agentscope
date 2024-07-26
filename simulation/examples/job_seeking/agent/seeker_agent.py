@@ -117,9 +117,7 @@ class SeekerAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            import simulation.examples.job_seeking.simulator as simulator
             message_manager.add_message(MessageUnit(
-                round=simulator.CUR_ROUND, 
                 name=self.name, 
                 prompt='\n'.join([p['content'] for p in prompt]), 
                 completion=response.text, 
@@ -146,9 +144,7 @@ class SeekerAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            import simulation.examples.job_seeking.simulator as simulator
             message_manager.add_message(MessageUnit(
-                round=simulator.CUR_ROUND, 
                 name=self.name, 
                 prompt='\n'.join([p['content'] for p in prompt]), 
                 completion=response.text, 
@@ -181,9 +177,7 @@ class SeekerAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            import simulation.examples.job_seeking.simulator as simulator
             message_manager.add_message(MessageUnit(
-                round=simulator.CUR_ROUND, 
                 name=self.name, 
                 prompt='\n'.join([p['content'] for p in prompt]), 
                 completion=response.text, 
@@ -261,9 +255,7 @@ class SeekerAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            import simulation.examples.job_seeking.simulator as simulator
             message_manager.add_message(MessageUnit(
-                round=simulator.CUR_ROUND, 
                 name=self.name, 
                 prompt='\n'.join([p['content'] for p in prompt]), 
                 completion=response.text, 

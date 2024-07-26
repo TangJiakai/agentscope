@@ -118,9 +118,7 @@ class JobAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, self.memory.get_memory(msg), msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            import simulation.examples.job_seeking.simulator as simulator
             message_manager.add_message(MessageUnit(
-                round=simulator.CUR_ROUND,
                 name=self.name,
                 prompt='\n'.join([p['content'] for p in prompt]),
                 completion=response.text,
@@ -153,9 +151,7 @@ class JobAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, self.memory.get_memory(msg), msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            import simulation.examples.job_seeking.simulator as simulator
             message_manager.add_message(MessageUnit(
-                round=simulator.CUR_ROUND,
                 name=self.name,
                 prompt='\n'.join([p['content'] for p in prompt]),
                 completion=response.text,
