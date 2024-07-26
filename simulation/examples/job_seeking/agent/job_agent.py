@@ -187,6 +187,12 @@ class JobAgent(AgentBase):
         for var in self.update_variables:
             var.clear()
 
+    def interview(self, query):
+        msg = Msg("user", query, role="user")
+        tht = self.reflect(current_action=query)
+        prompt = self.model.format(self.system_prompt, tht, msg)
+        return self.model(prompt).raw
+
     def reply(self, x: Optional[Union[Msg, Sequence[Msg]]] = None) -> Msg:
         fun = getattr(self, f"{x.fun}_fun")
         if hasattr(x, "params"):
