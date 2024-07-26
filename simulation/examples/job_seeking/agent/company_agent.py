@@ -58,11 +58,10 @@ class CompanyAgent(AgentBase):
         state = self.__dict__.copy()
         state.pop("model")
         memory_state = self.memory.__dict__.copy()
-        try:
+        if "model" in memory_state:
             memory_state["model"] = None
+        if "embedding_model" in memory_state:
             memory_state["embedding_model"] = None
-        except:
-            pass
         state['memory'] = memory_state
         return state
     
@@ -79,9 +78,11 @@ class CompanyAgent(AgentBase):
     def get_id(self):
         return self.id
 
-    def __setstate__(self, state: object) -> None:
-        self.__dict__.update(state)
-        self.model = load_model_by_config_name(self.model_config_name)
+    def interview(self, query):
+        msg = Msg("user", query, role="user")
+        tht = self.reflect(current_action=query)
+        prompt = self.model.format(self.system_prompt, tht, msg)
+        return self.model(prompt).raw
     
     def reply(self, x: Optional[Union[Msg, Sequence[Msg]]] = None) -> Msg:
         return Msg(self.name, None, role="assistant")

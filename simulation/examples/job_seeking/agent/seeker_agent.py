@@ -285,7 +285,7 @@ class SeekerAgent(AgentBase):
         self.seeking = response
     
     def update_job_condition(self,company_name, job):
-        self.seeker.job_condition = Template.generate_job_condition(company_name,job)
+        self.seeker.job_condition = Template.generate_job_condition(company_name, job)
         
     def update_fun(self):
         self.memory_info = {
@@ -294,6 +294,12 @@ class SeekerAgent(AgentBase):
         }
         for var in self.update_variables:
             var.clear()
+
+    def interview(self, query):
+        msg = Msg("user", query, role="user")
+        tht = self.reflect(current_action=query)
+        prompt = self.model.format(self.system_prompt, tht, msg)
+        return self.model(prompt).raw
 
     def reply(self, x: Optional[Union[Msg, Sequence[Msg]]] = None) -> Msg:
         fun = getattr(self, f"{x.fun}_fun")

@@ -149,7 +149,7 @@ class Simulator(BaseSimulator):
         for job_agent in self.job_agents:
             job_agent.init_system_prompt(name2company_agent[job_agent.job.company_name])
 
-        for agent in self.seeker_agents + self.job_agents:
+        for agent in self.agents:
             memory_config = load_json(
                 os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG)
             )
