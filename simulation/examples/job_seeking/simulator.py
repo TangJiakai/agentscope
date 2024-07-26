@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 import dill
 from loguru import logger
@@ -35,10 +36,12 @@ class Simulator(BaseSimulator):
     def __init__(self):
         super().__init__()
         self.config = load_yaml(os.path.join(scene_path, CONFIG_DIR, SIMULATION_CONFIG))
-        
-        global CUR_ROUND, _DEFAULT_DIR
+
+        global CUR_ROUND
         self.cur_round = CUR_ROUND
-        _DEFAULT_DIR = file_manager.dir = self.config["save_dir"]
+        import agentscope.constants
+
+        agentscope.constants._DEFAULT_DIR = file_manager.dir = self.config["save_dir"]
 
         self._from_scratch()
 
@@ -46,7 +49,7 @@ class Simulator(BaseSimulator):
         state = self.__dict__.copy()
         state["embedding_model"] = None
         return state
-    
+
     def __setstate__(self, state: object) -> None:
         self.__dict__.update(state)
         self._init_embedding_model()
@@ -61,7 +64,7 @@ class Simulator(BaseSimulator):
         else:
             self._init_embedding_model()
             self._init_agents()
-        
+
         save_configs(self.config)
 
     def _init_agentscope(self):
@@ -69,13 +72,15 @@ class Simulator(BaseSimulator):
             project=self.config["project_name"],
             save_code=False,
             save_api_invoke=False,
-            model_configs=os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"]),
+            model_configs=os.path.join(
+                scene_path, CONFIG_DIR, self.config["model_configs_path"]
+            ),
             use_monitor=False,
         )
 
     def _init_embedding_model(self):
         self.embedding_model = SentenceTransformer(
-            os.path.join(scene_path, "../../", self.config["embedding_model_path"]), 
+            os.path.join(scene_path, "../../", self.config["embedding_model_path"]),
             device=f"cuda:{self.config['gpu']}" if self.config["gpu"] else "cpu",
         )
 
@@ -93,29 +98,42 @@ class Simulator(BaseSimulator):
 
     def _init_agents(self):
         # Load configs
-        seeker_configs = load_json(os.path.join(scene_path, CONFIG_DIR, SEEKER_AGENT_CONFIG))
+        seeker_configs = load_json(
+            os.path.join(scene_path, CONFIG_DIR, SEEKER_AGENT_CONFIG)
+        )
         job_configs = load_json(os.path.join(scene_path, CONFIG_DIR, JOB_AGENT_CONFIG))
-        company_configs = load_json(os.path.join(scene_path, CONFIG_DIR, COMPANY_AGENT_CONFIG))
+        company_configs = load_json(
+            os.path.join(scene_path, CONFIG_DIR, COMPANY_AGENT_CONFIG)
+        )
 
         # Init agents
         self.seeker_agents = [
             SeekerAgent(
                 **config["args"],
-                distributed=self.config["distributed"], 
-                **({"embedding_model_path": self.config["embedding_model_path"]} if self.config["embedding_model_path"] else {})
+                distributed=self.config["distributed"],
+                **(
+                    {"embedding_model_path": self.config["embedding_model_path"]}
+                    if self.config["embedding_model_path"]
+                    else {}
+                ),
             )
             for config in seeker_configs
         ]
         self.job_agents = [
-            JobAgent(**config["args"], 
-                    distributed=self.config["distributed"],
-                    **({"embedding_model_path": self.config["embedding_model_path"]} if self.config["embedding_model_path"] else {})
+            JobAgent(
+                **config["args"],
+                distributed=self.config["distributed"],
+                **(
+                    {"embedding_model_path": self.config["embedding_model_path"]}
+                    if self.config["embedding_model_path"]
+                    else {}
+                ),
             )
             for config in job_configs
         ]
         self.company_agents = [
             CompanyAgent(
-                **config["args"], 
+                **config["args"],
                 distributed=self.config["distributed"],
             )
             for config in company_configs
@@ -130,16 +148,22 @@ class Simulator(BaseSimulator):
             job_agent.init_system_prompt(name2company_agent[job_agent.job.company_name])
 
         for agent in self.seeker_agents + self.job_agents:
-            memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
+            memory_config = load_json(
+                os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG)
+            )
             agent.memory = setup_memory(memory_config)
             agent.memory_config = memory_config
             agent.set_embedding(self.embedding_model)
 
         # assign job_ids_pool for all seekers
-        index = faiss.IndexFlatL2(self.embedding_model.get_sentence_embedding_dimension())
+        index = faiss.IndexFlatL2(
+            self.embedding_model.get_sentence_embedding_dimension()
+        )
         index.add(np.array([agent.embedding for agent in self.job_agents]))
         for seeker_agent in self.seeker_agents:
-            _, job_ids = index.search(np.array([seeker_agent.embedding]), self.config["pool_size"])
+            _, job_ids = index.search(
+                np.array([seeker_agent.embedding]), self.config["pool_size"]
+            )
             seeker_agent.job_ids_pool = list(job_ids[0] + len(self.seeker_agents))
 
         self._set_agent_models()
@@ -418,14 +442,16 @@ class Simulator(BaseSimulator):
 
     def run(self):
         play_event.set()
-        
+
         message_manager.message_queue.put("Start simulation.")
         for r in range(self.cur_round, self.config["round_n"] + 1):
             logger.info(f"Round {r} started")
             self._one_round()
             self.save()
             if stop_event.is_set():
-                message_manager.message_queue.put(f"Stop simulation by user at round {r}.")
+                message_manager.message_queue.put(
+                    f"Stop simulation by user at round {r}."
+                )
                 logger.info(f"Stop simulation by user at round {r}.")
                 break
         message_manager.message_queue.put("Simulation finished.")

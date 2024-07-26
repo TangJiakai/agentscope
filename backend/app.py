@@ -180,6 +180,25 @@ async def websocket_endpoint(websocket: WebSocket):
 #     manager.disconnect(websocket)
 
 
+@app.websocket("/chat/{id}")
+async def websocket_chat_endpoint(websocket: WebSocket, id: int):
+    await manager.connect(websocket, id)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            logger.info(f"Receive chat message: {data}")
+            # TODO: send to agent
+            message_manager.message_queue.put(data)
+            # await manager.send(data)
+            if data == "exit":
+                break
+            await manager.send(data)
+    except WebSocketDisconnect:
+        await manager.disconnect(websocket)
+    finally:
+        await manager.disconnect(websocket)
+
+
 @app.get("/scene", response_model=List[Scene])
 def get_scenes():
     assets_path = os.path.join(proj_path, "assets")
