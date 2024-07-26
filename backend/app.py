@@ -188,12 +188,11 @@ async def websocket_endpoint(websocket: WebSocket):
 async def websocket_chat_endpoint(websocket: WebSocket, id: int):
     await manager.connect(websocket, id)
     try:
+        agent = simulator.agents[id]
         while True:
             data = await websocket.receive_text()
             logger.info(f"Receive chat message: {data}")
-            # TODO: send to agent
-            message_manager.message_queue.put(data)
-            # await manager.send(data)
+            await manager.send(agent.interview(data))
             if data == "exit":
                 break
             await manager.send(data)
