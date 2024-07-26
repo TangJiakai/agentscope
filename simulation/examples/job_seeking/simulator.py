@@ -41,7 +41,6 @@ class Simulator(BaseSimulator):
         _DEFAULT_DIR = file_manager.dir = self.config["save_dir"]
 
         self._from_scratch()
-        logger.info(self.seeker_agents[0])
 
     def __getstate__(self) -> object:
         state = self.__dict__.copy()
@@ -421,7 +420,6 @@ class Simulator(BaseSimulator):
         play_event.set()
         
         message_manager.message_queue.put("Start simulation.")
-        logger.info(self.__dict__)
         for r in range(self.cur_round, self.config["round_n"] + 1):
             logger.info(f"Round {r} started")
             self._one_round()
