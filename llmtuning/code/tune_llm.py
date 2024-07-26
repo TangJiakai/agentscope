@@ -1,3 +1,4 @@
+import os
 from tqdm import tqdm
 from datasets import load_dataset
 from trl import (
@@ -18,7 +19,7 @@ import torch
 import wandb
 
 from llmtuning.code.utils.constants import *
-from llmtuning.code.utils.utils import check_load_adapter
+from llmtuning.code.utils.utils import check_load_adapter, check_dirs
 
 wandb.init(mode="disabled")
 tqdm.pandas()
@@ -85,11 +86,11 @@ def sft_train(tokenizer):
     )
 
     trainer.train()
-    print("SFT-Training completed!")
+    trainer.save_model(SAVE_DIR)
     return model
 
 
-def ppo_train(model, tokenizer):
+def ppo_train(tokenizer):
     dataset = load_dataset(PPO_FILE_PATH, data_files="ppo_data.json", split="train")
     def tokenize(sample):
         sample["query_ids"] = tokenizer.encode(sample["prompt"])
@@ -100,16 +101,39 @@ def ppo_train(model, tokenizer):
     dataset = dataset.map(tokenize, batch_size=False)
     dataset.set_format(type="torch", columns=["query_ids", "response_ids", "reward"])
 
-    model = AutoModelForCausalLMWithValueHead.from_pretrained(
-        model,
-        device_map="auto",
-        torch_dtype=torch.bfloat16, 
-    )
+    if_load_adapter = check_load_adapter()
+    if if_load_adapter:
+        model = AutoModelForCausalLM.from_pretrained(
+            LLM_DIR_PATH,
+            trust_remote_code=True,
+            device_map="auto",
+            torch_dtype=torch.bfloat16, 
+        )
+        model = PeftModel.from_pretrained(model, SAVE_DIR)
+        model = AutoModelForCausalLMWithValueHead.from_pretrained(
+            model,
+            device_map="auto",
+            torch_dtype=torch.bfloat16, 
+        )
+    else:
+        peft_config = LoraConfig(
+            r=16,
+            lora_alpha=32,
+            lora_dropout=0.05,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+        model = AutoModelForCausalLMWithValueHead.from_pretrained(
+            LLM_DIR_PATH,
+            trust_remote_code=True,
+            device_map="auto",
+            torch_dtype=torch.bfloat16, 
+            peft_config=peft_config,
+        )
+
     for name, param in model.named_parameters():
         if 'lora' in name:
             param.requires_grad = True
-        else:
-            param.requires_grad = False
 
     ref_model = create_reference_model(model)
     
@@ -140,7 +164,6 @@ def ppo_train(model, tokenizer):
         stats = trainer.step(query_tensors, response_tensors, rewards_tensors)
 
     trainer.save_pretrained(SAVE_DIR)
-    print(f"RLHF-Training completed! Saving the model to {SAVE_DIR}")
 
 
 def main():
@@ -150,9 +173,14 @@ def main():
     )
     tokenizer.pad_token = tokenizer.eos_token
 
-    model = sft_train(tokenizer)
-    ppo_train(model, tokenizer)
+    if os.path.isdir(SFT_FILE_PATH) and os.listdir(SFT_FILE_PATH):
+        sft_train(tokenizer)
+        print("SFT-Training completed!")
 
+    if os.path.isdir(PPO_FILE_PATH) and os.listdir(PPO_FILE_PATH):
+        ppo_train(tokenizer)
+        print(f"RLHF-Training completed! Saving the model to {SAVE_DIR}")
 
 if __name__ == "__main__":
+    check_dirs()
     main()
