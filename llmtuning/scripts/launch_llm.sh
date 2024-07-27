@@ -12,3 +12,7 @@ else
 fi
 
 echo $! > "$(dirname "$0")/.pid"
+
+sleep 10
+
+echo "LLM API is running."
