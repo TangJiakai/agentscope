@@ -1,22 +1,17 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <title>test</title>
+    <title>WebSocket Chat</title>
+    <meta charset="UTF-8">
 </head>
-
 <body>
-    <h1>test</h1>
+    <h1>Test</h1>
     <div style="width: 1400px; height: 500px; border: 1px solid black; overflow-y: auto;">
         <table id="msgsTable" style="width: 100%;">
             <thead>
                 <tr>
-                    <th>turn</th>
-                    <th>name</th>
-                    <th>prompt</th>
-                    <th>completion</th>
-                    <th>agent_type</th>
                     <th>agent_id</th>
+                    <th>state</th>
                 </tr>
             </thead>
             <tbody id="msgs">
@@ -24,17 +19,32 @@
         </table>
     </div>
     <div id="msgsText"
-        style="margin-top: 20px; width: 1400px; height: 200px; border: 1px solid black; overflow-y: auto;"></div>
-    
+         style="margin-top: 20px; width: 1400px; height: 200px; border: 1px solid black; overflow-y: auto;"></div>
+
     <div style="margin-top: 20px;">
-        <input type="text" id="inputText" style="width: 1200px;"/>
+        <input type="text" id="inputText" style="width: 1200px;" />
         <button id="sendButton">Send</button>
     </div>
-    
+
     <button id="startButton" style="margin-top: 20px; margin-right: 10px;">Start</button>
     <button id="pauseButton" style="margin-top: 20px; margin-right: 10px;">Pause/Resume</button>
     <button id="stopButton" style="margin-top: 20px;">Stop</button>
-    
+
+    <div style="margin-top: 20px;">
+        <label for="userId">Agent ID:</label>
+        <input type="text" id="userId" />
+        <button id="connectButton">Connect</button>
+    </div>
+
+    <div id="chatBox"
+         style="margin-top: 20px; width: 1400px; height: 200px; border: 1px solid black; overflow-y: auto;">
+    </div>
+
+    <div style="margin-top: 20px;">
+        <input type="text" id="chatInput" style="width: 1200px;" />
+        <button id="chatSendButton">Send</button>
+    </div>
+
     <script>
         const msgsTbody = document.getElementById('msgs');
         const msgsTextDiv = document.getElementById('msgsText');
@@ -43,11 +53,18 @@
         const startButton = document.getElementById('startButton');
         const pauseButton = document.getElementById('pauseButton');
         const stopButton = document.getElementById('stopButton');
-        const ws = new WebSocket("ws://localhost:39000/ws");
 
+        // 新增部分
+        const userIdInput = document.getElementById('userId');
+        const connectButton = document.getElementById('connectButton');
+        const chatBox = document.getElementById('chatBox');
+        const chatInput = document.getElementById('chatInput');
+        const chatSendButton = document.getElementById('chatSendButton');
+        let chatWs = null;
+
+        const ws = new WebSocket("ws://localhost:39000/ws");
         ws.onmessage = function (event) {
             const message = event.data;
-
             try {
                 const jsonObj = JSON.parse(message);
                 const row = document.createElement('tr');
@@ -66,19 +83,15 @@
                 msgsTextDiv.appendChild(msgElement);
             }
         };
-
         ws.onopen = function (event) {
             console.log("WebSocket connection established.");
         };
-
         ws.onclose = function (event) {
             console.log("WebSocket connection closed.");
         };
-
         ws.onerror = function (event) {
             console.log("WebSocket error:", event);
         };
-
         startButton.onclick = function () {
             fetch('/start', {
                 method: 'POST'
@@ -92,7 +105,6 @@
                 console.error("Error sending start request:", error);
             });
         };
-
         pauseButton.onclick = function () {
             fetch('/pause', {
                 method: 'POST'
@@ -106,7 +118,6 @@
                 console.error("Error sending pause request:", error);
             });
         };
-
         stopButton.onclick = function () {
             fetch('/stop', {
                 method: 'POST'
@@ -120,19 +131,54 @@
                 console.error("Error sending stop request:", error);
             });
         };
-
         sendButton.onclick = function () {
             const message = inputText.value;
             if (message) {
-                // 清空msgsTbody中的条目
+                // 清空 msgsTbody 中的条目
                 msgsTbody.innerHTML = '';
-                // 通过websocket发送用户输入的内容
+                // 通过 websocket 发送用户输入的内容
                 ws.send(message);
                 // 清空输入框
                 inputText.value = '';
             }
         };
+
+        // 新增的事件处理部分
+        connectButton.onclick = function () {
+            const userId = userIdInput.value.trim();
+            if (userId) {
+                if (chatWs) {
+                    chatWs.close();
+                }
+                chatWs = new WebSocket(`ws://localhost:39000/chat/${userId}`);
+                chatWs.onmessage = function (event) {
+                    const message = event.data;
+                    const msgElement = document.createElement('div');
+                    msgElement.textContent = message;
+                    chatBox.appendChild(msgElement);
+                };
+                chatWs.onopen = function (event) {
+                    console.log(`Connected to chat with user ID: ${userId}`);
+                };
+                chatWs.onclose = function (event) {
+                    console.log(`Chat connection closed.`);
+                };
+                chatWs.onerror = function (event) {
+                    console.log(`Chat WebSocket error:`, event);
+                };
+            }
+        };
+
+        chatSendButton.onclick = function () {
+            const message = chatInput.value;
+            if (message && chatWs) {
+                chatWs.send(message);
+                const msgElement = document.createElement('div');
+                msgElement.textContent = message;
+                chatBox.appendChild(msgElement);
+                chatInput.value = '';
+            }
+        };
     </script>
 </body>
-
 </html>

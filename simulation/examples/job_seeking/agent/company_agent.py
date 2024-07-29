@@ -9,12 +9,16 @@ from agentscope.agents.agent import DistConf
 from agentscope.message import Msg
 from agentscope.models import load_model_by_config_name
 
+from simulation.helpers.message import StateUnit, message_manager
 from simulation.helpers.utils import setup_memory
 
 scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 file_loader = FileSystemLoader(os.path.join(scene_path, "prompts"))
 env = Environment(loader=file_loader)
 Template = env.get_template('company_prompts.j2').module
+
+
+CompanyAgentStates = ["idle"]
 
 
 class Company(object):
@@ -53,6 +57,7 @@ class CompanyAgent(AgentBase):
         self.model_config_name = model_config_name
         self.company = Company(name, cd)
         self.system_prompt = Msg("system", Template.system_prompt(self.company), role="system")
+        self._state = "idle"
 
     def __getstate__(self) -> object:
         state = self.__dict__.copy()
@@ -70,6 +75,17 @@ class CompanyAgent(AgentBase):
         self.memory = setup_memory(self.memory_config)
         self.memory.__dict__.update(state['memory'])
         self.model = load_model_by_config_name(self.model_config_name)
+    
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, new_value):
+        if new_value not in CompanyAgentStates:
+            raise ValueError(f"Invalid state: {new_value}")
+        self._state = new_value
+        message_manager.add_state(StateUnit(agent_id=self.id, state=new_value))
 
     def set_id(self, id: int):
         self.id = id
@@ -82,7 +98,7 @@ class CompanyAgent(AgentBase):
         msg = Msg("user", query, role="user")
         tht = self.reflect(current_action=query)
         prompt = self.model.format(self.system_prompt, tht, msg)
-        return self.model(prompt).raw
+        return self.model(prompt).text
     
     def reply(self, x: Optional[Union[Msg, Sequence[Msg]]] = None) -> Msg:
         return Msg(self.name, None, role="assistant")

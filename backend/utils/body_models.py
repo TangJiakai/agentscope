@@ -72,4 +72,16 @@ class InterventionMsg(BaseModel):
 class AgentInfo(BaseModel):
     name: str
     id: int
+    cls: str
+    state: str
     profile: str
+
+
+class AgentStateInfo(BaseModel):
+    agent_cls_name: str
+    states: List[str]
+
+
+class AgentState(BaseModel):
+    agent_id: int
+    state: str

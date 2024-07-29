@@ -155,6 +155,7 @@ class Simulator(BaseSimulator):
             )
             agent.memory = setup_memory(memory_config)
             agent.memory_config = memory_config
+        for agent in self.seeker_agents + self.job_agents:
             agent.set_embedding(self.embedding_model)
 
         # assign job_ids_pool for all seekers

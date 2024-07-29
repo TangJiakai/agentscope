@@ -8,7 +8,7 @@ from pathlib import Path
 from queue import Empty, Queue
 import subprocess
 from threading import Thread, Event
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import aiofiles
 import uvicorn
@@ -22,7 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from backend.utils.connection import manager
-from simulation.helpers.message import message_manager, MessageUnit
+from simulation.helpers.message import message_manager, MessageUnit, StateUnit
 from simulation.helpers.events import play_event, stop_event
 from backend.utils.body_models import (
     Scene,
@@ -35,6 +35,7 @@ from backend.utils.body_models import (
     DistributedConfig,
     InterventionMsg,
     AgentInfo,
+    AgentStateInfo,
 )
 from simulation.memory import (
     NoneMemory,
@@ -42,6 +43,7 @@ from simulation.memory import (
     ShortLongMemory,
     ShortLongReflectionMemory,
 )
+from backend.utils.utils import try_serialize_dict
 
 
 yaml = YAML()
@@ -91,41 +93,34 @@ app.add_middleware(
 )
 
 
-# async def fetch_msg(websocket: WebSocket):
-#     try:
-#         while True:
-#             # wait for new message and send to frontend via WebSocket
-#             if not message_queue.empty():
-#                 msg = message_queue.get()
-#                 if isinstance(msg, MessageUnit):
-#                     await websocket.send_text(msg.model_dump_json())
-#                 elif isinstance(msg, str):
-#                     await websocket.send_text(msg)
-#             await asyncio.sleep(1)  # polling frequency
-#     except WebSocketDisconnect:
-#         print("WebSocket connection closed")
-
-
-def check_msg_filter(
-    msg: MessageUnit, filter_condition: Optional[FilterCondition]
+def check_filter(
+    msg_or_state: Union[MessageUnit, StateUnit],
+    filter_condition: Optional[FilterCondition],
 ) -> bool:
     if filter_condition is None:
         return True
     elif filter_condition.condition == "id":
-        return msg.agent_id in filter_condition.ids
+        return msg_or_state.agent_id in filter_condition.ids
     elif filter_condition.condition == "name":
-        return msg.name.lower() in [name.lower() for name in filter_condition.names]
+        return msg_or_state.name.lower() in [
+            name.lower() for name in filter_condition.names
+        ]
     elif filter_condition.condition == "type":
-        return msg.agent_type.lower() in [
+        return msg_or_state.agent_type.lower() in [
             type.lower() for type in filter_condition.types
         ]
     return False
 
 
-def filter_messages(
-    msgs: List[MessageUnit], filter_condition: Optional[FilterCondition]
-) -> List[MessageUnit]:
-    return [msg for msg in msgs if check_msg_filter(msg, filter_condition)]
+def filter_msgs_or_states(
+    msgs_or_states: List[Union[MessageUnit, StateUnit]],
+    filter_condition: Optional[FilterCondition],
+) -> List[Union[MessageUnit, StateUnit]]:
+    return [
+        msg_or_state
+        for msg_or_state in msgs_or_states
+        if check_filter(msg_or_state, filter_condition)
+    ]
 
 
 @app.websocket("/ws")
@@ -133,20 +128,13 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     filter_condition = None
 
-    async def send_filtered_history(filter_condition: Optional[FilterCondition]):
-        async with lock:
-            msgs = message_manager.messages.copy()
-        msgs = filter_messages(msgs, filter_condition)
-        for msg in msgs:
-            await manager.send(msg)
-
     try:
         while True:
-            # get msg from message queue
+            # get state from state queue
             try:
-                msg = message_manager.message_queue.get_nowait()
+                state = message_manager.state_queue.get_nowait()
             except Empty:
-                msg = None
+                state = None
 
             # listen for filter condition without timeout
             try:
@@ -156,32 +144,18 @@ async def websocket_endpoint(websocket: WebSocket):
                 filter_condition = FilterCondition(**filter_condition)
                 if filter_condition.condition == "None":
                     filter_condition = None
-                await send_filtered_history(filter_condition)
             except asyncio.TimeoutError:
                 pass
 
-            # send msg to frontend
-            if msg and (
-                not filter_condition or check_msg_filter(msg, filter_condition)
+            # send state to frontend
+            if state and (
+                not filter_condition or check_filter(state, filter_condition)
             ):
-                await manager.send(msg)
+                await manager.send(state)
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
     finally:
         await manager.disconnect(websocket)
-
-
-# @app.websocket("/ws/{id}")
-# async def websocket_agent_endpoint(websocket: WebSocket, id: int):
-# await manager.connect(websocket, id)
-# try:
-#     while True:
-#         data = await websocket.receive_text()
-#         # TODO
-# except WebSocketDisconnect:
-#     manager.disconnect(websocket)
-# finally:
-#     manager.disconnect(websocket)
 
 
 @app.websocket("/chat/{id}")
@@ -192,14 +166,13 @@ async def websocket_chat_endpoint(websocket: WebSocket, id: int):
         while True:
             data = await websocket.receive_text()
             logger.info(f"Receive chat message: {data}")
-            await manager.send(agent.interview(data))
+            await manager.send_to_agent(id, agent.interview(data))
             if data == "exit":
                 break
-            await manager.send(data)
     except WebSocketDisconnect:
-        await manager.disconnect(websocket)
+        await manager.disconnect(websocket, id)
     finally:
-        await manager.disconnect(websocket)
+        await manager.disconnect(websocket, id)
 
 
 @app.get("/scene", response_model=List[Scene])
@@ -212,8 +185,6 @@ def get_scenes():
             with open(os.path.join(scene_path, "desc.txt"), "r") as f:
                 desc = f.read()
             pic_path = os.path.join(scene_path, "pic.png")
-            print(desc)
-            print(pic_path)
             scenes.append(Scene(name=scene, desc=desc, pic_path=pic_path))
     return scenes
 
@@ -239,9 +210,31 @@ def get_agents(query: Optional[str] = None):
     if query:
         agents = fuzzy_search(agents, query)
     return [
-        AgentInfo(name=agent.name, id=agent.id, profile=agent.system_prompt["content"])
+        AgentInfo(
+            name=agent.name,
+            id=agent.id,
+            cls=agent._init_settings["class_name"],
+            state=agent.state,
+            profile=agent.system_prompt["content"],
+        )
         for agent in agents
     ]
+
+
+# @app.get("/agents")
+# def get_agents(query: Optional[str] = None):
+#     agents = simulator.agents
+
+#     def fuzzy_search(agents, query):
+#         return [
+#             agent
+#             for agent in agents
+#             if query.lower() in agent.name.lower() or query == str(agent.id)
+#         ]
+
+#     if query:
+#         agents = fuzzy_search(agents, query)
+#     return [try_serialize_dict(agent.__dict__) for agent in agents]
 
 
 @app.get("/agent/config", response_model=List[AgentConfig])
@@ -285,13 +278,17 @@ def put_agent_config(req: List[AgentConfig]):
     return {"status": "success"}
 
 
-@app.get("/agent/{id}")
+@app.get("/agent/{id}", response_model=AgentInfo)
 def get_agent(id: int):
     agents = simulator.agents
     try:
         agent = agents[id]
         return AgentInfo(
-            name=agent.name, id=agent.id, profile=agent.system_prompt["content"]
+            name=agent.name,
+            id=agent.id,
+            cls=agent._init_settings["class_name"],
+            state=agent.state,
+            profile=agent.system_prompt["content"],
         )
     except IndexError:
         return HTMLResponse(content="Agent not found.", status_code=404)
@@ -475,7 +472,7 @@ async def get_messages(
         async with lock:
             cur_msgs = message_manager.messages.copy()
         cur_msgs_index = list(range(len(cur_msgs)))
-    msgs = filter_messages(cur_msgs, filter_condition)
+    msgs = filter_msgs_or_states(cur_msgs, filter_condition)
     return msgs[offset : offset + limit]
 
 
@@ -491,6 +488,16 @@ async def random_selection_messages(num: int):
     cur_msgs_index = list(cur_msgs_index)
     cur_msgs = list(cur_msgs)
     return {"status": "success"}
+
+
+@app.get("/states", response_model=List[AgentStateInfo])
+async def get_all_agent_states_info():
+    module_path = f"simulation.examples.{_scene}.agent"
+    all_agent_states_info = importlib.import_module(module_path).ALL_AGENT_STATES
+    return [
+        AgentStateInfo(agent_cls_name=agent_cls_name, states=states)
+        for agent_cls_name, states in all_agent_states_info.items()
+    ]
 
 
 @app.post("/start")

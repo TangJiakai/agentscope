@@ -11,14 +11,17 @@ from agentscope.models import ModelResponse
 from agentscope.models import load_model_by_config_name
 
 from simulation.examples.job_seeking.utils.utils import extract_dict
-from simulation.helpers.message import message_manager, MessageUnit
+from simulation.helpers.message import MessageUnit, StateUnit, message_manager
 from simulation.helpers.utils import setup_memory
 
 
 scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 file_loader = FileSystemLoader(os.path.join(scene_path, "prompts"))
 env = Environment(loader=file_loader)
-Template = env.get_template('seeker_prompts.j2').module
+Template = env.get_template("seeker_prompts.j2").module
+
+
+SeekerAgentStates = ["idle", "determining_status", "considering_search_job_number", "applying_jobs", "making_decision"]
 
 
 class Seeker(object):
@@ -30,16 +33,13 @@ class Seeker(object):
         self.job_condition = "unemployed"
 
     def __str__(self):
-        return (
-            f"Seeker Name: {self.name}\n"
-            f"Seeker CV: {self.cv}\n"
-        )
+        return f"Seeker Name: {self.name}\n" f"Seeker CV: {self.cv}\n"
 
 
 class SeekerAgent(AgentBase):
     """seeker agent."""
 
-    name: str   # Name of the seeker
+    name: str  # Name of the seeker
     model_config_name: str  # Model config name
     seeker: Seeker  # Seeker object
     system_prompt: Msg  # System prompt
@@ -69,18 +69,36 @@ class SeekerAgent(AgentBase):
         super().__init__(
             name=name,
             model_config_name=model_config_name,
-            to_dist=DistConf(host=kwargs["host"], port=kwargs["port"]) if kwargs["distributed"] else None
+            to_dist=(
+                DistConf(host=kwargs["host"], port=kwargs["port"])
+                if kwargs["distributed"]
+                else None
+            ),
         )
         self.model_config_name = model_config_name
         self.seeker = Seeker(name, cv, trait, status)
-        self.system_prompt = Msg("system", Template.system_prompt(self.seeker), role="system")
+        self.system_prompt = Msg(
+            "system", Template.system_prompt(self.seeker), role="system"
+        )
         self.memory_info = {
             "final_decision": 0,
             "waiting_time": 0,
         }
-        self.job_ids_pool, self.apply_job_ids, self.cv_passed_job_ids, self.offer_job_ids, self.wl_jobs_dict = list(), list(), list(), list(), dict()
+        (
+            self.job_ids_pool,
+            self.apply_job_ids,
+            self.cv_passed_job_ids,
+            self.offer_job_ids,
+            self.wl_jobs_dict,
+        ) = (list(), list(), list(), list(), dict())
         self.fail_job_ids = list()
-        self.update_variables = [self.job_ids_pool, self.apply_job_ids, self.offer_job_ids, self.wl_jobs_dict]
+        self.update_variables = [
+            self.job_ids_pool,
+            self.apply_job_ids,
+            self.offer_job_ids,
+            self.wl_jobs_dict,
+        ]
+        self._state = "idle"
 
     def __getstate__(self) -> object:
         state = self.__dict__.copy()
@@ -91,14 +109,25 @@ class SeekerAgent(AgentBase):
             memory_state["embedding_model"] = None
         except:
             pass
-        state['memory'] = memory_state
+        state["memory"] = memory_state
         return state
-    
+
     def __setstate__(self, state: object) -> None:
         self.__dict__.update(state)
         self.memory = setup_memory(self.memory_config)
-        self.memory.__dict__.update(state['memory'])
+        self.memory.__dict__.update(state["memory"])
         self.model = load_model_by_config_name(self.model_config_name)
+
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, new_value):
+        if new_value not in SeekerAgentStates:
+            raise ValueError(f"Invalid state: {new_value}")
+        self._state = new_value
+        message_manager.add_state(StateUnit(agent_id=self.id, state=new_value))
 
     def set_id(self, id: int):
         self.id = id
@@ -106,24 +135,29 @@ class SeekerAgent(AgentBase):
 
     def get_id(self):
         return self.id
-    
+
     def set_embedding(self, embedding_model):
-        self.embedding = embedding_model.encode(str(self.seeker), normalize_embeddings=True)
+        self.embedding = embedding_model.encode(
+            str(self.seeker), normalize_embeddings=True
+        )
 
     def search_job_number_fun(self):
         """Set search job number."""
+        self.state = "considering_search_job_number"
         msg = Msg("user", Template.search_job_number_prompt(), role="user")
         tht = self.reflect(current_action="Determine the number of jobs to search for")
         prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            message_manager.add_message(MessageUnit(
-                name=self.name, 
-                prompt='\n'.join([p['content'] for p in prompt]), 
-                completion=response.text, 
-                agent_type=type(self).__name__,
-                agent_id=self.get_id()
-            ))
+            message_manager.add_message(
+                MessageUnit(
+                    name=self.name,
+                    prompt="\n".join([p["content"] for p in prompt]),
+                    completion=response.text,
+                    agent_type=type(self).__name__,
+                    agent_id=self.get_id(),
+                )
+            )
             try:
                 res_dict = extract_dict(response.text)
                 return ModelResponse(raw=int(res_dict["number"]))
@@ -132,25 +166,32 @@ class SeekerAgent(AgentBase):
                     f"Invalid response format in parse_func "
                     f"with response: {response.text}",
                 )
+
         # print(prompt)
         response = self.model(prompt, parse_func=parse_func).raw
         # print(response)
         self.search_job_number = max(min(response, len(self.job_ids_pool)), 1)
+        self.state = "idle"
 
     def apply_job_fun(self, search_jobs: list):
         """Apply job."""
+        self.state = "applying_jobs"
         msg = Msg("user", Template.apply_jobs_prompt(search_jobs), role="user")
-        tht = self.reflect(current_action="Select the positions to which you want to submit your resume")
+        tht = self.reflect(
+            current_action="Select the positions to which you want to submit your resume"
+        )
         prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            message_manager.add_message(MessageUnit(
-                name=self.name, 
-                prompt='\n'.join([p['content'] for p in prompt]), 
-                completion=response.text, 
-                agent_type=type(self).__name__,
-                agent_id=self.get_id()
-            ))
+            message_manager.add_message(
+                MessageUnit(
+                    name=self.name,
+                    prompt="\n".join([p["content"] for p in prompt]),
+                    completion=response.text,
+                    agent_type=type(self).__name__,
+                    agent_id=self.get_id(),
+                )
+            )
             try:
                 res_dict = extract_dict(response.text)
                 return ModelResponse(raw=list(map(int, res_dict["apply_jobs"])))
@@ -159,82 +200,103 @@ class SeekerAgent(AgentBase):
                     f"Invalid response format in parse_func "
                     f"with response: {response.text}",
                 )
-        
+
         # print(prompt)
         response = self.model(prompt, parse_func=parse_func).raw
         # print(response)
         self.apply_job_ids = response
+        self.state = "idle"
 
     def make_decision_fun(self, agents: dict):
         """Make decision."""
+        self.state = "making_decision"
         if len(self.offer_job_ids) == 0 and len(self.wl_jobs_dict) == 0:
             self.decision = 0
             self.final_offer_id = None
             self.reject_offer_job_ids, self.reject_wl_job_ids = list(), list()
 
-        msg = Msg("user", Template.make_decision_prompt(self.offer_job_ids, self.wl_jobs_dict, agents), role="user")
-        tht = self.reflect(current_action="Decide to accept, wait for a backup, or decline the offer")
+        msg = Msg(
+            "user",
+            Template.make_decision_prompt(
+                self.offer_job_ids, self.wl_jobs_dict, agents
+            ),
+            role="user",
+        )
+        tht = self.reflect(
+            current_action="Decide to accept, wait for a backup, or decline the offer"
+        )
         prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            message_manager.add_message(MessageUnit(
-                name=self.name, 
-                prompt='\n'.join([p['content'] for p in prompt]), 
-                completion=response.text, 
-                agent_type=type(self).__name__,
-                agent_id=self.get_id()
-            ))
+            message_manager.add_message(
+                MessageUnit(
+                    name=self.name,
+                    prompt="\n".join([p["content"] for p in prompt]),
+                    completion=response.text,
+                    agent_type=type(self).__name__,
+                    agent_id=self.get_id(),
+                )
+            )
             try:
                 res_dict = extract_dict(response.text)
                 res_dict = {k: int(v) if v else None for k, v in res_dict.items()}
-                assert res_dict["decision"] in [1,2,3], ValueError(
+                assert res_dict["decision"] in [1, 2, 3], ValueError(
                     f"Invalid response in parse_func "
                     f"with response: {response.text}",
                 )
-                if res_dict["decision"] == 1:   # Accept offer
+                if res_dict["decision"] == 1:  # Accept offer
                     final_offer_id = res_dict["final_offer_id"]
-                    return ModelResponse(raw={
-                        "decision": res_dict["decision"],
-                        "final_offer_id": final_offer_id
-                    })
-                elif res_dict["decision"] in [2,3]:  # Reject offer or waitlist
-                    return ModelResponse(raw={
-                        "decision": res_dict["decision"]
-                    })
+                    return ModelResponse(
+                        raw={
+                            "decision": res_dict["decision"],
+                            "final_offer_id": final_offer_id,
+                        }
+                    )
+                elif res_dict["decision"] in [2, 3]:  # Reject offer or waitlist
+                    return ModelResponse(raw={"decision": res_dict["decision"]})
             except:
                 raise ValueError(
                     f"Invalid response format in parse_func "
                     f"with response: {response.text}",
                 )
-        
+
         # print(prompt)
         response = self.model(prompt, parse_func=parse_func).raw
         # print(response)
-        if response["decision"] == 1:   # Accept offer
+        if response["decision"] == 1:  # Accept offer
             self.decision = 1
             self.seeker.status = "employed"
             self.final_offer_id = response["final_offer_id"]
-            self.reject_offer_job_ids = list(set(self.offer_job_ids) - set([self.final_offer_id]))
+            self.reject_offer_job_ids = list(
+                set(self.offer_job_ids) - set([self.final_offer_id])
+            )
             self.reject_wl_job_ids = [x for x in self.wl_jobs_dict]
-        elif response["decision"] == 2: # Reject offer and wait jobs in waitlist
+        elif response["decision"] == 2:  # Reject offer and wait jobs in waitlist
             self.decision = 2
             self.final_offer_id = None
             self.reject_offer_job_ids = self.offer_job_ids
             self.reject_wl_job_ids = list()
-        elif response["decision"] == 3: # Reject offer and waitlist jobs, prepare for next round
+        elif (
+            response["decision"] == 3
+        ):  # Reject offer and waitlist jobs, prepare for next round
             self.decision = 3
             self.final_offer_id = None
             self.reject_wl_job_ids = [x for x in self.wl_jobs_dict]
             self.wl_jobs_dict = dict()
             self.reject_offer_job_ids = self.offer_job_ids
-        
+
         self.offer_job_ids = list()
+        self.state = "idle"
 
     def add_memory_fun(self, seeking=True):
         if seeking:
-            mem = Msg("assistant", Template.seeker_memory(self.memory_info), role="assistant")
-        else: # agents who are on the job and do not seek jobs
-            mem = Msg("assistant", Template.nonseeker_memory(self.seeker), role="assistant")
+            mem = Msg(
+                "assistant", Template.seeker_memory(self.memory_info), role="assistant"
+            )
+        else:  # agents who are on the job and do not seek jobs
+            mem = Msg(
+                "assistant", Template.nonseeker_memory(self.seeker), role="assistant"
+            )
         self.memory.add(mem)
 
     def reflect(self, current_action):
@@ -243,28 +305,37 @@ class SeekerAgent(AgentBase):
         retrived_memories = self.memory.get_memory(query_msg)
         if retrived_memories is None or len(retrived_memories) == 0:
             return Msg("assistant", None, role="assistant")
-        msg = Msg("user", Template.reflection_prompt([x["content"] for x in retrived_memories], current_action), role="user")
+        msg = Msg(
+            "user",
+            Template.reflection_prompt(
+                [x["content"] for x in retrived_memories], current_action
+            ),
+            role="user",
+        )
         prompt = self.model.format(self.system_prompt, msg)
 
         response = self.model(prompt).text
         return Msg("user", content=response, role="user")
-    
+
     def determine_status_fun(self):
+        self.state = "determining_status"
         msg = Msg("user", Template.determine_status_prompt(), role="user")
         tht = self.reflect(current_action="Choose whether to conduct a job search")
         prompt = self.model.format(self.system_prompt, tht, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
-            message_manager.add_message(MessageUnit(
-                name=self.name, 
-                prompt='\n'.join([p['content'] for p in prompt]), 
-                completion=response.text, 
-                agent_type=type(self).__name__,
-                agent_id=self.get_id()
-            ))
+            message_manager.add_message(
+                MessageUnit(
+                    name=self.name,
+                    prompt="\n".join([p["content"] for p in prompt]),
+                    completion=response.text,
+                    agent_type=type(self).__name__,
+                    agent_id=self.get_id(),
+                )
+            )
             try:
                 res_dict = response.text.strip().lower()
-                if 'yes' in res_dict:
+                if "yes" in res_dict:
                     return ModelResponse(raw=True)
                 return ModelResponse(raw=False)
             except:
@@ -272,13 +343,14 @@ class SeekerAgent(AgentBase):
                     f"Invalid response format in parse_func "
                     f"with response: {response.text}",
                 )
-        
+
         response = self.model(prompt, parse_func=parse_func).raw
         self.seeking = response
-    
-    def update_job_condition(self,company_name, job):
+        self.state = "idle"
+
+    def update_job_condition(self, company_name, job):
         self.seeker.job_condition = Template.generate_job_condition(company_name, job)
-        
+
     def update_fun(self):
         self.memory_info = {
             "final_decision": 0,
@@ -291,7 +363,7 @@ class SeekerAgent(AgentBase):
         msg = Msg("user", query, role="user")
         tht = self.reflect(current_action=query)
         prompt = self.model.format(self.system_prompt, tht, msg)
-        return self.model(prompt).raw
+        return self.model(prompt).text
 
     def reply(self, x: Optional[Union[Msg, Sequence[Msg]]] = None) -> Msg:
         fun = getattr(self, f"{x.fun}_fun")
