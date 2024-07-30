@@ -1,6 +1,7 @@
 #!/bin/bash
 
-PID_FILE="$(dirname "$0")/.pid"
+PID_FILE="$(realpath "$(dirname "${BASH_SOURCE[0]}")")/.pid"
+
 
 if [ -f "$PID_FILE" ]; then
     PID=$(cat "$PID_FILE")
