@@ -560,6 +560,16 @@ def chatgpt(req: GPTReq):
     return {"status": "success"}
 
 
+@app.post("/tune")
+def tune():
+    # Tune LLM
+    tune_llm_sh_path = os.path.join(
+        proj_path, "llmtuning", "scripts", "tune_llm.sh"
+    )
+    run_sh(tune_llm_sh_path)
+    return {"status": "success"}
+
+
 @app.post("/export/{mode}")
 def export_changed_messages(mode: Literal["rewrite", "rate"]):
     with lock:
