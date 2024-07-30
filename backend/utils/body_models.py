@@ -85,3 +85,14 @@ class AgentStateInfo(BaseModel):
 class AgentState(BaseModel):
     agent_id: int
     state: str
+
+
+class GPTReq(BaseModel):
+    msg_ids: List[int]
+    mode: Literal["rewrite", "rate"]
+
+
+class ChangedMsg(BaseModel):
+    msg_id: int
+    rewritten_response: Optional[str] = None
+    rating: Optional[int] = None

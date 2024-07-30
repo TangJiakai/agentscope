@@ -8,10 +8,10 @@ from pathlib import Path
 from queue import Empty, Queue
 import subprocess
 from threading import Thread, Event
-from typing import Dict, List, Optional, Union
+import threading
+from typing import Dict, List, Literal, Optional, Union
 
 import aiofiles
-import uvicorn
 from ruamel.yaml import YAML
 from agentscope.message import Msg
 from contextlib import asynccontextmanager
@@ -36,6 +36,8 @@ from backend.utils.body_models import (
     InterventionMsg,
     AgentInfo,
     AgentStateInfo,
+    GPTReq,
+    ChangedMsg,
 )
 from simulation.memory import (
     NoneMemory,
@@ -43,7 +45,8 @@ from simulation.memory import (
     ShortLongMemory,
     ShortLongReflectionMemory,
 )
-from backend.utils.utils import try_serialize_dict
+from backend.utils.utils import run_sh, try_serialize_dict
+from backend.chatgpt_api import rewritten_responses, rate_responses
 
 
 yaml = YAML()
@@ -56,30 +59,32 @@ simulation_thread: Thread
 events: Dict[str, Event] = {}
 queue = Queue()
 simulator = None
-lock = asyncio.Lock()
+lock = threading.Lock()
 distributed: bool = False
 distributed_args: DistributedArgs = None
 cur_msgs: List[MessageUnit] = None
-cur_msgs_index: List[int] = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Launch LLM
+    launch_llm_sh_path = os.path.join(
+        proj_path, "llmtuning", "scripts", "launch_llm.sh"
+    )
+    run_sh(launch_llm_sh_path)
+
     yield
-    # clean distributed servers
+
+    # Kill LLM
+    kill_llm_sh_path = os.path.join(proj_path, "llmtuning", "scripts", "kill_llm.sh")
+    run_sh(kill_llm_sh_path)
+
+    # Clean distributed servers
     if distributed:
         kill_server_sh_path = os.path.join(
             proj_path, "simulation", "examples", _scene, "kill_all_server.sh"
         )
-        command = ["bash", kill_server_sh_path]
-        try:
-            result = subprocess.run(
-                command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            )
-            logger.info("Kill server script output:\n", result.stdout.decode())
-        except subprocess.CalledProcessError as e:
-            logger.error("Kill server script failed with return code:", e.returncode)
-            logger.error("Kill server script error output:\n", e.stderr.decode())
+        run_sh(kill_server_sh_path)
 
 
 app = FastAPI(lifespan=lifespan)
@@ -97,7 +102,7 @@ def check_filter(
     msg_or_state: Union[MessageUnit, StateUnit],
     filter_condition: Optional[FilterCondition],
 ) -> bool:
-    if filter_condition is None:
+    if filter_condition is None or filter_condition.condition == "None":
         return True
     elif filter_condition.condition == "id":
         return msg_or_state.agent_id in filter_condition.ids
@@ -461,43 +466,127 @@ def configure_distributed(req: DistributedConfig):
     return {"status": "success"}
 
 
-@app.get("/messages", response_model=List[MessageUnit])
-async def get_messages(
-    filter_condition: Optional[FilterCondition] = None,
-    offset: Optional[int] = 0,
-    limit: Optional[int] = 10,
-):
-    global cur_msgs, cur_msgs_index
-    if cur_msgs is None:
-        async with lock:
-            cur_msgs = message_manager.messages.copy()
-        cur_msgs_index = list(range(len(cur_msgs)))
-    msgs = filter_msgs_or_states(cur_msgs, filter_condition)
-    return msgs[offset : offset + limit]
-
-
-@app.get("/messages/random")
-async def random_selection_messages(num: int):
-    global cur_msgs, cur_msgs_index
-    async with lock:
-        cur_msgs = message_manager.messages.copy()
-    cur_msgs_index = list(range(len(cur_msgs)))
-    indexed_cur_msgs = list(enumerate(cur_msgs))
-    indexed_chosen_cur_msgs = random.choices(indexed_cur_msgs, k=num)
-    cur_msgs_index, cur_msgs = zip(*indexed_chosen_cur_msgs)
-    cur_msgs_index = list(cur_msgs_index)
-    cur_msgs = list(cur_msgs)
-    return {"status": "success"}
-
-
 @app.get("/states", response_model=List[AgentStateInfo])
-async def get_all_agent_states_info():
+def get_all_agent_states_info():
     module_path = f"simulation.examples.{_scene}.agent"
     all_agent_states_info = importlib.import_module(module_path).ALL_AGENT_STATES
     return [
         AgentStateInfo(agent_cls_name=agent_cls_name, states=states)
         for agent_cls_name, states in all_agent_states_info.items()
     ]
+
+
+@app.post("/messages", response_model=List[MessageUnit])
+def get_messages_with_filter(
+    filter_condition: Optional[FilterCondition] = None,
+    offset: Optional[int] = 0,
+    limit: Optional[int] = 10,
+):
+    global cur_msgs
+    if cur_msgs is None:
+        with lock:
+            cur_msgs = message_manager.messages.copy()
+    msgs = filter_msgs_or_states(cur_msgs, filter_condition)
+    return msgs[offset : offset + limit]
+
+
+def change_msgs(mode: Literal["rewrite", "rate"], new_msgs: List[ChangedMsg]):
+    with lock:
+        for new_msg in new_msgs:
+            if mode == "rewrite":
+                message_manager.messages[new_msg.msg_id].rewritten_response = (
+                    new_msg.rewritten_response
+                )
+            elif mode == "rate":
+                message_manager.messages[new_msg.msg_id].rating = new_msg.rating
+    global cur_msgs
+    cur_msgs_ids = [msg.msg_id for msg in cur_msgs]
+    for new_msg in new_msgs:
+        if new_msg.msg_id in cur_msgs_ids:
+            if mode == "rewrite":
+                cur_msgs[cur_msgs_ids.index(new_msg.msg_id)].rewritten_response = (
+                    new_msg.rewritten_response
+                )
+            elif mode == "rate":
+                cur_msgs[cur_msgs_ids.index(new_msg.msg_id)].rating = new_msg.rating
+
+
+@app.put("/messages/random")
+def random_selection_messages(num: int):
+    global cur_msgs
+    with lock:
+        cur_msgs = message_manager.messages.copy()
+    cur_msgs = sorted(random.choices(cur_msgs, k=num), key=lambda x: x.msg_id)
+    return {"status": "success"}
+
+
+@app.post("/messages/random/undo")
+def undo_random_selection():
+    global cur_msgs
+    with lock:
+        cur_msgs = message_manager.messages.copy()
+    return {"status": "success"}
+
+
+@app.put("/messages/{mode}")
+def save_changed_messages(mode: Literal["rewrite", "rate"], msgs: List[ChangedMsg]):
+    change_msgs(mode, msgs)
+    return {"status": "success"}
+
+
+@app.post("/gpt")
+def chatgpt(req: GPTReq):
+    with lock:
+        msgs = message_manager.messages.copy()
+    msgs = [msgs[id].model_dump(include={"query", "response"}) for id in req.msg_ids]
+    if req.mode == "rewrite":
+        resps = rewritten_responses(msgs)
+        change_msgs(
+            "rewrite",
+            [
+                ChangedMsg(msg_id=msg_id, rewritten_response=resps[idx])
+                for idx, msg_id in enumerate(req.msg_ids)
+            ],
+        )
+    elif req.mode == "rate":
+        resps = rate_responses(msgs)
+        change_msgs(
+            "rate",
+            [
+                ChangedMsg(msg_id=msg_id, rating=resps[idx])
+                for idx, msg_id in enumerate(req.msg_ids)
+            ],
+        )
+    return {"status": "success"}
+
+
+@app.post("/export/{mode}")
+def export_changed_messages(mode: Literal["rewrite", "rate"]):
+    with lock:
+        msgs = message_manager.messages.copy()
+    if mode == "rewrite":
+        msgs = [
+            msg.model_dump(include={"query", "rewritten_response"}, by_alias=True)
+            for msg in msgs
+            if msg.rewritten_response
+        ]
+        export_path = os.path.join(
+            proj_path, "llmtuning", "datasets", "sft_data", "sft_data.json"
+        )
+        with open(export_path, "w") as f:
+            json.dump(msgs, f, ensure_ascii=False, indent=4)
+    elif mode == "rate":
+        msgs = [
+            msg.model_dump(include={"query", "response", "rating"}, by_alias=True)
+            for msg in msgs
+            if msg.rating
+        ]
+        export_path = os.path.join(
+            proj_path, "llmtuning", "datasets", "ppo_data", "ppo_data.json"
+        )
+        with open(export_path, "w") as f:
+            json.dump(msgs, f, ensure_ascii=False, indent=4)
+    return {"status": "success"}
 
 
 @app.post("/start")
@@ -513,20 +602,11 @@ async def start():
         launch_server_sh_path = os.path.join(
             proj_path, "simulation", "examples", _scene, "launch_server.sh"
         )
-        command = [
-            "bash",
+        run_sh(
             launch_server_sh_path,
             distributed_args.server_num_per_host,
             distributed_args.base_port,
-        ]
-        try:
-            result = subprocess.run(
-                command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            )
-            logger.info("Launch server script output:\n", result.stdout.decode())
-        except subprocess.CalledProcessError as e:
-            logger.error("Launch server script failed with return code:", e.returncode)
-            logger.error("Launch server script error output:\n", e.stderr.decode())
+        )
 
     module_path = f"simulation.examples.{_scene}.simulator"
     Simulator = importlib.import_module(module_path).Simulator
@@ -538,14 +618,18 @@ async def start():
 
 
 @app.post("/pause")
-async def pause_and_resume():
+def pause_and_resume():
     if play_event.is_set():
         message_manager.message_queue.put("Pause simulation.")
         play_event.clear()
+        # Distribute MsgID for messages
+        with lock:
+            for idx, msg in enumerate(message_manager.messages):
+                msg.msg_id = idx
     else:
         global cur_msgs
         cur_msgs = None
-        await message_manager.clear()
+        message_manager.clear()
         message_manager.message_queue.put("Resume simulation.")
         play_event.set()
     return {"status": "success"}
@@ -560,7 +644,3 @@ async def stop():
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
     return templates.TemplateResponse("index.html", {"request": {}})
-
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
