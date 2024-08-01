@@ -153,8 +153,8 @@ class SeekerAgent(AgentBase):
             message_manager.add_message(
                 MessageUnit(
                     name=self.name,
-                    prompt="\n".join([p["content"] for p in prompt]),
-                    completion=response.text,
+                    query="\n".join([p["content"] for p in prompt]),
+                    response=response.text,
                     agent_type=type(self).__name__,
                     agent_id=self.get_id(),
                 )
@@ -188,8 +188,8 @@ class SeekerAgent(AgentBase):
             message_manager.add_message(
                 MessageUnit(
                     name=self.name,
-                    prompt="\n".join([p["content"] for p in prompt]),
-                    completion=response.text,
+                    query="\n".join([p["content"] for p in prompt]),
+                    response=response.text,
                     agent_type=type(self).__name__,
                     agent_id=self.get_id(),
                 )
@@ -234,8 +234,8 @@ class SeekerAgent(AgentBase):
             message_manager.add_message(
                 MessageUnit(
                     name=self.name,
-                    prompt="\n".join([p["content"] for p in prompt]),
-                    completion=response.text,
+                    query="\n".join([p["content"] for p in prompt]),
+                    response=response.text,
                     agent_type=type(self).__name__,
                     agent_id=self.get_id(),
                 )
@@ -331,8 +331,8 @@ class SeekerAgent(AgentBase):
             message_manager.add_message(
                 MessageUnit(
                     name=self.name,
-                    prompt="\n".join([p["content"] for p in prompt]),
-                    completion=response.text,
+                    query="\n".join([p["content"] for p in prompt]),
+                    response=response.text,
                     agent_type=type(self).__name__,
                     agent_id=self.get_id(),
                 )
