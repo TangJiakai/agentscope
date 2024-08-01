@@ -2,7 +2,7 @@
 
 export CUDA_VISIBLE_DEVICES=0,6 
 export API_HOST=0.0.0.0 
-export API_PORT=8084 
+export API_PORT=8083
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 
 

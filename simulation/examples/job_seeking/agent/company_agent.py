@@ -96,8 +96,9 @@ class CompanyAgent(AgentBase):
 
     def interview(self, query):
         msg = Msg("user", query, role="user")
-        tht = self.reflect(current_action=query)
-        prompt = self.model.format(self.system_prompt, tht, msg)
+        memory_msg = self.memory.get_memory(msg)
+        msg = Msg("user", memory_msg.content+msg.content, role="user")
+        prompt = self.model.format(self.system_prompt, msg)
         return self.model(prompt).text
     
     def reply(self, x: Optional[Union[Msg, Sequence[Msg]]] = None) -> Msg:

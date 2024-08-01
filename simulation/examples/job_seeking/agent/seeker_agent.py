@@ -146,7 +146,8 @@ class SeekerAgent(AgentBase):
         self.state = "considering_search_job_number"
         msg = Msg("user", Template.search_job_number_prompt(), role="user")
         tht = self.reflect(current_action="Determine the number of jobs to search for")
-        prompt = self.model.format(self.system_prompt, tht, msg)
+        msg = Msg("user", tht.content+msg.content, role="user")
+        prompt = self.model.format(self.system_prompt, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             message_manager.add_message(
@@ -169,7 +170,7 @@ class SeekerAgent(AgentBase):
 
         # print(prompt)
         response = self.model(prompt, parse_func=parse_func).raw
-        # print(response)
+        print(response)
         self.search_job_number = max(min(response, len(self.job_ids_pool)), 1)
         self.state = "idle"
 
@@ -180,7 +181,8 @@ class SeekerAgent(AgentBase):
         tht = self.reflect(
             current_action="Select the positions to which you want to submit your resume"
         )
-        prompt = self.model.format(self.system_prompt, tht, msg)
+        msg = Msg("user", tht.content+msg.content, role="user")
+        prompt = self.model.format(self.system_prompt, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             message_manager.add_message(
@@ -225,7 +227,8 @@ class SeekerAgent(AgentBase):
         tht = self.reflect(
             current_action="Decide to accept, wait for a backup, or decline the offer"
         )
-        prompt = self.model.format(self.system_prompt, tht, msg)
+        msg = Msg("user", tht.content+msg.content, role="user")
+        prompt = self.model.format(self.system_prompt, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             message_manager.add_message(
@@ -304,7 +307,7 @@ class SeekerAgent(AgentBase):
         query_msg = Msg("assistant", current_action, role="assistant")
         retrived_memories = self.memory.get_memory(query_msg)
         if retrived_memories is None or len(retrived_memories) == 0:
-            return Msg("assistant", None, role="assistant")
+            return Msg("assistant", "", role="assistant")
         msg = Msg(
             "user",
             Template.reflection_prompt(
@@ -321,7 +324,8 @@ class SeekerAgent(AgentBase):
         self.state = "determining_status"
         msg = Msg("user", Template.determine_status_prompt(), role="user")
         tht = self.reflect(current_action="Choose whether to conduct a job search")
-        prompt = self.model.format(self.system_prompt, tht, msg)
+        msg = Msg("user", tht.content+msg.content, role="user")
+        prompt = self.model.format(self.system_prompt, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             message_manager.add_message(
@@ -362,7 +366,8 @@ class SeekerAgent(AgentBase):
     def interview(self, query):
         msg = Msg("user", query, role="user")
         tht = self.reflect(current_action=query)
-        prompt = self.model.format(self.system_prompt, tht, msg)
+        msg = Msg("user", tht.content+msg.content, role="user")
+        prompt = self.model.format(self.system_prompt, msg)
         return self.model(prompt).text
 
     def reply(self, x: Optional[Union[Msg, Sequence[Msg]]] = None) -> Msg:

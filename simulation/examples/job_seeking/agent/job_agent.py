@@ -154,7 +154,9 @@ class JobAgent(AgentBase):
             Template.screen_resumes_prompt(cv_passed_hc, apply_seekers),
             role="user",
         )
-        prompt = self.model.format(self.system_prompt, self.memory.get_memory(msg), msg)
+        memory_msg = self.memory.get_memory(msg)
+        msg = Msg("user", memory_msg.content+msg.content, role="user")
+        prompt = self.model.format(self.system_prompt, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             message_manager.add_message(
@@ -198,7 +200,9 @@ class JobAgent(AgentBase):
             Template.make_decision(offer_hc, wl_n, interview_seekers),
             role="user",
         )
-        prompt = self.model.format(self.system_prompt, self.memory.get_memory(msg), msg)
+        memory_msg = self.memory.get_memory(msg)
+        msg = Msg("user", memory_msg.content+msg.content, role="user")
+        prompt = self.model.format(self.system_prompt, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             message_manager.add_message(
@@ -251,8 +255,9 @@ class JobAgent(AgentBase):
 
     def interview(self, query):
         msg = Msg("user", query, role="user")
-        tht = self.reflect(current_action=query)
-        prompt = self.model.format(self.system_prompt, tht, msg)
+        memory_msg = self.memory.get_memory(msg)
+        msg = Msg("user", memory_msg.content+msg.content, role="user")
+        prompt = self.model.format(self.system_prompt, msg)
         return self.model(prompt).text
 
     def reply(self, x: Optional[Union[Msg, Sequence[Msg]]] = None) -> Msg:

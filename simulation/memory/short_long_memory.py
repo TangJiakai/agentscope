@@ -114,7 +114,9 @@ class ShortLongMemory(ShortMemory):
         rescored_docs.sort(key=lambda x: x[1], reverse=True)
         return [x[0] for x in rescored_docs]
 
-    def add(self, memory: Msg):
+    def add(self, memory: Msg = None):
+        if memory is None: return None
+
         ltm_memory_unit = super().add(memory)
         if ltm_memory_unit:
             self.add_ltm_memory(ltm_memory_unit)
@@ -129,6 +131,8 @@ class ShortLongMemory(ShortMemory):
         docs_and_scores.update(self.get_salient_docs(query))
         return self._get_rescored_docs(query, docs_and_scores)
 
-    def get_memory(self, query: Msg):
+    def get_memory(self, query: Msg = None, only_short=False):
         stm_memory = super().get_memory(query)
+        if not query or only_short:
+            return stm_memory
         return self.get_ltm_memory(query) + stm_memory
