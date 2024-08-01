@@ -146,7 +146,7 @@ class SeekerAgent(AgentBase):
         self.state = "considering_search_job_number"
         msg = Msg("user", Template.search_job_number_prompt(), role="user")
         tht = self.reflect(current_action="Determine the number of jobs to search for")
-        msg = Msg("user", msg.content+tht.content, role="user")
+        msg = Msg("user", tht.content+msg.content, role="user")
         prompt = self.model.format(self.system_prompt, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
@@ -181,7 +181,7 @@ class SeekerAgent(AgentBase):
         tht = self.reflect(
             current_action="Select the positions to which you want to submit your resume"
         )
-        msg = Msg("user", msg.content+tht.content, role="user")
+        msg = Msg("user", tht.content+msg.content, role="user")
         prompt = self.model.format(self.system_prompt, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
@@ -227,7 +227,7 @@ class SeekerAgent(AgentBase):
         tht = self.reflect(
             current_action="Decide to accept, wait for a backup, or decline the offer"
         )
-        msg = Msg("user", msg.content+tht.content, role="user")
+        msg = Msg("user", tht.content+msg.content, role="user")
         prompt = self.model.format(self.system_prompt, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
@@ -324,7 +324,7 @@ class SeekerAgent(AgentBase):
         self.state = "determining_status"
         msg = Msg("user", Template.determine_status_prompt(), role="user")
         tht = self.reflect(current_action="Choose whether to conduct a job search")
-        msg = Msg("user", msg.content+tht.content, role="user")
+        msg = Msg("user", tht.content+msg.content, role="user")
         prompt = self.model.format(self.system_prompt, msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
@@ -366,7 +366,7 @@ class SeekerAgent(AgentBase):
     def interview(self, query):
         msg = Msg("user", query, role="user")
         tht = self.reflect(current_action=query)
-        msg = Msg("user", msg.content+tht.content, role="user")
+        msg = Msg("user", tht.content+msg.content, role="user")
         prompt = self.model.format(self.system_prompt, msg)
         return self.model(prompt).text
 
