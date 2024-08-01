@@ -1,0 +1,9 @@
+{% macro interview_opening_statement(seeker, job) %}
+In this round of interviews, the participants are job seeker {{seeker.name}} and the interviewer from company {{job.company_name}}. 
+The position the job seeker is as follows:
+{{str(job)}}
+Attention, interviewer: if the interview is over, please simply output 'exit'.
+First, please have {{seeker.name}} introduce themselves.
+{% endmacro %}
+
+
