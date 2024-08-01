@@ -18,10 +18,9 @@ def try_serialize_dict(data):
 def run_sh(script_path: str, *args):
     command = ["bash", script_path, *args]
     try:
-        result = subprocess.run(
-            command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        process = subprocess.Popen(
+            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        logger.info(f"Run {script_path} output:\n{result.stdout.decode()}")
+        logger.info(f"Run {script_path} with PID {process.pid}")
     except subprocess.CalledProcessError as e:
-        logger.error(f"Run {script_path} failed with return code: {e.returncode}")
-        logger.error(f"Run {script_path} error output:\n{e.stderr.decode()}")
+        logger.error(f"Error running {script_path}: {e}")
