@@ -9,10 +9,10 @@ class NoneMemory:
     ) -> None:
         pass
 
-    def add(self, memory: Msg):
+    def add(self, memory: Msg = None):
         pass
 
-    def get_memory(self, query: Msg):
+    def get_memory(self, query: Msg = None):
         pass
 
 

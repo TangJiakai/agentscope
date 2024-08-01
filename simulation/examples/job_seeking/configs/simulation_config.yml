@@ -3,7 +3,7 @@ model_configs_path: model_configs.json
 project_name: job_seeking
 round_n: 2
 distributed: true
-save_dir: /data/gaoheyang/GeneralSimulation/simulation/examples/job_seeking/runs
+save_dir: /data/tangjiakai/general_simulation/simulation/examples/job_seeking/runs
 
 # custom settings
 seeker_agent_configs_path: seeker_agent_configs.json

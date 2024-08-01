@@ -97,7 +97,9 @@ class ShortLongReflectionMemory(ShortLongMemory):
             for insight in insights:
                 self.add_ltm_memory(Msg("user", insight, role="user"))
 
-    def add(self, memory: Msg):
+    def add(self, memory: Msg = None):
+        if memory is None: return
+
         super().add(memory)
         if len(self.ltm_memory) == 0:
             return
@@ -112,5 +114,5 @@ class ShortLongReflectionMemory(ShortLongMemory):
             self.aggregate_importance = 0.0
             self.reflecting = False
 
-    def get_memory(self, query: Msg):
+    def get_memory(self, query: Msg = None):
         return super().get_memory(query)

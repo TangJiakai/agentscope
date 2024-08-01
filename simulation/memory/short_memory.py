@@ -12,11 +12,13 @@ class ShortMemory:
         self.stm_K = stm_K
         self.stm_memory = []
 
-    def add(self, memory: Msg):
+    def add(self, memory: Msg = None):
+        if memory is None: return None
+
         self.stm_memory.append(memory)
         if len(self.stm_memory) > self.stm_K:
             return self.stm_memory.pop(0)
         return None
 
-    def get_memory(self, query: Msg):
+    def get_memory(self, query: Msg = None):
         return self.stm_memory
