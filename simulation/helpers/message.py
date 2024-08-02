@@ -8,10 +8,10 @@ class MessageUnit(BaseModel):
     agent_id: int
     name: str
     agent_type: str
-    query: str = Field(..., serialization_alias="prompt")
-    response: str = Field(..., serialization_alias="completion")
-    rewritten_response: Optional[str] = Field(None, serialization_alias="completion")
-    rating: Optional[int] = Field(None, serialization_alias="reward")
+    prompt: str
+    completion: str
+    rewritten_response: Optional[str] = None
+    rating: Optional[int] = None
 
 
 class StateUnit(BaseModel):

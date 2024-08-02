@@ -38,12 +38,12 @@ SeekerAgentStates = [
 def set_state(flag: str):
     def decorator(func):
         def wrapper(self, *args, **kwargs):
-            init_state = self._state
-            self._state = flag
+            init_state = self.state
+            self.state = flag
             try:
                 return func(self, *args, **kwargs)
             finally:
-                self._state = init_state
+                self.state = init_state
         return wrapper
     return decorator
 
@@ -141,8 +141,8 @@ class SeekerAgent(AgentBase):
     def send_message(self, prompt, response):
         message_manager.add_message(MessageUnit(
             name=self.name,
-            query="\n".join("\n".join([p["content"] for p in prompt])),
-            response=response.text,
+            prompt="\n".join([p["content"] for p in prompt]),
+            completion=response.text,
             agent_type=type(self).__name__,
             agent_id=self.get_id(),
         ))
