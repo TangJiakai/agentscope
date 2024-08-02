@@ -13,7 +13,7 @@ Position Requirements:
 {# Prompt: Screening cv of job seeker #}
 {% macro screening_cv_prompt(seeker, hc) %}
 Currently, you have received the following resume from the job seeker:
-{{str(seeker)}}
+{{seeker}}
 
 Based on the number of resumes you have previously screened and the remaining {{hc}} headcounts, please decide whether this job seeker should pass the resume screening and move on to the next stage of the interview process in order to maximize the company's benefits while minimizing costs.
 If you decide to pass the resume, please output 'yes'; otherwise, output 'no'.
@@ -28,3 +28,13 @@ If yes, please output 'yes'; otherwise, output 'no'.
 Be sure to provide one of these options and do not refuse to answer.
 {% endmacro %}
 
+
+{# Observation: Receive notification from the seeker #}
+{% macro receive_notification_observation(seeker, agree) %}
+You have received a notification from job seeker {{seeker.name}}. The notification is as follows:
+{% if agree %}
+{{seeker.name}} has agreed to the job offer.
+{% else %}
+{{seeker.name}} has rejected the job offer.
+{% endif %}
+{% endmacro %}

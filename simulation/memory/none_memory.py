@@ -13,7 +13,7 @@ class NoneMemory:
         pass
 
     def get_memory(self, query: Msg = None):
-        pass
+        return []
 
 
 

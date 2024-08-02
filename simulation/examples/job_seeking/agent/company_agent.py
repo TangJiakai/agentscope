@@ -9,7 +9,7 @@ from agentscope.agents.agent import DistConf
 from agentscope.message import Msg
 from agentscope.models import load_model_by_config_name
 
-from simulation.helpers.message import StateUnit, message_manager
+from simulation.helpers.message import MessageUnit, StateUnit, message_manager
 from simulation.helpers.utils import setup_memory
 
 scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -18,7 +18,10 @@ env = Environment(loader=file_loader)
 Template = env.get_template('company_prompts.j2').module
 
 
-CompanyAgentStates = ["idle"]
+CompanyAgentStates = [
+    "idle",
+    "external interviewing",
+]
 
 
 class Company(object):
@@ -33,6 +36,19 @@ class Company(object):
             f"Company Description: {self.cd}"
         )
     
+
+def set_state(flag: str):
+    def decorator(func):
+        def wrapper(self, *args, **kwargs):
+            init_state = self._state
+            self._state = flag
+            try:
+                return func(self, *args, **kwargs)
+            finally:
+                self._state = init_state
+        return wrapper
+    return decorator
+
 
 class CompanyAgent(AgentBase):
     """company agent."""
@@ -93,13 +109,38 @@ class CompanyAgent(AgentBase):
 
     def get_id(self):
         return self.id
+    
+    def send_message(self, prompt, response):
+        message_manager.add_message(MessageUnit(
+            name=self.name,
+            query="\n".join("\n".join([p["content"] for p in prompt])),
+            response=response.text,
+            agent_type=type(self).__name__,
+            agent_id=self.get_id(),
+        ))
 
-    def interview(self, query):
-        msg = Msg("user", query, role="user")
-        memory_msg = self.memory.get_memory(msg)
-        msg = Msg("user", memory_msg.content+msg.content, role="user")
+    @set_state("external interviewing")
+    def external_interview_fun(self, query, **kwargs):
+        query_msg = Msg("assistant", query, role="assistant")
+        memory_msg = self.memory.get_memory(query_msg)
+        msg = Msg("assistant", "\n".join([p.content for p in memory_msg]) + query, "assistant")
         prompt = self.model.format(self.system_prompt, msg)
-        return self.model(prompt).text
+        response = self.model(prompt)
+        return response.text
+    
+    def run_fun(self, **kwargs):
+        pass
     
     def reply(self, x: Optional[Union[Msg, Sequence[Msg]]] = None) -> Msg:
-        return Msg(self.name, None, role="assistant")
+        if x is not None and x.get("fun", None):
+            return getattr(self, f"{x.fun}_fun")(**getattr(x, "params", {}))
+        else:
+            memory = self.memory.get_memory(x)
+            self.memory.add(x)
+            msg = Msg("user", "\n".join([p.content for p in memory]) + x.content, "user")
+            prompt = self.model.format(self.system_prompt, msg)
+            response = self.model(prompt)
+            self.send_message(prompt, response)
+            msg = Msg(self.name, response.text, role="user")
+            self.memory.add(msg)
+            return msg

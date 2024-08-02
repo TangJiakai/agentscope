@@ -7,7 +7,7 @@ from agentscope.msghub import msghub
 from agentscope.pipelines.functional import sequentialpipeline
 
 
-scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+scene_path = os.path.dirname(os.path.abspath(__file__))
 file_loader = FileSystemLoader(os.path.join(scene_path, "prompts"))
 env = Environment(loader=file_loader)
 Template = env.get_template("environment_prompts.j2").module
@@ -29,7 +29,7 @@ class Environment:
         try:
             response = interviewer_agent(Msg(
                 name=seeker.name,
-                content=str(seeker),
+                content=None,
                 role="user",
                 fun="screening_cv",
                 params={
@@ -42,7 +42,7 @@ class Environment:
         return response
     
     def interview(self, seeker, job):
-        MAX_INTERVIEW_ROUND = 3
+        MAX_INTERVIEW_ROUND = 1
         seeker_agent, interviewer_agent = self.agents[seeker.id], self.agents[job.id]
         
         HostMsg = partial(Msg, name="Moderator", role="assistant")
@@ -71,3 +71,15 @@ class Environment:
             interviewer_agent.release_lock()
             
         return interview_res
+    
+    def notify_interviewer(self, seeker, job, agree):
+        job_agent = self.agents[job.id]
+        job_agent(Msg(
+            name="assistant",
+            content=None,
+            role="assistant",
+            fun="receive_notification",
+            params={
+                "seeker": seeker,
+                "agree": agree,
+        }))

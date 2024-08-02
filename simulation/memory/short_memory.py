@@ -6,7 +6,7 @@ class ShortMemory:
     def __init__(
         self,
         *,
-        stm_K: int = 5,
+        stm_K: int = 2,
         **kwargs,
     ) -> None:
         self.stm_K = stm_K

@@ -8,10 +8,8 @@ from typing import Sequence
 from agentscope.agents import AgentBase
 from agentscope.agents.agent import DistConf
 from agentscope.message import Msg
-from agentscope.models.response import ModelResponse
 from agentscope.models import load_model_by_config_name
 
-from simulation.examples.job_seeking.utils.utils import extract_dict
 from simulation.helpers.message import MessageUnit, StateUnit, message_manager
 from simulation.helpers.utils import setup_memory
 from simulation.examples.job_seeking2.agent.seeker_agent import Seeker
@@ -36,7 +34,7 @@ def set_state(flag: str):
             init_state = self._state
             self._state = flag
             try:
-                return func(*args, **kwargs)
+                return func(self, *args, **kwargs)
             finally:
                 self._state = init_state
         return wrapper
@@ -136,8 +134,8 @@ class InterviewerAgent(AgentBase):
     def send_message(self, prompt, response):
         message_manager.add_message(MessageUnit(
             name=self.name,
-            prompt="\n".join("\n".join([p["content"] for p in prompt])),
-            completion=response.text,
+            query="\n".join("\n".join([p["content"] for p in prompt])),
+            response=response.text,
             agent_type=type(self).__name__,
             agent_id=self.get_id(),
         ))
@@ -164,11 +162,7 @@ class InterviewerAgent(AgentBase):
     @set_state("making decision")
     def make_decision_fun(self, seeker: Seeker):
         msg = Msg("assistant", Template.make_decision_prompt(seeker), role="assistant")
-        response = self.reply(msg)
-        if "yes" in response.text:
-            self.job.hc -= 1
-        
-        return response
+        return self.reply(msg)
 
     @set_state("external interviewing")
     def external_interview_fun(self, query, **kwargs):
@@ -179,21 +173,24 @@ class InterviewerAgent(AgentBase):
         response = self.model(prompt)
         return response.text
     
+    @set_state("receiving notification")
+    def receive_notification_fun(self, seeker: Seeker, agree: bool, **kwargs):
+        self.observe(Msg("assistant", Template.receive_notification_observation(seeker, agree), role="assistant"))
+        self.job.hc -= 1 if agree else 0
+    
     def run_fun(self, **kwargs):
         pass
 
     def reply(self, x: Optional[Union[Msg, Sequence[Msg]]] = None) -> Msg:
-        if fun := getattr(self, f"{x.fun}_fun"):
-            fun(**getattr(x, "params", {}))
-            return Msg(self.name, None, role="assistant")
+        if x is not None and x.get("fun", None):
+            return getattr(self, f"{x.fun}_fun")(**getattr(x, "params", {}))
         else:
-            self.memory.add(x)
             memory = self.memory.get_memory(x)
-            msg = Msg("assistant", "\n".join([p.content for p in memory]) + x.content, "assistant")
+            self.memory.add(x)
+            msg = Msg("user", "\n".join([p.content for p in memory]) + x.content, "user")
             prompt = self.model.format(self.system_prompt, msg)
             response = self.model(prompt)
-            msg = Msg(self.name, response.text, role="assistant")
             self.send_message(prompt, response)
+            msg = Msg(self.name, response.text, role="user")
             self.memory.add(msg)
-            
-            return response
+            return msg

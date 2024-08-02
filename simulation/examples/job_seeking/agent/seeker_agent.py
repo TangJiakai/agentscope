@@ -1,6 +1,7 @@
+import random
 import os
 from typing import Optional
-from jinja2 import Environment, FileSystemLoader
+import jinja2
 from typing import Union
 from typing import Sequence
 
@@ -13,27 +14,51 @@ from agentscope.models import load_model_by_config_name
 from simulation.examples.job_seeking.utils.utils import extract_dict
 from simulation.helpers.message import MessageUnit, StateUnit, message_manager
 from simulation.helpers.utils import setup_memory
+from simulation.examples.job_seeking2.environment import Environment
 
 
 scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-file_loader = FileSystemLoader(os.path.join(scene_path, "prompts"))
-env = Environment(loader=file_loader)
+file_loader = jinja2.FileSystemLoader(os.path.join(scene_path, "prompts"))
+env = jinja2.Environment(loader=file_loader)
 Template = env.get_template("seeker_prompts.j2").module
 
 
-SeekerAgentStates = ["idle", "determining_status", "considering_search_job_number", "applying_jobs", "making_decision"]
+SeekerAgentStates = [
+    "idle", 
+    "determining status",
+    "determining search job number",
+    "determining search jobs",
+    "determining jobs to apply",
+    "applying jobs",
+    "interviewing",
+    "making final decision",
+    "external interviewing",
+]
+
+def set_state(flag: str):
+    def decorator(func):
+        def wrapper(self, *args, **kwargs):
+            init_state = self._state
+            self._state = flag
+            try:
+                return func(self, *args, **kwargs)
+            finally:
+                self._state = init_state
+        return wrapper
+    return decorator
 
 
 class Seeker(object):
-    def __init__(self, name: str, cv: str, trait: str, status: str):
+    def __init__(self, name: str, cv: str, trait: str):
         self.name = name
         self.cv = cv
         self.trait = trait
-        self.status = status
-        self.job_condition = "unemployed"
+        self.working_condition = "unemployed"
 
     def __str__(self):
-        return f"Seeker Name: {self.name}\n" f"Seeker CV: {self.cv}\n"
+        return f"Name: {self.name}\n" \
+            f"CV: {self.cv}\n" \
+            f"Current Working Condition: {self.working_condition}\n"
 
 
 class SeekerAgent(AgentBase):
@@ -43,19 +68,7 @@ class SeekerAgent(AgentBase):
     model_config_name: str  # Model config name
     seeker: Seeker  # Seeker object
     system_prompt: Msg  # System prompt
-    search_job_number: int  # Search job number
     job_ids_pool: list  # Job ids pool
-    apply_job_ids: list  # Apply job ids
-    cv_passed_job_ids: list  # CV passed job ids
-    offer_job_ids: list  # Offer job ids
-    wl_jobs_dict: dict  # Waitlist jobs dict
-    decision: int  # Decision, 0: no any (wl) offer, 1: accept offer, 2: reject offer and wait jobs in waitlist, 3: reject offer and waitlist jobs, prepare for next round
-    final_offer_id: int  # Final offer id
-    reject_offer_job_ids: list  # Reject offer job ids
-    reject_wl_job_ids: list  # Reject waitlist job ids
-    fail_job_ids: list  # Fail job ids
-    update_variables: list  # Update variables
-    seeking: bool  # seeking job or not
 
     def __init__(
         self,
@@ -63,7 +76,7 @@ class SeekerAgent(AgentBase):
         model_config_name: str,
         cv: str,
         trait: str,
-        status: str,
+        env: Environment,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -76,28 +89,12 @@ class SeekerAgent(AgentBase):
             ),
         )
         self.model_config_name = model_config_name
-        self.seeker = Seeker(name, cv, trait, status)
+        self.env = env
+        self.seeker = Seeker(name, cv, trait)
         self.system_prompt = Msg(
             "system", Template.system_prompt(self.seeker), role="system"
         )
-        self.memory_info = {
-            "final_decision": 0,
-            "waiting_time": 0,
-        }
-        (
-            self.job_ids_pool,
-            self.apply_job_ids,
-            self.cv_passed_job_ids,
-            self.offer_job_ids,
-            self.wl_jobs_dict,
-        ) = (list(), list(), list(), list(), dict())
-        self.fail_job_ids = list()
-        self.update_variables = [
-            self.job_ids_pool,
-            self.apply_job_ids,
-            self.offer_job_ids,
-            self.wl_jobs_dict,
-        ]
+        
         self._state = "idle"
 
     def __getstate__(self) -> object:
@@ -141,239 +138,127 @@ class SeekerAgent(AgentBase):
             str(self.seeker), normalize_embeddings=True
         )
 
-    def search_job_number_fun(self):
+    def send_message(self, prompt, response):
+        message_manager.add_message(MessageUnit(
+            name=self.name,
+            query="\n".join("\n".join([p["content"] for p in prompt])),
+            response=response.text,
+            agent_type=type(self).__name__,
+            agent_id=self.get_id(),
+        ))
+
+    @set_state("determining status")
+    def determine_if_seeking_fun(self, **kwargs):
+        msg = Msg("user", Template.determine_if_seeking_prompt(), role="user")
+        response = self.reply(msg)
+        return response.content
+
+    @set_state("determining search job number")
+    def determine_search_job_number_fun(self, **kwargs):
         """Set search job number."""
-        self.state = "considering_search_job_number"
-        msg = Msg("user", Template.search_job_number_prompt(), role="user")
-        tht = self.reflect(current_action="Determine the number of jobs to search for")
-        msg = Msg("user", tht.content+msg.content, role="user")
-        prompt = self.model.format(self.system_prompt, msg)
+        msg = Msg("user", Template.determine_search_job_number_prompt(), role="user")
+        response = self.reply(msg)
+        search_job_number = int(extract_dict(response.content)["number"])
+        return search_job_number
+    
+    @set_state("determining search jobs")
+    def determine_search_jobs_fun(self, search_job_number: int, **kwargs):
+        search_job_ids = random.sample(self.job_ids_pool, search_job_number)
+        search_jobs = self.env.get_jobs(search_job_ids)
 
-        def parse_func(response: ModelResponse) -> ModelResponse:
-            message_manager.add_message(
-                MessageUnit(
-                    name=self.name,
-                    query="\n".join([p["content"] for p in prompt]),
-                    response=response.text,
-                    agent_type=type(self).__name__,
-                    agent_id=self.get_id(),
-                )
-            )
-            try:
-                res_dict = extract_dict(response.text)
-                return ModelResponse(raw=int(res_dict["number"]))
-            except:
-                raise ValueError(
-                    f"Invalid response format in parse_func "
-                    f"with response: {response.text}",
-                )
+        self.observe(Msg(
+            "assistant", Template.determine_search_jobs_memory(search_jobs), role="assistant"
+        ))
+        return search_jobs
 
-        # print(prompt)
-        response = self.model(prompt, parse_func=parse_func).raw
-        print(response)
-        self.search_job_number = max(min(response, len(self.job_ids_pool)), 1)
-        self.state = "idle"
+    @set_state("determining jobs to apply")
+    def determine_apply_job_fun(self, search_jobs: list, **kwargs):
+        """Determine which jobs to apply."""
+        msg = Msg("user", Template.determine_apply_jobs_prompt(search_jobs), role="user")
+        response = self.reply(msg)
+        apply_job_ids = list(map(int, extract_dict(response.content)["apply_jobs"]))
+        apply_jobs = [job for job in search_jobs if job.id in apply_job_ids]
 
-    def apply_job_fun(self, search_jobs: list):
-        """Apply job."""
-        self.state = "applying_jobs"
-        msg = Msg("user", Template.apply_jobs_prompt(search_jobs), role="user")
-        tht = self.reflect(
-            current_action="Select the positions to which you want to submit your resume"
-        )
-        msg = Msg("user", tht.content+msg.content, role="user")
-        prompt = self.model.format(self.system_prompt, msg)
+        return apply_jobs
 
-        def parse_func(response: ModelResponse) -> ModelResponse:
-            message_manager.add_message(
-                MessageUnit(
-                    name=self.name,
-                    query="\n".join([p["content"] for p in prompt]),
-                    response=response.text,
-                    agent_type=type(self).__name__,
-                    agent_id=self.get_id(),
-                )
-            )
-            try:
-                res_dict = extract_dict(response.text)
-                return ModelResponse(raw=list(map(int, res_dict["apply_jobs"])))
-            except:
-                raise ValueError(
-                    f"Invalid response format in parse_func "
-                    f"with response: {response.text}",
-                )
+    @set_state("applying jobs")
+    def apply_job_fun(self, apply_jobs: list, **kwargs):
+        """Apply jobs."""
+        cv_passed_jobs = []
+        for job in apply_jobs:
+            response = self.env.apply_job(self.seeker, job)
+            if "yes" in response.content:
+                cv_passed_jobs.append(job)
 
-        # print(prompt)
-        response = self.model(prompt, parse_func=parse_func).raw
-        # print(response)
-        self.apply_job_ids = response
-        self.state = "idle"
+        self.observe(Msg(
+            "assistant", Template.apply_job_observation(cv_passed_jobs), role="assistant"
+        ))
 
-    def make_decision_fun(self, agents: dict):
+        return cv_passed_jobs
+
+    @set_state("interviewing")
+    def interview_fun(self, cv_passed_jobs: list, **kwargs):
+        """Interview."""
+        offer_jobs = []
+        for job in cv_passed_jobs:
+            response = self.env.interview(self.seeker, job)
+            if "yes" in response["content"]:
+                offer_jobs.append(job)
+                self.observe(Msg(
+                    "assistant", Template.interview_observation(job, True), role="assistant"
+                ))
+            else:
+                self.observe(Msg(
+                    "assistant", Template.interview_observation(job, False), role="assistant"
+                ))
+
+        return offer_jobs
+
+    @set_state("making final decision")
+    def make_final_decision_fun(self, offer_jobs: list, **kwargs):
         """Make decision."""
-        self.state = "making_decision"
-        if len(self.offer_job_ids) == 0 and len(self.wl_jobs_dict) == 0:
-            self.decision = 0
-            self.final_offer_id = None
-            self.reject_offer_job_ids, self.reject_wl_job_ids = list(), list()
+        if len(offer_jobs) > 0:
+            msg = Msg("user", Template.make_final_decision_prompt(offer_jobs), role="user")
+            response = self.reply(msg)
+            final_job_id = int(extract_dict(response.content)["final_decision"])
+        
+        for job in offer_jobs:
+            self.env.notify_interviewer(self.seeker, job, final_job_id == job.id)
 
-        msg = Msg(
-            "user",
-            Template.make_decision_prompt(
-                self.offer_job_ids, self.wl_jobs_dict, agents
-            ),
-            role="user",
-        )
-        tht = self.reflect(
-            current_action="Decide to accept, wait for a backup, or decline the offer"
-        )
-        msg = Msg("user", tht.content+msg.content, role="user")
+    @set_state("external interviewing")
+    def external_interview_fun(self, query, **kwargs):
+        query_msg = Msg("assistant", query, role="assistant")
+        memory_msg = self.memory.get_memory(query_msg)
+        msg = Msg("assistant", "\n".join([p.content for p in memory_msg]) + query, "assistant")
         prompt = self.model.format(self.system_prompt, msg)
-
-        def parse_func(response: ModelResponse) -> ModelResponse:
-            message_manager.add_message(
-                MessageUnit(
-                    name=self.name,
-                    query="\n".join([p["content"] for p in prompt]),
-                    response=response.text,
-                    agent_type=type(self).__name__,
-                    agent_id=self.get_id(),
-                )
-            )
-            try:
-                res_dict = extract_dict(response.text)
-                res_dict = {k: int(v) if v else None for k, v in res_dict.items()}
-                assert res_dict["decision"] in [1, 2, 3], ValueError(
-                    f"Invalid response in parse_func "
-                    f"with response: {response.text}",
-                )
-                if res_dict["decision"] == 1:  # Accept offer
-                    final_offer_id = res_dict["final_offer_id"]
-                    return ModelResponse(
-                        raw={
-                            "decision": res_dict["decision"],
-                            "final_offer_id": final_offer_id,
-                        }
-                    )
-                elif res_dict["decision"] in [2, 3]:  # Reject offer or waitlist
-                    return ModelResponse(raw={"decision": res_dict["decision"]})
-            except:
-                raise ValueError(
-                    f"Invalid response format in parse_func "
-                    f"with response: {response.text}",
-                )
-
-        # print(prompt)
-        response = self.model(prompt, parse_func=parse_func).raw
-        # print(response)
-        if response["decision"] == 1:  # Accept offer
-            self.decision = 1
-            self.seeker.status = "employed"
-            self.final_offer_id = response["final_offer_id"]
-            self.reject_offer_job_ids = list(
-                set(self.offer_job_ids) - set([self.final_offer_id])
-            )
-            self.reject_wl_job_ids = [x for x in self.wl_jobs_dict]
-        elif response["decision"] == 2:  # Reject offer and wait jobs in waitlist
-            self.decision = 2
-            self.final_offer_id = None
-            self.reject_offer_job_ids = self.offer_job_ids
-            self.reject_wl_job_ids = list()
-        elif (
-            response["decision"] == 3
-        ):  # Reject offer and waitlist jobs, prepare for next round
-            self.decision = 3
-            self.final_offer_id = None
-            self.reject_wl_job_ids = [x for x in self.wl_jobs_dict]
-            self.wl_jobs_dict = dict()
-            self.reject_offer_job_ids = self.offer_job_ids
-
-        self.offer_job_ids = list()
-        self.state = "idle"
-
-    def add_memory_fun(self, seeking=True):
-        if seeking:
-            mem = Msg(
-                "assistant", Template.seeker_memory(self.memory_info), role="assistant"
-            )
-        else:  # agents who are on the job and do not seek jobs
-            mem = Msg(
-                "assistant", Template.nonseeker_memory(self.seeker), role="assistant"
-            )
-        self.memory.add(mem)
-
-    def reflect(self, current_action):
-        """Reflect from memories."""
-        query_msg = Msg("assistant", current_action, role="assistant")
-        retrived_memories = self.memory.get_memory(query_msg)
-        if retrived_memories is None or len(retrived_memories) == 0:
-            return Msg("assistant", "", role="assistant")
-        msg = Msg(
-            "user",
-            Template.reflection_prompt(
-                [x["content"] for x in retrived_memories], current_action
-            ),
-            role="user",
-        )
-        prompt = self.model.format(self.system_prompt, msg)
-
-        response = self.model(prompt).text
-        return Msg("user", content=response, role="user")
-
-    def determine_status_fun(self):
-        self.state = "determining_status"
-        msg = Msg("user", Template.determine_status_prompt(), role="user")
-        tht = self.reflect(current_action="Choose whether to conduct a job search")
-        msg = Msg("user", tht.content+msg.content, role="user")
-        prompt = self.model.format(self.system_prompt, msg)
-
-        def parse_func(response: ModelResponse) -> ModelResponse:
-            message_manager.add_message(
-                MessageUnit(
-                    name=self.name,
-                    query="\n".join([p["content"] for p in prompt]),
-                    response=response.text,
-                    agent_type=type(self).__name__,
-                    agent_id=self.get_id(),
-                )
-            )
-            try:
-                res_dict = response.text.strip().lower()
-                if "yes" in res_dict:
-                    return ModelResponse(raw=True)
-                return ModelResponse(raw=False)
-            except:
-                raise ValueError(
-                    f"Invalid response format in parse_func "
-                    f"with response: {response.text}",
-                )
-
-        response = self.model(prompt, parse_func=parse_func).raw
-        self.seeking = response
-        self.state = "idle"
-
-    def update_job_condition(self, company_name, job):
-        self.seeker.job_condition = Template.generate_job_condition(company_name, job)
-
-    def update_fun(self):
-        self.memory_info = {
-            "final_decision": 0,
-            "waiting_time": 0,
-        }
-        for var in self.update_variables:
-            var.clear()
-
-    def interview(self, query):
-        msg = Msg("user", query, role="user")
-        tht = self.reflect(current_action=query)
-        msg = Msg("user", tht.content+msg.content, role="user")
-        prompt = self.model.format(self.system_prompt, msg)
-        return self.model(prompt).text
+        response = self.model(prompt)
+        return response.text
+    
+    def run_fun(self, **kwargs):
+        if self.seeker.working_condition != "unemployed":
+            if "no" in self.determine_if_seeking_fun(): return
+        
+        search_job_number = self.determine_search_job_number_fun()
+        search_jobs = self.determine_search_jobs_fun(search_job_number)
+        apply_jobs = self.determine_apply_job_fun(search_jobs)
+        cv_passed_jobs = self.apply_job_fun(apply_jobs)
+        offer_jobs = self.interview_fun(cv_passed_jobs)
+        self.make_final_decision_fun(offer_jobs)
 
     def reply(self, x: Optional[Union[Msg, Sequence[Msg]]] = None) -> Msg:
-        fun = getattr(self, f"{x.fun}_fun")
-        if hasattr(x, "params"):
-            fun(**x.params)
+        if x and x.get("fun", None):
+            return getattr(self, f"{x.fun}_fun")(**getattr(x, "params", {}))
         else:
-            fun()
-        return Msg(self.name, None, role="assistant")
+            memory = self.memory.get_memory(x)
+            if x:
+                self.memory.add(x)
+                msg = Msg("user", "\n".join([p.content for p in memory]) + x.content, "user")
+            else:
+                msg = Msg("user", "\n".join([p.content for p in memory]), "user")
+            prompt = self.model.format(self.system_prompt, msg)
+            response = self.model(prompt)
+            self.send_message(prompt, response)
+            msg = Msg(self.name, response.text, role="user")
+            self.memory.add(msg)
+            return msg
+        

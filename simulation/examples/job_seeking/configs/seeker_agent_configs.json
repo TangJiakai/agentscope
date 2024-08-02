@@ -4,7 +4,6 @@
         "args": {
             "model_config_name": "Llama3",
             "embedding_model_config_name": "chatgpt",
-            "id": 1,
             "name": "李华",
             "cv": {
                 "学历": "江西财经大学人力资源管理专业本科",
@@ -48,7 +47,6 @@
         "args": {
             "model_config_name": "Llama3",
             "embedding_model_config_name": "chatgpt",
-            "id": 2,
             "name": "王敏",
             "cv": {
                 "学历": "复旦大学环境工程专业硕士",
@@ -91,7 +89,6 @@
         "args": {
             "model_config_name": "Llama3",
             "embedding_model_config_name": "chatgpt",
-            "id": 3,
             "name": "张强",
             "cv": {
                 "学历": "哈尔滨工业大学机械工程专业硕士",
@@ -134,7 +131,6 @@
         "args": {
             "model_config_name": "Llama3",
             "embedding_model_config_name": "chatgpt",
-            "id": 4,
             "name": "赵丽",
             "cv": {
                 "学历": "南京大学市场营销专业本科",

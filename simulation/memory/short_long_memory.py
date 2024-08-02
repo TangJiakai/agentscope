@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import datetime
+from datetime import datetime
 import re
 import os
 from typing import Optional
@@ -11,7 +11,6 @@ import numpy as np
 
 from agentscope.models import ModelResponse
 from agentscope.message import Msg
-from agentscope.service import cos_sim
 
 from simulation.memory import ShortMemory
 
@@ -28,8 +27,8 @@ class ShortLongMemory(ShortMemory):
         *,
         embedding_size: int = 768,
         importance_weight: Optional[float] = 0.15,
-        stm_K: int = 5,
-        ltm_K: int = 5,
+        stm_K: int = 2,
+        ltm_K: int = 2,
         **kwargs,
     ) -> None:
         super().__init__(stm_K=stm_K, **kwargs)
@@ -67,10 +66,10 @@ class ShortLongMemory(ShortMemory):
         ltm_memory_unit.importance_score = self._score_memory_importance(memory_content)
         self.ltm_memory.append(ltm_memory_unit)
         self.retriever.add(
-            [self.embedding_model.encode(memory_content, normalize_embeddings=True)]
+            np.atleast_2d(self.embedding_model.encode(memory_content, normalize_embeddings=True))
         )
 
-    def get_salient_docs(self, query: Msg, k=100):
+    def get_salient_docs(self, query: Msg, k=3):
         def relevance_score_fn(score: float) -> float:
             """Return a similarity score on a scale [0, 1]."""
             # This will differ depending on a few things:
@@ -86,9 +85,7 @@ class ShortLongMemory(ShortMemory):
         for j, i in enumerate(indices[0]):
             if i == -1:
                 continue
-            docs_and_scores[i].append(
-                (self.ltm_memory[i], relevance_score_fn(scores[0][j]))
-            )
+            docs_and_scores[i] = (self.ltm_memory[i], relevance_score_fn(scores[0][j]))
         return docs_and_scores
 
     def _get_combined_score(self, query, doc, relevance_score):
@@ -112,7 +109,7 @@ class ShortLongMemory(ShortMemory):
             for doc, relevance_score in docs_and_scores.values()
         ]
         rescored_docs.sort(key=lambda x: x[1], reverse=True)
-        return [x[0] for x in rescored_docs]
+        return [x[0] for x in rescored_docs[:self.ltm_K]]
 
     def add(self, memory: Msg = None):
         if memory is None: return None
@@ -125,7 +122,7 @@ class ShortLongMemory(ShortMemory):
         query.embedding = self.embedding_model.encode(query.content)
         docs_and_scores = {
             len(self.ltm_memory) - self.ltm_K + i: (doc, 0.0)
-            for i, doc in enumerate(self.ltm_memory[-self.ltm_K :])
+            for i, doc in enumerate(self.ltm_memory[-self.ltm_K:])
         }
 
         docs_and_scores.update(self.get_salient_docs(query))

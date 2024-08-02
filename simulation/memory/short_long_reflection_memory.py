@@ -23,8 +23,8 @@ class ShortLongReflectionMemory(ShortLongMemory):
         *,
         embedding_size: int = 768,
         importance_weight: Optional[float] = 0.15,
-        stm_K: int = 5,
-        ltm_K: int = 4,
+        stm_K: int = 2,
+        ltm_K: int = 2,
         reflection_threshold: Optional[float] = 1.0,
         **kwargs,
     ) -> None:
