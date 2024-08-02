@@ -60,7 +60,7 @@ events: Dict[str, Event] = {}
 queue = Queue()
 simulator = None
 lock = threading.Lock()
-distributed: bool = True
+distributed: bool = False
 distributed_args: DistributedArgs = None
 cur_msgs: List[MessageUnit] = None
 
