@@ -60,7 +60,7 @@ events: Dict[str, Event] = {}
 queue = Queue()
 simulator = None
 lock = threading.Lock()
-distributed: bool = False
+distributed: bool = True
 distributed_args: DistributedArgs = None
 cur_msgs: List[MessageUnit] = None
 
@@ -71,13 +71,13 @@ async def lifespan(app: FastAPI):
     launch_llm_sh_path = os.path.join(
         proj_path, "llmtuning", "scripts", "launch_llm.sh"
     )
-    run_sh(launch_llm_sh_path)
+    # run_sh(launch_llm_sh_path)
 
     yield
 
     # Kill LLM
     kill_llm_sh_path = os.path.join(proj_path, "llmtuning", "scripts", "kill_llm.sh")
-    run_sh(kill_llm_sh_path)
+    # run_sh(kill_llm_sh_path)
 
     # Clean distributed servers
     if distributed:
@@ -538,7 +538,7 @@ def save_changed_messages(mode: Literal["rewrite", "rate"], msgs: List[ChangedMs
 def chatgpt(req: GPTReq):
     with lock:
         msgs = message_manager.messages.copy()
-    msgs = [msgs[id].model_dump(include={"query", "response"}) for id in req.msg_ids]
+    msgs = [msgs[id].model_dump(include={"prompt", "completion"}) for id in req.msg_ids]
     if req.mode == "rewrite":
         resps = rewritten_responses(msgs)
         change_msgs(
@@ -563,9 +563,7 @@ def chatgpt(req: GPTReq):
 @app.post("/tune")
 def tune():
     # Tune LLM
-    tune_llm_sh_path = os.path.join(
-        proj_path, "llmtuning", "scripts", "tune_llm.sh"
-    )
+    tune_llm_sh_path = os.path.join(proj_path, "llmtuning", "scripts", "tune_llm.sh")
     run_sh(tune_llm_sh_path)
     return {"status": "success"}
 
@@ -576,7 +574,7 @@ def export_changed_messages(mode: Literal["rewrite", "rate"]):
         msgs = message_manager.messages.copy()
     if mode == "rewrite":
         msgs = [
-            msg.model_dump(include={"query", "rewritten_response"}, by_alias=True)
+            {"prompt": msg.prompt, "completion": msg.rewritten_response}
             for msg in msgs
             if msg.rewritten_response
         ]
@@ -587,7 +585,7 @@ def export_changed_messages(mode: Literal["rewrite", "rate"]):
             json.dump(msgs, f, ensure_ascii=False, indent=4)
     elif mode == "rate":
         msgs = [
-            msg.model_dump(include={"query", "response", "rating"}, by_alias=True)
+            {"prompt": msg.prompt, "completion": msg.completion, "rating": msg.rating}
             for msg in msgs
             if msg.rating
         ]
