@@ -39,7 +39,7 @@ def setup_participant_agent_server(host: str, port: int) -> None:
         host=host,
         port=port,
         max_pool_size=16384,
-        custom_agent_classes=[SeekerAgent, JobAgent, CompanyAgent],
+        custom_agent_classes=[SeekerAgent, InterviewerAgent, CompanyAgent],
         studio_url="http://127.0.0.1:5000",
     )
     assistant_server_launcher.launch(in_subprocess=False)
