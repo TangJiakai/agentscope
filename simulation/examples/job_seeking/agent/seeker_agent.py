@@ -14,7 +14,7 @@ from agentscope.models import load_model_by_config_name
 from simulation.examples.job_seeking.utils.utils import extract_dict
 from simulation.helpers.message import MessageUnit, StateUnit, message_manager
 from simulation.helpers.utils import setup_memory
-from simulation.examples.job_seeking2.environment import Environment
+from simulation.examples.job_seeking.environment import Environment
 
 
 scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

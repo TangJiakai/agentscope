@@ -21,9 +21,9 @@ from simulation.helpers.message import message_manager
 from simulation.helpers.constants import *
 from agentscope.constants import _DEFAULT_DIR
 
-from simulation.examples.job_seeking2.agent import SeekerAgent, InterviewerAgent, CompanyAgent
+from simulation.examples.job_seeking.agent import SeekerAgent, InterviewerAgent, CompanyAgent
 from simulation.helpers.utils import setup_memory
-from simulation.examples.job_seeking2.environment import Environment
+from simulation.examples.job_seeking.environment import Environment
 
 CUR_ROUND = 1
 SEEKER_AGENT_CONFIG = "seeker_agent_configs.json"
@@ -186,7 +186,6 @@ class Simulator(BaseSimulator):
     def _one_round(self):
         for agent in self.env.agents:
             agent(Msg("system", None, role="system", fun="run"))
-        check_pause()
 
     def run(self):
         play_event.set()
