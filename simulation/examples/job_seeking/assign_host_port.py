@@ -11,7 +11,7 @@ from simulation.helpers.constants import *
 
 scene_path = os.path.dirname(os.path.abspath(__file__))
 SEEKER_AGENT_CONFIG = "seeker_agent_configs.json"
-JOB_AGENT_CONFIG = "job_agent_configs.json"
+INTERVIEWER_AGENT_CONFIG = "interviewer_agent_configs.json"
 COMPANY_AGENT_CONFIG = "company_agent_configs.json"
 
 def parse_args() -> argparse.Namespace:
@@ -34,19 +34,19 @@ def main(args):
     server_num_per_host = args.server_num_per_host
 
     seeker_configs = load_json(os.path.join(scene_path, CONFIG_DIR, SEEKER_AGENT_CONFIG))
-    job_configs = load_json(os.path.join(scene_path, CONFIG_DIR, JOB_AGENT_CONFIG))
+    interview_configs = load_json(os.path.join(scene_path, CONFIG_DIR, INTERVIEWER_AGENT_CONFIG))
     company_configs = load_json(os.path.join(scene_path, CONFIG_DIR, COMPANY_AGENT_CONFIG))
 
     print("len(seeker_configs):", len(seeker_configs))
-    print("len(job_configs):", len(job_configs))
+    print("len(interview_configs):", len(interview_configs))
     print("len(company_configs):", len(company_configs))
 
-    total_agent_num = len(seeker_configs) + len(job_configs) + len(company_configs)
+    total_agent_num = len(seeker_configs) + len(interview_configs) + len(company_configs)
     agent_num_per_server = math.ceil(total_agent_num / server_num_per_host)
     print("agent_num_per_server:", agent_num_per_server)
 
     interleaved_configs = [config for sublist in zip_longest(
-        seeker_configs, job_configs, company_configs
+        seeker_configs, interview_configs, company_configs
         ) for config in sublist if config is not None]
 
     for i, agent_config in enumerate(interleaved_configs):
@@ -54,7 +54,7 @@ def main(args):
         agent_config["args"]["port"] = base_port + i // agent_num_per_server
 
     save_agent_configs(seeker_configs, os.path.join(scene_path, CONFIG_DIR, SEEKER_AGENT_CONFIG))
-    save_agent_configs(job_configs, os.path.join(scene_path, CONFIG_DIR, JOB_AGENT_CONFIG))
+    save_agent_configs(interview_configs, os.path.join(scene_path, CONFIG_DIR, INTERVIEWER_AGENT_CONFIG))
     save_agent_configs(company_configs, os.path.join(scene_path, CONFIG_DIR, COMPANY_AGENT_CONFIG))
 
 

@@ -186,6 +186,7 @@ class Simulator(BaseSimulator):
     def _one_round(self):
         for agent in self.env.agents:
             agent(Msg("system", None, role="system", fun="run"))
+            print("HHHHH!!!!!")
 
     def run(self):
         play_event.set()
