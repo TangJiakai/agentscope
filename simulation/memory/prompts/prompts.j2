@@ -9,16 +9,16 @@ Rating:
 {% macro format_memories_detail_prompt(memories, with_index=False) %}
 {% for mem in memories %}
     {% if with_index %}
-- {{ loop.index }}. [{{ mem.timestamp }}] {{ mem.content }}
+{{ loop.index }}. [{{ mem["timestamp"] }}] {{ mem["content"] }}
     {% else %}
-- [{{ mem.timestamp }}] {{mem.content }}
+- [{{ mem["timestamp"] }}] {{ mem["content"] }}
     {% endif %}
 {% endfor %}
 {% endmacro %}
 
 
-{% macro get_topics_of_reflection_prompt(memory_content) %}
-{{ format_memories_detail_prompt(memory_content, False) }}
+{% macro get_topics_of_reflection_prompt(memories) %}
+{{ format_memories_detail_prompt(memories, False) }}
 Given only the information above, what are the 3 most salient high-level questions we can answer about the subjects in the statements?
 Provide each question on a new line.
 {% endmacro %}

@@ -21,7 +21,7 @@ class ShortLongReflectionMemory(ShortLongMemory):
     def __init__(
         self,
         *,
-        embedding_size: int = 768,
+        embedding_size: int,
         importance_weight: Optional[float] = 0.15,
         stm_K: int = 2,
         ltm_K: int = 2,
@@ -43,7 +43,7 @@ class ShortLongReflectionMemory(ShortLongMemory):
         msg = Msg(
             "user",
             Template.get_topics_of_reflection_prompt(
-                [_.content for _ in self.ltm_memory[-last_k:]]
+                [x for x in self.ltm_memory[-last_k:]]
             ),
             role="user",
         )
@@ -69,7 +69,7 @@ class ShortLongReflectionMemory(ShortLongMemory):
         retrieved_memories = self.get_ltm_memory(topic)
         msg = Msg(
             "user",
-            Template.get_insights_on_topic_prompt(retrieved_memories, topic, True),
+            Template.get_insights_on_topic_prompt([x["content"] for x in retrieved_memories], topic["content"], True),
             role="user",
         )
         prompt = self.model.format(msg)
@@ -104,7 +104,7 @@ class ShortLongReflectionMemory(ShortLongMemory):
         if len(self.ltm_memory) == 0:
             return
 
-        self.aggregate_importance += self.ltm_memory[-1].importance_score
+        self.aggregate_importance += self.ltm_memory[-1]["importance_score"]
         if (
             self.aggregate_importance >= self.reflection_threshold
             and not self.reflecting

@@ -32,6 +32,7 @@ def main(args):
     host = args.host
     base_port = args.base_port
     server_num_per_host = args.server_num_per_host
+    available_port_num = server_num_per_host - 1
 
     seeker_configs = load_json(os.path.join(scene_path, CONFIG_DIR, SEEKER_AGENT_CONFIG))
     interview_configs = load_json(os.path.join(scene_path, CONFIG_DIR, INTERVIEWER_AGENT_CONFIG))
@@ -42,7 +43,7 @@ def main(args):
     print("len(company_configs):", len(company_configs))
 
     total_agent_num = len(seeker_configs) + len(interview_configs) + len(company_configs)
-    agent_num_per_server = math.ceil(total_agent_num / server_num_per_host)
+    agent_num_per_server = math.ceil(total_agent_num / available_port_num)
     print("agent_num_per_server:", agent_num_per_server)
 
     interleaved_configs = [config for sublist in zip_longest(

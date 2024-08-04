@@ -3,7 +3,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
             "name": "李华",
             "cv": {
                 "学历": "江西财经大学人力资源管理专业本科",
@@ -46,7 +45,6 @@
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
             "name": "王敏",
             "cv": {
                 "学历": "复旦大学环境工程专业硕士",
@@ -81,14 +79,13 @@
             },
             "status": "unemployed",
             "host": "localhost",
-            "port": 12011
+            "port": 12010
         }
     },
     {
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
             "name": "张强",
             "cv": {
                 "学历": "哈尔滨工业大学机械工程专业硕士",
@@ -123,14 +120,13 @@
             },
             "status": "unemployed",
             "host": "localhost",
-            "port": 12013
+            "port": 12010
         }
     },
     {
         "class": "SeekerAgent",
         "args": {
             "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
             "name": "赵丽",
             "cv": {
                 "学历": "南京大学市场营销专业本科",
@@ -165,7 +161,7 @@
             },
             "status": "unemployed",
             "host": "localhost",
-            "port": 12014
+            "port": 12010
         }
     }
 ]
