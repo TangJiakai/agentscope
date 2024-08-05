@@ -32,7 +32,7 @@ def main(args):
     host = args.host
     base_port = args.base_port
     server_num_per_host = args.server_num_per_host
-    available_port_num = server_num_per_host - 1
+    available_port_num = server_num_per_host
 
     seeker_configs = load_json(os.path.join(scene_path, CONFIG_DIR, SEEKER_AGENT_CONFIG))
     interview_configs = load_json(os.path.join(scene_path, CONFIG_DIR, INTERVIEWER_AGENT_CONFIG))
