@@ -5,8 +5,8 @@ round_n: 2
 distributed: true
 save_dir: 
 embedding_api: http://localhost:8000/
-load_simulator_path:
-env_agent_port: 12012
+load_simulator_path: 
+env_agent_port: 12002
 
 # custom settings
 seeker_agent_configs_path: seeker_agent_configs.json

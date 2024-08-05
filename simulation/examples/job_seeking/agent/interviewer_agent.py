@@ -12,7 +12,6 @@ from agentscope.models import load_model_by_config_name
 
 from simulation.helpers.message import MessageUnit, StateUnit, message_manager
 from simulation.helpers.utils import *
-from simulation.examples.job_seeking.agent.seeker_agent import Seeker
 
 scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 file_loader = FileSystemLoader(os.path.join(scene_path, "prompts"))
@@ -51,10 +50,10 @@ class Job(dict):
     def __str__(self):
         jr_string = "\n".join([f"- {r}" for r in self.jr])
         return (
-            f"Title: {self.name}\n"
-            f"JD: {self.jd}\n"
-            f"Requirements:\n{jr_string}\n"
-            f"HC: {self.hc}"
+            f"Position Name: {self.name}\n"
+            f"Job Description: {self.jd}\n"
+            f"Job Requirements:\n{jr_string}\n"
+            f"Headcount: {self.hc}"
         )
 
 
@@ -88,9 +87,12 @@ class InterviewerAgent(AgentBase):
         self.embedding = embedding
         self.env_agent = env_agent
 
-        self.system_prompt = Msg("system", Template.system_prompt(self.job), role="system")
+        self.update_system_prompt()
         self._lock = threading.Lock()
         self._state = "idle"
+
+    def update_system_prompt(self):
+        self.system_prompt = Msg("system", Template.system_prompt(self.job), role="system")
 
     def __getstate__(self) -> object:
         state = self.__dict__.copy()
@@ -135,7 +137,13 @@ class InterviewerAgent(AgentBase):
 
     def get_attr_fun(self, attr):
         if attr == "job":
-            return get_assistant_msg(str(self.job))
+            job = {
+                "Position Name": self.job.name,
+                "Job Description": self.job.jd,
+                "Job Requirements": self.job.jr,
+                "Headcount": self.job.hc
+            }
+            return get_assistant_msg(job)
         return get_assistant_msg(getattr(self, attr))
 
     @set_state("screening cv")
@@ -162,7 +170,9 @@ class InterviewerAgent(AgentBase):
     @set_state("receiving notification")
     def receive_notification_fun(self, seeker_name: str, is_accept: bool, **kwargs):
         self.observe(get_assistant_msg(Template.receive_notification_observation(seeker_name, is_accept)))
-        self.job.hc -= 1 if is_accept else 0
+        if is_accept:
+            self.job.hc -= 1
+            self.update_system_prompt()
         return get_assistant_msg("sucesss")
 
     @set_state("external interviewing")

@@ -42,14 +42,6 @@ class Simulator(BaseSimulator):
 
         self._from_scratch()
 
-    def __getstate__(self) -> object:
-        state = self.__dict__.copy()
-        return state
-
-    def __setstate__(self, state: object) -> None:
-        self.__dict__.update(state)
-        self._set_agent_models()
-
     def _from_scratch(self):
         self._init_agentscope()
 

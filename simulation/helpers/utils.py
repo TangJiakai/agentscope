@@ -58,5 +58,5 @@ def rpc_client_post_and_get(agent_client, fun=None, params=None, msg=None):
     )
 
 
-def get_assistant_msg(content=None, fun=None, params=None):
-    return Msg("assistant", content, role="assistant", fun=fun, params=params)
+def get_assistant_msg(content=None, **kwargs):
+    return Msg("assistant", content, role="assistant", **kwargs)

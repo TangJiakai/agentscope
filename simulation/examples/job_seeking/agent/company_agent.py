@@ -5,12 +5,11 @@ from typing import Union
 from typing import Sequence
 
 from agentscope.agents import AgentBase
-from agentscope.agents.agent import DistConf
 from agentscope.message import Msg
 from agentscope.models import load_model_by_config_name
 
 from simulation.helpers.message import MessageUnit, StateUnit, message_manager
-from simulation.helpers.utils import setup_memory
+from simulation.helpers.utils import *
 
 scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 file_loader = FileSystemLoader(os.path.join(scene_path, "prompts"))
@@ -106,11 +105,6 @@ class CompanyAgent(AgentBase):
             raise ValueError(f"Invalid state: {new_value}")
         self._state = new_value
         message_manager.add_state(StateUnit(agent_id=self.agent_id, state=new_value))
-
-    def set_embedding(self, embedding_model):
-        self.embedding = embedding_model.encode(
-            str(self.company), normalize_embeddings=True
-        )
     
     def _send_message(self, prompt, response):
         message_manager.add_message(MessageUnit(
@@ -120,6 +114,9 @@ class CompanyAgent(AgentBase):
             agent_type=type(self).__name__,
             agent_id=self.get_id(),
         ))
+
+    def get_attr_fun(self, attr):
+        return get_assistant_msg(getattr(self, attr))
 
     @set_state("external interviewing")
     def external_interview_fun(self, query, **kwargs):

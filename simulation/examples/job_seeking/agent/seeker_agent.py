@@ -91,9 +91,12 @@ class SeekerAgent(AgentBase):
         self.env_agent = env_agent
 
         self.seeker = Seeker(name, cv, trait)
-        self.system_prompt = Msg("system", Template.system_prompt(self.seeker), role="system")
         
+        self._update_system_prompt()
         self._state = "idle"
+
+    def _update_system_prompt(self):
+        self.system_prompt = Msg("system", Template.system_prompt(self.seeker), role="system")
 
     def __getstate__(self) -> object:
         state = self.__dict__.copy()
@@ -133,6 +136,9 @@ class SeekerAgent(AgentBase):
     def set_attr_fun(self, attr: str, value, **kwargs):
         setattr(self, attr, value)
         return get_assistant_msg("success")
+    
+    def get_attr_fun(self, attr):
+        return get_assistant_msg(getattr(self, attr))
 
     @set_state("determining status")
     def _determine_if_seeking_fun(self, **kwargs):
@@ -195,7 +201,8 @@ class SeekerAgent(AgentBase):
         for (agent_id, agent_info), result in zip(apply_interviewer_agent_infos.items(), results):
             if "yes" in rpc_client_get(agent_info["agent_client"], result)["content"]:
                 cv_passed_interviewer_agent_infos[agent_id] = agent_info
-        self.observe(get_assistant_msg(Template.apply_job_observation(cv_passed_interviewer_agent_infos)))
+        if len(cv_passed_interviewer_agent_infos) > 0:
+            self.observe(get_assistant_msg(Template.apply_job_observation(cv_passed_interviewer_agent_infos)))
         
         return cv_passed_interviewer_agent_infos
 
@@ -240,6 +247,10 @@ class SeekerAgent(AgentBase):
             msg = Msg("user", Template.make_final_decision_prompt(offer_interviewer_agent_infos), role="user")
             final_job_id = extract_agent_id(extract_dict(self.reply(msg)["content"])["result"])
         
+        if final_job_id == "-1":
+            self.seeker.working_condition = offer_interviewer_agent_infos[final_job_id]["job"]["Position Name"]
+            self._update_system_prompt()
+
         results = []
         for agent_id, agent_info in offer_interviewer_agent_infos.items():
             results.append(rpc_client_post(agent_info["agent_client"], fun="receive_notification", params={"seeker_name": self.seeker.name, "is_accept": agent_id==final_job_id}))
@@ -257,6 +268,9 @@ class SeekerAgent(AgentBase):
         prompt = self.model.format(self.system_prompt, msg)
         response = self.model(prompt)
         return Msg(self.name, response.text, "user")
+
+    def get_memory_fun(self, **kwargs):
+        return get_assistant_msg(self.memory.get_memory())
     
     def run_fun(self, **kwargs):
         if self.seeker.working_condition != "unemployed":
