@@ -1,11 +1,11 @@
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 import queue
 
 
 class MessageUnit(BaseModel):
     msg_id: Optional[int] = None
-    agent_id: int
+    agent_id: str
     name: str
     agent_type: str
     prompt: str
@@ -27,9 +27,7 @@ class MessageManager:
 
     def add_message(self, message: MessageUnit):
         from backend.app import lock
-        from simulation.helpers.events import check_pause
 
-        check_pause()
         with lock:
             self.messages.append(message)
         self.message_queue.put(message)

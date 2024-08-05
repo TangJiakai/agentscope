@@ -1,5 +1,6 @@
 import random
 import os
+import requests
 from typing import Optional
 import jinja2
 from typing import Union
@@ -12,7 +13,7 @@ from agentscope.models import load_model_by_config_name
 from agentscope.rpc.rpc_agent_client import RpcAgentClient
 
 from simulation.examples.job_seeking.utils.utils import *
-from simulation.helpers.message import MessageUnit, StateUnit, message_manager
+from simulation.helpers.message import MessageUnit
 from simulation.helpers.utils import *
 
 
@@ -23,7 +24,7 @@ Template = env.get_template("seeker_prompts.j2").module
 
 
 SeekerAgentStates = [
-    "idle", 
+    "idle",
     "determining status",
     "determining search job number",
     "determining search jobs",
@@ -34,6 +35,9 @@ SeekerAgentStates = [
     "external interviewing",
 ]
 
+backend_server_url = "http://localhost:39000"
+
+
 def set_state(flag: str):
     def decorator(func):
         def wrapper(self, *args, **kwargs):
@@ -43,7 +47,9 @@ def set_state(flag: str):
                 return func(self, *args, **kwargs)
             finally:
                 self.state = init_state
+
         return wrapper
+
     return decorator
 
 
@@ -55,9 +61,11 @@ class Seeker(object):
         self.working_condition = working_condition
 
     def __str__(self):
-        return f"Name: {self.name}\n" \
-            f"CV: {self.cv}\n" \
+        return (
+            f"Name: {self.name}\n"
+            f"CV: {self.cv}\n"
             f"Current Working Condition: {self.working_condition}\n"
+        )
 
 
 class SeekerAgent(AgentBase):
@@ -91,12 +99,14 @@ class SeekerAgent(AgentBase):
         self.env_agent = env_agent
 
         self.seeker = Seeker(name, cv, trait)
-        
+
         self._update_system_prompt()
         self._state = "idle"
 
     def _update_system_prompt(self):
-        self.system_prompt = Msg("system", Template.system_prompt(self.seeker), role="system")
+        self.sys_prompt = Msg(
+            "system", Template.system_prompt(self.seeker), role="system"
+        )
 
     def __getstate__(self) -> object:
         state = self.__dict__.copy()
@@ -122,22 +132,33 @@ class SeekerAgent(AgentBase):
         if new_value not in SeekerAgentStates:
             raise ValueError(f"Invalid state: {new_value}")
         self._state = new_value
-        message_manager.add_state(StateUnit(agent_id=self.agent_id, state=new_value))
+        url = f"{backend_server_url}/api/state"
+        resp = requests.post(url, json={"agent_id": self.agent_id, "state": new_value})
+        if resp.status_code != 200:
+            logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
 
     def _send_message(self, prompt, response):
-        message_manager.add_message(MessageUnit(
-            name=self.name,
-            prompt="\n".join([p["content"] for p in prompt]),
-            completion=response.text,
-            agent_type=type(self).__name__,
-            agent_id=self.agent_id,
-        ))
+        url = f"{backend_server_url}/api/message"
+        resp = requests.post(
+            url,
+            json={
+                "name": self.name,
+                "prompt": "\n".join([p["content"] for p in prompt]),
+                "completion": response.text,
+                "agent_type": type(self).__name__,
+                "agent_id": self.agent_id,
+            },
+        )
+        if resp.status_code != 200:
+            logger.error(f"Failed to send message: {self.agent_id}")
 
     def set_attr_fun(self, attr: str, value, **kwargs):
         setattr(self, attr, value)
         return get_assistant_msg("success")
-    
+
     def get_attr_fun(self, attr):
+        if attr == "sys_prompt":
+            return self.sys_prompt
         return get_assistant_msg(getattr(self, attr))
 
     @set_state("determining status")
@@ -154,39 +175,63 @@ class SeekerAgent(AgentBase):
         search_job_number = int(extract_dict(response)["result"])
         logger.info("Search job number: {}", search_job_number)
         return search_job_number
-    
+
     @set_state("determining search jobs")
     def _determine_search_jobs_fun(self, search_job_number: int, **kwargs):
-        search_job_indices = random.sample(range(len(self.job_ids_pool)), search_job_number)
+        search_job_indices = random.sample(
+            range(len(self.job_ids_pool)), search_job_number
+        )
         search_job_ids = [self.job_ids_pool[i] for i in search_job_indices]
-        search_interviewer_agent_distribution_infos = self.env_agent(Msg(
-            "assistant", None, role="assistant", fun="get_agent_distribution_infos", params={"agent_ids": search_job_ids}
-        ))["content"]
+        search_interviewer_agent_distribution_infos = self.env_agent(
+            Msg(
+                "assistant",
+                None,
+                role="assistant",
+                fun="get_agent_distribution_infos",
+                params={"agent_ids": search_job_ids},
+            )
+        )["content"]
         interviewer_agent_infos = {
             agent_id: {"agent_client": RpcAgentClient(**agent_dist_info)}
             for agent_id, agent_dist_info in search_interviewer_agent_distribution_infos.items()
         }
         for agent_info in interviewer_agent_infos.values():
-            agent_info["job"] = rpc_client_post(agent_info["agent_client"], fun="get_attr", params={"attr": "job"})
+            agent_info["job"] = rpc_client_post(
+                agent_info["agent_client"], fun="get_attr", params={"attr": "job"}
+            )
 
         for agent_info in interviewer_agent_infos.values():
-            agent_info["job"] = rpc_client_get(agent_info["agent_client"], agent_info["job"])["content"]
+            agent_info["job"] = rpc_client_get(
+                agent_info["agent_client"], agent_info["job"]
+            )["content"]
 
-        self.observe(get_assistant_msg(Template.determine_search_jobs_memory(interviewer_agent_infos)))
+        self.observe(
+            get_assistant_msg(
+                Template.determine_search_jobs_memory(interviewer_agent_infos)
+            )
+        )
 
         return interviewer_agent_infos
 
     @set_state("determining jobs to apply")
     def _determine_apply_job_fun(self, interviewer_agent_infos: dict, **kwargs):
         """Determine which jobs to apply."""
-        msg = Msg("user", Template.determine_apply_jobs_prompt(interviewer_agent_infos), role="user")
+        msg = Msg(
+            "user",
+            Template.determine_apply_jobs_prompt(interviewer_agent_infos),
+            role="user",
+        )
         apply_ids = extract_agent_id(extract_dict(self.reply(msg)["content"])["result"])
         apply_ids = [apply_ids] if isinstance(apply_ids, str) else apply_ids
         logger.info("Apply jobs: {}", apply_ids)
         if "-1" in apply_ids:
             return {}
         valid_ids = set(interviewer_agent_infos.keys())
-        apply_interviewer_agent_infos = {agent_id: interviewer_agent_infos[agent_id] for agent_id in apply_ids if agent_id in valid_ids}
+        apply_interviewer_agent_infos = {
+            agent_id: interviewer_agent_infos[agent_id]
+            for agent_id in apply_ids
+            if agent_id in valid_ids
+        }
 
         return apply_interviewer_agent_infos
 
@@ -195,47 +240,89 @@ class SeekerAgent(AgentBase):
         """Apply jobs."""
         results = []
         for agent_info in apply_interviewer_agent_infos.values():
-            results.append(rpc_client_post(agent_info["agent_client"], fun="screening_cv", params={"seeker_info": str(self.seeker)}))
-        
+            results.append(
+                rpc_client_post(
+                    agent_info["agent_client"],
+                    fun="screening_cv",
+                    params={"seeker_info": str(self.seeker)},
+                )
+            )
+
         cv_passed_interviewer_agent_infos = {}
-        for (agent_id, agent_info), result in zip(apply_interviewer_agent_infos.items(), results):
+        for (agent_id, agent_info), result in zip(
+            apply_interviewer_agent_infos.items(), results
+        ):
             if "yes" in rpc_client_get(agent_info["agent_client"], result)["content"]:
                 cv_passed_interviewer_agent_infos[agent_id] = agent_info
         if len(cv_passed_interviewer_agent_infos) > 0:
-            self.observe(get_assistant_msg(Template.apply_job_observation(cv_passed_interviewer_agent_infos)))
-        
+            self.observe(
+                get_assistant_msg(
+                    Template.apply_job_observation(cv_passed_interviewer_agent_infos)
+                )
+            )
+
         return cv_passed_interviewer_agent_infos
 
     @set_state("interviewing")
     def _interview_fun(self, cv_passed_interviewer_agent_infos: dict, **kwargs):
         """Interview."""
         MAX_INTERVIEW_ROUND = 1
-        
+
         offer_interviewer_agent_infos = {}
         for agent_id, agent_info in cv_passed_interviewer_agent_infos.items():
-            moderator_opening_msg = get_assistant_msg(Template.interview_opening_statement(self.seeker, agent_info["job"]))
+            moderator_opening_msg = get_assistant_msg(
+                Template.interview_opening_statement(self.seeker, agent_info["job"])
+            )
             answer = self.reply(moderator_opening_msg)
             question = rpc_client_post_and_get(
-                agent_info["agent_client"], fun="start_interview", params={"msg": get_assistant_msg(
-                    content=moderator_opening_msg["content"] + answer["content"] + Template.interview_turn_taking("Interviewer")
-                )}
+                agent_info["agent_client"],
+                fun="start_interview",
+                params={
+                    "msg": get_assistant_msg(
+                        content=moderator_opening_msg["content"]
+                        + answer["content"]
+                        + Template.interview_turn_taking("Interviewer")
+                    )
+                },
             )
-            answer = self.reply(get_assistant_msg(question["content"] + Template.interview_turn_taking("Seeker")))
-            for _ in range(MAX_INTERVIEW_ROUND-1):
-                question = rpc_client_post_and_get(
-                    agent_info["agent_client"], msg=get_assistant_msg(content=answer["content"] + Template.interview_turn_taking("Interviewer"))
+            answer = self.reply(
+                get_assistant_msg(
+                    question["content"] + Template.interview_turn_taking("Seeker")
                 )
-                answer = self.reply(Msg(
-                    "user", question["content"] + Template.interview_turn_taking("Seeker"), role="user"
-                ))
+            )
+            for _ in range(MAX_INTERVIEW_ROUND - 1):
+                question = rpc_client_post_and_get(
+                    agent_info["agent_client"],
+                    msg=get_assistant_msg(
+                        content=answer["content"]
+                        + Template.interview_turn_taking("Interviewer")
+                    ),
+                )
+                answer = self.reply(
+                    Msg(
+                        "user",
+                        question["content"] + Template.interview_turn_taking("Seeker"),
+                        role="user",
+                    )
+                )
             result = rpc_client_post_and_get(
-                agent_info["agent_client"], fun="end_interview", params={"msg":get_assistant_msg(content=answer["content"])}
+                agent_info["agent_client"],
+                fun="end_interview",
+                params={"msg": get_assistant_msg(content=answer["content"])},
             )
             if "yes" in result["content"]:
                 offer_interviewer_agent_infos[agent_id] = agent_info
-                self.observe(get_assistant_msg(Template.interview_observation(agent_info["job"], True)))
+                self.observe(
+                    get_assistant_msg(
+                        Template.interview_observation(agent_info["job"], True)
+                    )
+                )
             else:
-                self.observe(get_assistant_msg(Template.interview_observation(agent_info["job"], False)))
+                self.observe(
+                    get_assistant_msg(
+                        Template.interview_observation(agent_info["job"], False)
+                    )
+                )
 
         return offer_interviewer_agent_infos
 
@@ -244,16 +331,33 @@ class SeekerAgent(AgentBase):
         """Make decision."""
         final_job_id = "-1"
         if len(offer_interviewer_agent_infos) > 0:
-            msg = Msg("user", Template.make_final_decision_prompt(offer_interviewer_agent_infos), role="user")
-            final_job_id = extract_agent_id(extract_dict(self.reply(msg)["content"])["result"])
-        
+            msg = Msg(
+                "user",
+                Template.make_final_decision_prompt(offer_interviewer_agent_infos),
+                role="user",
+            )
+            final_job_id = extract_agent_id(
+                extract_dict(self.reply(msg)["content"])["result"]
+            )
+
         if final_job_id == "-1":
-            self.seeker.working_condition = offer_interviewer_agent_infos[final_job_id]["job"]["Position Name"]
+            self.seeker.working_condition = offer_interviewer_agent_infos[final_job_id][
+                "job"
+            ]["Position Name"]
             self._update_system_prompt()
 
         results = []
         for agent_id, agent_info in offer_interviewer_agent_infos.items():
-            results.append(rpc_client_post(agent_info["agent_client"], fun="receive_notification", params={"seeker_name": self.seeker.name, "is_accept": agent_id==final_job_id}))
+            results.append(
+                rpc_client_post(
+                    agent_info["agent_client"],
+                    fun="receive_notification",
+                    params={
+                        "seeker_name": self.seeker.name,
+                        "is_accept": agent_id == final_job_id,
+                    },
+                )
+            )
 
         for agent_info, res in zip(offer_interviewer_agent_infos.values(), results):
             rpc_client_get(agent_info["agent_client"], res)
@@ -265,22 +369,33 @@ class SeekerAgent(AgentBase):
         query_msg = get_assistant_msg(query)
         memory_msg = self.memory.get_memory(query_msg)
         msg = get_assistant_msg("\n".join([p["content"] for p in memory_msg]) + query)
-        prompt = self.model.format(self.system_prompt, msg)
+        prompt = self.model.format(self.sys_prompt, msg)
         response = self.model(prompt)
         return Msg(self.name, response.text, "user")
 
     def get_memory_fun(self, **kwargs):
         return get_assistant_msg(self.memory.get_memory())
-    
+
+    def post_intervention_fun(self, intervention: str, **kwargs):
+        self.memory.add(Msg("assistant", intervention, role="assistant"))
+        return get_assistant_msg("success")
+
     def run_fun(self, **kwargs):
         if self.seeker.working_condition != "unemployed":
-            if "no" in self.determine_if_seeking_fun(): return
-        
+            if "no" in self.determine_if_seeking_fun():
+                return
+
         search_job_number = self._determine_search_job_number_fun()
         interviewer_agent_infos = self._determine_search_jobs_fun(search_job_number)
-        apply_interviewer_agent_infos = self._determine_apply_job_fun(interviewer_agent_infos)
-        cv_passed_interviewer_agent_infos = self._apply_job_fun(apply_interviewer_agent_infos)
-        offer_interviewer_agent_infos = self._interview_fun(cv_passed_interviewer_agent_infos)
+        apply_interviewer_agent_infos = self._determine_apply_job_fun(
+            interviewer_agent_infos
+        )
+        cv_passed_interviewer_agent_infos = self._apply_job_fun(
+            apply_interviewer_agent_infos
+        )
+        offer_interviewer_agent_infos = self._interview_fun(
+            cv_passed_interviewer_agent_infos
+        )
         final_job_id = self._make_final_decision_fun(offer_interviewer_agent_infos)
 
         return get_assistant_msg(final_job_id)
@@ -292,12 +407,16 @@ class SeekerAgent(AgentBase):
             memory = self.memory.get_memory(x)
             if x:
                 self.memory.add(x)
-                msg = Msg("user", "\n".join([p["content"] for p in memory]) + x["content"], "user")
+                msg = Msg(
+                    "user",
+                    "\n".join([p["content"] for p in memory]) + x["content"],
+                    "user",
+                )
             else:
                 msg = Msg("user", "\n".join([p["content"] for p in memory]), "user")
-            prompt = self.model.format(self.system_prompt, msg)
+            prompt = self.model.format(self.sys_prompt, msg)
             response = self.model(prompt)
+            self._send_message(prompt, response)
             msg = Msg(self.name, response.text, role="user")
             self.memory.add(msg)
             return msg
-        

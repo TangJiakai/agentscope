@@ -49,8 +49,8 @@ class PathReq(BaseModel):
 
 class DistributedArgs(BaseModel):
     host: Optional[str] = "localhost"
-    base_port: int = 12010
-    server_num_per_host: int = 1
+    base_port: int = 12110
+    server_num_per_host: int = 10
 
 
 class DistributedConfig(BaseModel):
@@ -71,7 +71,7 @@ class InterventionMsg(BaseModel):
 
 class AgentInfo(BaseModel):
     name: str
-    id: int
+    id: str
     cls: str
     state: str
     profile: str
@@ -83,7 +83,7 @@ class AgentStateInfo(BaseModel):
 
 
 class AgentState(BaseModel):
-    agent_id: int
+    agent_id: str
     state: str
 
 
