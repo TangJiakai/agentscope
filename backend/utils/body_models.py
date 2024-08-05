@@ -54,7 +54,7 @@ class DistributedArgs(BaseModel):
 
 
 class DistributedConfig(BaseModel):
-    distributed: bool = False
+    distributed: bool = True
     args: Optional[DistributedArgs] = None
 
 

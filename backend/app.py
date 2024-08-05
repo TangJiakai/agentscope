@@ -60,13 +60,19 @@ events: Dict[str, Event] = {}
 queue = Queue()
 simulator = None
 lock = threading.Lock()
-distributed: bool = False
+distributed: bool = True
 distributed_args = DistributedArgs()
 cur_msgs: List[MessageUnit] = None
+backend_server_url: str = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Update backend_server_url
+    global backend_server_url
+    host = os.environ.get("HOST", "0.0.0.0")
+    port = os.environ.get("PORT", 9000)
+    backend_server_url = f"http://{host}:{port}"
     # Launch LLM
     launch_llm_sh_path = os.path.join(
         proj_path, "llmtuning", "scripts", "launch_llm.sh"
@@ -182,7 +188,6 @@ async def websocket_chat_endpoint(websocket: WebSocket, id: str):
                     params={"query": data},
                 )
             )["content"]
-            logger.info(type(resp))
             await manager.send_to_agent(id, resp)
     except WebSocketDisconnect:
         await manager.disconnect(websocket, id)
@@ -671,6 +676,17 @@ async def start():
     Simulator = importlib.import_module(module_path).Simulator
     global simulator
     simulator = Simulator()
+    agents = simulator.agents[:-1]
+    for agent in agents:
+        agent(
+            Msg(
+                "system",
+                None,
+                role="system",
+                fun="set_attr",
+                params={"attr": "backend_server_url", "value": backend_server_url},
+            )
+        )["content"]
     simulation_thread = Thread(target=simulator.run)
     simulation_thread.start()
     return {"status": "success"}

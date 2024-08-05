@@ -1,7 +1,10 @@
-port=9000
+#!/bin/bash
+
+export HOST=0.0.0.0
+export PORT=9000
 
 if [ $# -eq 1 ]; then
-    port=$1
+    export PORT=$1
 fi
 
-uvicorn backend.app:app --host 0.0.0.0 --port $port --reload
+uvicorn backend.app:app --host $HOST --port $PORT --reload

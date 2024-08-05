@@ -34,8 +34,6 @@ SeekerAgentStates = [
     "making final decision",
 ]
 
-backend_server_url = "http://localhost:39000"
-
 
 def set_state(flag: str):
     def decorator(func):
@@ -126,28 +124,30 @@ class SeekerAgent(AgentBase):
 
     @state.setter
     def state(self, new_value):
-        if new_value not in SeekerAgentStates:
-            raise ValueError(f"Invalid state: {new_value}")
-        self._state = new_value
-        url = f"{backend_server_url}/api/state"
-        resp = requests.post(url, json={"agent_id": self.agent_id, "state": new_value})
-        if resp.status_code != 200:
-            logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
+        if hasattr(self, "backend_server_url"):
+            if new_value not in SeekerAgentStates:
+                raise ValueError(f"Invalid state: {new_value}")
+            self._state = new_value
+            url = f"{self.backend_server_url}/api/state"
+            resp = requests.post(url, json={"agent_id": self.agent_id, "state": new_value})
+            if resp.status_code != 200:
+                logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
 
     def _send_message(self, prompt, response):
-        url = f"{backend_server_url}/api/message"
-        resp = requests.post(
-            url,
-            json={
-                "name": self.name,
-                "prompt": "\n".join([p["content"] for p in prompt]),
-                "completion": response.text,
-                "agent_type": type(self).__name__,
-                "agent_id": self.agent_id,
-            },
-        )
-        if resp.status_code != 200:
-            logger.error(f"Failed to send message: {self.agent_id}")
+        if hasattr(self, "backend_server_url"):
+            url = f"{self.backend_server_url}/api/message"
+            resp = requests.post(
+                url,
+                json={
+                    "name": self.name,
+                    "prompt": "\n".join([p["content"] for p in prompt]),
+                    "completion": response.text,
+                    "agent_type": type(self).__name__,
+                    "agent_id": self.agent_id,
+                },
+            )
+            if resp.status_code != 200:
+                logger.error(f"Failed to send message: {self.agent_id}")
 
     def set_attr_fun(self, attr: str, value, **kwargs):
         setattr(self, attr, value)
