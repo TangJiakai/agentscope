@@ -6,5 +6,5 @@ stop_event = Event()
 pause_success_event = Event()
 
 
-async def check_pause():
-    await play_event.wait()
+def check_pause():
+    play_event.wait()

@@ -49,7 +49,7 @@ class PathReq(BaseModel):
 
 class DistributedArgs(BaseModel):
     host: Optional[str] = "localhost"
-    base_port: int = 12110
+    base_port: int = 12200
     server_num_per_host: int = 10
 
 

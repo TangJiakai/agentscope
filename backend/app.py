@@ -8,6 +8,7 @@ from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread, Event
 import threading
+import time
 from typing import Dict, List, Literal, Optional, Union
 
 import aiofiles
@@ -181,6 +182,7 @@ async def websocket_chat_endpoint(websocket: WebSocket, id: str):
                     params={"query": data},
                 )
             )["content"]
+            logger.info(type(resp))
             await manager.send_to_agent(id, resp)
     except WebSocketDisconnect:
         await manager.disconnect(websocket, id)
@@ -663,6 +665,7 @@ async def start():
         str(distributed_args.server_num_per_host),
         str(distributed_args.base_port),
     )
+    time.sleep(5)
 
     module_path = f"simulation.examples.{_scene}.simulator"
     Simulator = importlib.import_module(module_path).Simulator

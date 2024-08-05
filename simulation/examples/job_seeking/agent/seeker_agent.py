@@ -32,7 +32,6 @@ SeekerAgentStates = [
     "applying jobs",
     "interviewing",
     "making final decision",
-    "external interviewing",
 ]
 
 backend_server_url = "http://localhost:39000"
@@ -104,9 +103,7 @@ class SeekerAgent(AgentBase):
         self._state = "idle"
 
     def _update_sys_prompt(self):
-        self.sys_prompt = Msg(
-            "system", Template.sys_prompt(self.seeker), role="system"
-        )
+        self.sys_prompt = Msg("system", Template.sys_prompt(self.seeker), role="system")
 
     def __getstate__(self) -> object:
         state = self.__dict__.copy()
@@ -331,11 +328,19 @@ class SeekerAgent(AgentBase):
         """Make decision."""
         final_job_id = "-1"
         if len(offer_interviewer_agent_infos) > 0:
-            msg = Msg("user", Template.make_final_decision_prompt(offer_interviewer_agent_infos), role="user")
-            final_job_id = extract_agent_id(extract_dict(self.reply(msg)["content"])["result"])
-        
+            msg = Msg(
+                "user",
+                Template.make_final_decision_prompt(offer_interviewer_agent_infos),
+                role="user",
+            )
+            final_job_id = extract_agent_id(
+                extract_dict(self.reply(msg)["content"])["result"]
+            )
+
         if final_job_id != "-1":
-            self.seeker.working_condition = offer_interviewer_agent_infos[final_job_id]["job"]["Position Name"]
+            self.seeker.working_condition = offer_interviewer_agent_infos[final_job_id][
+                "job"
+            ]["Position Name"]
             self._update_sys_prompt()
 
         results = []
@@ -356,14 +361,13 @@ class SeekerAgent(AgentBase):
 
         return final_job_id
 
-    @set_state("external interviewing")
     def external_interview_fun(self, query, **kwargs):
         query_msg = get_assistant_msg(query)
         memory_msg = self.memory.get_memory(query_msg)
-        msg = get_assistant_msg("\n".join([p["content"] for p in memory_msg]) + query)
+        msg = Msg("user", "\n".join([p["content"] for p in memory_msg]) + query, "user")
         prompt = self.model.format(self.sys_prompt, msg)
         response = self.model(prompt)
-        return Msg(self.name, response.text, "user")
+        return Msg(self.name, response.text, "assistant")
 
     def get_memory_fun(self, **kwargs):
         return get_assistant_msg(self.memory.get_memory())
@@ -374,7 +378,7 @@ class SeekerAgent(AgentBase):
 
     def run_fun(self, **kwargs):
         if self.seeker.working_condition != "unemployed":
-            if "no" in self.determine_if_seeking_fun():
+            if "no" in self._determine_if_seeking_fun():
                 return
 
         search_job_number = self._determine_search_job_number_fun()
