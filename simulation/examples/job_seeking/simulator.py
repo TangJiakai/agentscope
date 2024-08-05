@@ -100,7 +100,7 @@ class Simulator(BaseSimulator):
         # Init agents
         env_agent = EnvironmentAgent(
             name="environment",
-            to_dist=DistConf(host="localhost", port=self.config["env_agent_port"]),
+            to_dist=DistConf(host=self.config["host"], port=self.config["base_port"]),
         )
         
         seeker_agents = [
