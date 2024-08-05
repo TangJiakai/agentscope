@@ -5,7 +5,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.
 import dill
 from loguru import logger
 import numpy as np
-from sentence_transformers import SentenceTransformer
 import faiss
 
 import agentscope
@@ -126,7 +125,7 @@ class Simulator(BaseSimulator):
         # Init agents
         env_agent = EnvironmentAgent(
             name="environment",
-            to_dist=DistConf(host="localhost", port=self.config["env_agent_port"]),
+            to_dist=DistConf(host=self.config["host"], port=self.config["base_port"]),
         )
 
         seeker_agents = [

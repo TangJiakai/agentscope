@@ -95,14 +95,12 @@ class InterviewerAgent(AgentBase):
         self.embedding = embedding
         self.env_agent = env_agent
 
-        self.update_system_prompt()
+        self.update_sys_prompt()
         self._lock = threading.Lock()
         self._state = "idle"
 
-    def update_system_prompt(self):
-        self.sys_prompt = Msg(
-            "system", Template.system_prompt(self.job), role="system"
-        )
+    def update_sys_prompt(self):
+        self.sys_prompt = Msg("system", Template.sys_prompt(self.job), role="system")
 
     def __getstate__(self) -> object:
         state = self.__dict__.copy()
@@ -201,7 +199,7 @@ class InterviewerAgent(AgentBase):
         )
         if is_accept:
             self.job.hc -= 1
-            self.update_system_prompt()
+            self.update_sys_prompt()
         return get_assistant_msg("sucesss")
 
     @set_state("external interviewing")

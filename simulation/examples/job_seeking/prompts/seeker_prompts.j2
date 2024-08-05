@@ -1,5 +1,5 @@
 {# Prompt: system prompt. #}
-{% macro system_prompt(seeker) %}
+{% macro sys_prompt(seeker) %}
 You are a job seeker.
 {% if seeker.status == "unemployed" %}
 Your current status is unemployed, and you need to find a suitable and ideal job.
@@ -43,7 +43,7 @@ Answer:
 {% macro determine_search_jobs_memory(interviewer_agent_infos) %}
 The job information you have currently searched is as follows (string in <> represents job ID):
 {% for id, info in interviewer_agent_infos.items() %}
-- <{{id}}> {{info["job"].__str__()}}
+- <{{id}}> {{info["job"]}}
 {% endfor %}
 {% endmacro %}
 
@@ -53,7 +53,7 @@ The job information you have currently searched is as follows (string in <> repr
 When deciding whether to submit a job application, your goal is to maximize the total discounted utility to the present value across all periods.
 You have already searched {{interviewer_agent_infos | length}} jobs as follows (string in <> represents ID):
 {% for id, info in interviewer_agent_infos.items() %}
-- <{{id}}> {{info["job"].__str__()}}
+- <{{id}}> {{info["job"]}}
 {% endfor %}
 
 You need to respond in the following format, which can be loaded by json.loads in Python:
@@ -68,7 +68,7 @@ Answer:
 {% macro apply_job_observation(cv_passed_interviewer_agent_infos) %}
 In the current round, you have received interview opportunities for the following jobs (string in <> represents ID):
 {% for id, info in cv_passed_interviewer_agent_infos.items() %}
-- <{{id}}> {{info["job"].__str__()}}
+- <{{id}}> {{info["job"]}}
 {% endfor %}
 {% endmacro %}
 
@@ -88,7 +88,7 @@ Failure
 {% macro make_final_decision_prompt(offer_interviewer_agent_infos) %}
 In the current round, you have received offers for the following jobs (string in <> represents job ID):
 {% for id, info in offer_interviewer_agent_infos.items() %}
-- <{{id}}> {{info["job"].__str__()}}
+- <{{id}}> {{info["job"]}}
 {% endfor %}
 
 Based on the above circumstances, to maximize individual multi-period discounted expected utility, You have to either

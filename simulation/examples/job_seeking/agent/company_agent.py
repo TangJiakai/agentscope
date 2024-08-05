@@ -82,9 +82,7 @@ class CompanyAgent(AgentBase):
         self.embedding = embedding
         self.env_agent = env_agent
 
-        self.sys_prompt = Msg(
-            "system", Template.system_prompt(self.company), role="system"
-        )
+        self.sys_prompt = Msg("system", Template.sys_prompt(self.company), role="system")
         self._state = "idle"
 
     def __getstate__(self) -> object:

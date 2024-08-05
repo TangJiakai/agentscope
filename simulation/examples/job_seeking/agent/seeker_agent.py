@@ -331,20 +331,12 @@ class SeekerAgent(AgentBase):
         """Make decision."""
         final_job_id = "-1"
         if len(offer_interviewer_agent_infos) > 0:
-            msg = Msg(
-                "user",
-                Template.make_final_decision_prompt(offer_interviewer_agent_infos),
-                role="user",
-            )
-            final_job_id = extract_agent_id(
-                extract_dict(self.reply(msg)["content"])["result"]
-            )
-
-        if final_job_id == "-1":
-            self.seeker.working_condition = offer_interviewer_agent_infos[final_job_id][
-                "job"
-            ]["Position Name"]
-            self._update_system_prompt()
+            msg = Msg("user", Template.make_final_decision_prompt(offer_interviewer_agent_infos), role="user")
+            final_job_id = extract_agent_id(extract_dict(self.reply(msg)["content"])["result"])
+        
+        if final_job_id != "-1":
+            self.seeker.working_condition = offer_interviewer_agent_infos[final_job_id]["job"]["Position Name"]
+            self._update_sys_prompt()
 
         results = []
         for agent_id, agent_info in offer_interviewer_agent_infos.items():

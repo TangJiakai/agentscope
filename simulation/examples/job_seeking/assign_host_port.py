@@ -18,8 +18,8 @@ def parse_args() -> argparse.Namespace:
     """Parse arguments"""
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="localhost")
-    parser.add_argument("--base-port", type=int, default=12010)
-    parser.add_argument("--server-num-per-host", type=int, default=1)
+    parser.add_argument("--base_port", type=int, default=12010)
+    parser.add_argument("--server_num_per_host", type=int, default=1)
     return parser.parse_args()
 
 
@@ -32,7 +32,7 @@ def main(args):
     host = args.host
     base_port = args.base_port
     server_num_per_host = args.server_num_per_host
-    available_port_num = server_num_per_host - 1
+    available_port_num = server_num_per_host
 
     seeker_configs = load_json(os.path.join(scene_path, CONFIG_DIR, SEEKER_AGENT_CONFIG))
     interview_configs = load_json(os.path.join(scene_path, CONFIG_DIR, INTERVIEWER_AGENT_CONFIG))
