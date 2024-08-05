@@ -100,12 +100,12 @@ class SeekerAgent(AgentBase):
 
         self.seeker = Seeker(name, cv, trait)
 
-        self._update_system_prompt()
+        self._update_sys_prompt()
         self._state = "idle"
 
-    def _update_system_prompt(self):
+    def _update_sys_prompt(self):
         self.sys_prompt = Msg(
-            "system", Template.system_prompt(self.seeker), role="system"
+            "system", Template.sys_prompt(self.seeker), role="system"
         )
 
     def __getstate__(self) -> object:
