@@ -2,12 +2,12 @@
 model_configs_path: model_configs.json
 project_name: job_seeking
 round_n: 2
-distributed: true
 save_dir: 
 embedding_api: http://localhost:8000/
 load_simulator_path: 
 host: localhost
 base_port: 12000
+server_num_per_host: 3
 
 # custom settings
 seeker_agent_configs_path: seeker_agent_configs.json

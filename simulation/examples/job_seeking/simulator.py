@@ -37,7 +37,8 @@ class Simulator(BaseSimulator):
         global CUR_ROUND
         self.cur_round = CUR_ROUND
         from agentscope import constants
-        constants._DEFAULT_DIR = file_manager.dir = self.config["save_dir"]
+        if self.config["save_dir"]:
+            constants._DEFAULT_DIR = file_manager.dir = self.config["save_dir"] + "./runs"
 
         self._from_scratch()
 
