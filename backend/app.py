@@ -6,9 +6,9 @@ import importlib
 import inspect
 from pathlib import Path
 from queue import Empty, Queue
-import subprocess
 from threading import Thread, Event
 import threading
+import time
 from typing import Dict, List, Literal, Optional, Union
 
 import aiofiles
@@ -23,7 +23,7 @@ from loguru import logger
 
 from backend.utils.connection import manager
 from simulation.helpers.message import message_manager, MessageUnit, StateUnit
-from simulation.helpers.events import play_event, stop_event
+from simulation.helpers.events import play_event, stop_event, pause_success_event
 from backend.utils.body_models import (
     Scene,
     ModelConfig,
@@ -60,13 +60,19 @@ events: Dict[str, Event] = {}
 queue = Queue()
 simulator = None
 lock = threading.Lock()
-distributed: bool = False
-distributed_args: DistributedArgs = None
+distributed: bool = True
+distributed_args = DistributedArgs()
 cur_msgs: List[MessageUnit] = None
+backend_server_url: str = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Update backend_server_url
+    global backend_server_url
+    host = os.environ.get("HOST", "0.0.0.0")
+    port = os.environ.get("PORT", 9000)
+    backend_server_url = f"http://{host}:{port}"
     # Launch LLM
     launch_llm_sh_path = os.path.join(
         proj_path, "llmtuning", "scripts", "launch_llm.sh"
@@ -164,16 +170,25 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 @app.websocket("/chat/{id}")
-async def websocket_chat_endpoint(websocket: WebSocket, id: int):
+async def websocket_chat_endpoint(websocket: WebSocket, id: str):
     await manager.connect(websocket, id)
     try:
-        agent = simulator.agents[id]
+        agent = simulator.get_agent_by_id(id)
         while True:
             data = await websocket.receive_text()
             logger.info(f"Receive chat message: {data}")
-            await manager.send_to_agent(id, agent.interview(data))
             if data == "exit":
                 break
+            resp = agent(
+                Msg(
+                    "user",
+                    None,
+                    role="user",
+                    fun="external_interview",
+                    params={"query": data},
+                )
+            )["content"]
+            await manager.send_to_agent(id, resp)
     except WebSocketDisconnect:
         await manager.disconnect(websocket, id)
     finally:
@@ -203,13 +218,13 @@ def put_scene(scene_name: str):
 
 @app.get("/agents", response_model=List[AgentInfo])
 def get_agents(query: Optional[str] = None):
-    agents = simulator.agents
+    agents = simulator.agents[:-1]
 
     def fuzzy_search(agents, query):
         return [
             agent
             for agent in agents
-            if query.lower() in agent.name.lower() or query == str(agent.id)
+            if query.lower() in agent.name.lower() or query == agent.agent_id
         ]
 
     if query:
@@ -217,10 +232,26 @@ def get_agents(query: Optional[str] = None):
     return [
         AgentInfo(
             name=agent.name,
-            id=agent.id,
+            id=agent.agent_id,
             cls=agent._init_settings["class_name"],
-            state=agent.state,
-            profile=agent.system_prompt["content"],
+            state=agent(
+                Msg(
+                    "user",
+                    None,
+                    role="user",
+                    fun="get_attr",
+                    params={"attr": "state"},
+                )
+            )["content"],
+            profile=agent(
+                Msg(
+                    "user",
+                    None,
+                    role="user",
+                    fun="get_attr",
+                    params={"attr": "sys_prompt"},
+                )
+            )["content"],
         )
         for agent in agents
     ]
@@ -284,18 +315,33 @@ def put_agent_config(req: List[AgentConfig]):
 
 
 @app.get("/agent/{id}", response_model=AgentInfo)
-def get_agent(id: int):
-    agents = simulator.agents
-    try:
-        agent = agents[id]
+def get_agent(id: str):
+    agent = simulator.get_agent_by_id(id)
+    if agent:
         return AgentInfo(
             name=agent.name,
-            id=agent.id,
+            id=agent.agent_id,
             cls=agent._init_settings["class_name"],
-            state=agent.state,
-            profile=agent.system_prompt["content"],
+            state=agent(
+                Msg(
+                    "user",
+                    None,
+                    role="user",
+                    fun="get_attr",
+                    params={"attr": "state"},
+                )
+            )["content"],
+            profile=agent(
+                Msg(
+                    "user",
+                    None,
+                    role="user",
+                    fun="get_attr",
+                    params={"attr": "sys_prompt"},
+                )
+            )["content"],
         )
-    except IndexError:
+    else:
         return HTMLResponse(content="Agent not found.", status_code=404)
 
 
@@ -312,13 +358,17 @@ def get_agent(id: int):
 
 @app.post("/intervention")
 def post_intervention(intervention: InterventionMsg):
-    global simulator
-    map(
-        lambda agent: agent.memory.add(
-            Msg("assistant", intervention.msg, role="assistant")
-        ),
-        simulator.agents,
-    )
+    agents = simulator.agents[:-1]
+    for agent in agents:
+        agent(
+            Msg(
+                "user",
+                None,
+                role="user",
+                fun="post_intervention",
+                params={"intervention": intervention.msg},
+            )
+        )["content"]
     return {"status": "success"}
 
 
@@ -597,39 +647,58 @@ def export_changed_messages(mode: Literal["rewrite", "rate"]):
     return {"status": "success"}
 
 
+@app.post("/api/state")
+def post_state(state: StateUnit):
+    message_manager.add_state(state)
+    return {"status": "success"}
+
+
+@app.post("/api/message")
+def post_messages(message: MessageUnit):
+    message_manager.add_message(message)
+    return {"status": "success"}
+
+
 @app.post("/start")
 async def start():
-    # Distributed setup
-    if distributed:
-        # assign host and port for agents
-        module_path = f"simulation.examples.{_scene}.assign_host_port"
-        assign_host_port = importlib.import_module(module_path).main
-        assign_host_port(distributed_args)
-
-        # launch server
-        launch_server_sh_path = os.path.join(
-            proj_path, "simulation", "examples", _scene, "launch_server.sh"
-        )
-        run_sh(
-            launch_server_sh_path,
-            distributed_args.server_num_per_host,
-            distributed_args.base_port,
-        )
+    # launch server
+    launch_server_sh_path = os.path.join(
+        proj_path, "simulation", "examples", _scene, "launch_server.sh"
+    )
+    run_sh(
+        launch_server_sh_path,
+        str(distributed_args.server_num_per_host),
+        str(distributed_args.base_port),
+    )
+    time.sleep(5)
 
     module_path = f"simulation.examples.{_scene}.simulator"
     Simulator = importlib.import_module(module_path).Simulator
     global simulator
     simulator = Simulator()
+    agents = simulator.agents[:-1]
+    for agent in agents:
+        agent(
+            Msg(
+                "system",
+                None,
+                role="system",
+                fun="set_attr",
+                params={"attr": "backend_server_url", "value": backend_server_url},
+            )
+        )["content"]
     simulation_thread = Thread(target=simulator.run)
     simulation_thread.start()
     return {"status": "success"}
 
 
 @app.post("/pause")
-def pause_and_resume():
+async def pause_and_resume():
     if play_event.is_set():
         message_manager.message_queue.put("Pause simulation.")
         play_event.clear()
+        while not pause_success_event.is_set():
+            await asyncio.sleep(0.1)
         # Distribute MsgID for messages
         with lock:
             for idx, msg in enumerate(message_manager.messages):
@@ -640,6 +709,7 @@ def pause_and_resume():
         message_manager.clear()
         message_manager.message_queue.put("Resume simulation.")
         play_event.set()
+        pause_success_event.clear()
     return {"status": "success"}
 
 
