@@ -1,10 +1,9 @@
 {
     "class": "ShortLongReflectionMemory",
     "args": {
-        "embedding_size": 768,
         "importance_weight": 0.15,
-        "stm_K": 3,
-        "ltm_K": 3,
+        "stm_K": 2,
+        "ltm_K": 2,
         "reflection_threshold": 1.0
     }
 }

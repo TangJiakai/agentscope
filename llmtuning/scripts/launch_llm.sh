@@ -10,9 +10,9 @@ PARENT_PARENT_DIR="$(realpath "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")"
 
 
 if [ -f "saves/adapter_config.json" ]; then
-    llamafactory-cli api "$PARENT_PARENT_DIR/configs/llama3_lora.yaml" &
+    llamafactory-cli api "$PARENT_PARENT_DIR/configs/llama3_lora.yaml"
 else
-    llamafactory-cli api "$PARENT_PARENT_DIR/configs/llama3.yaml" &
+    llamafactory-cli api "$PARENT_PARENT_DIR/configs/llama3.yaml"
 fi
 
 echo $! > "$(dirname "$0")/.pid"

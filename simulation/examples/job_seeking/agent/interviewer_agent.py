@@ -1,6 +1,6 @@
 import os
 import threading
-from typing import Optional
+from typing import List, Optional
 from jinja2 import Environment, FileSystemLoader
 from typing import Union
 from typing import Sequence
@@ -11,9 +11,7 @@ from agentscope.message import Msg
 from agentscope.models import load_model_by_config_name
 
 from simulation.helpers.message import MessageUnit, StateUnit, message_manager
-from simulation.helpers.utils import setup_memory
-from simulation.examples.job_seeking.agent.seeker_agent import Seeker
-
+from simulation.helpers.utils import *
 
 scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 file_loader = FileSystemLoader(os.path.join(scene_path, "prompts"))
@@ -25,25 +23,26 @@ InterviewerAgentStates = [
     "idle", 
     "screening cv", 
     "making decision", 
+    "receiving notification",
     "external interviewing"
 ]
 
 def set_state(flag: str):
     def decorator(func):
         def wrapper(self, *args, **kwargs):
-            init_state = self._state
-            self._state = flag
+            init_state = self.state
+            self.state = flag
             try:
                 return func(self, *args, **kwargs)
             finally:
-                self._state = init_state
+                self.state = init_state
         return wrapper
     return decorator
 
-class Job(object):
-    def __init__(self, name: str, company_name: str, jd: str, jr: list, hc: int):
+class Job(dict):
+    def __init__(self, name: str, jd: str, jr: List[str], hc: int):
+        super().__init__(name=name, jd=jd, jr=jr, hc=hc)
         self.name = name
-        self.company_name = company_name
         self.jd = jd
         self.jr = jr
         self.hc = hc
@@ -51,54 +50,55 @@ class Job(object):
     def __str__(self):
         jr_string = "\n".join([f"- {r}" for r in self.jr])
         return (
-            f"Position Title: {self.name}\n"
-            f"Company Name: {self.company_name}\n"
-            f"Position Description: {self.jd}\n"
-            f"Position Requirements:\n{jr_string}"
+            f"Position Name: {self.name}\n"
+            f"Job Description: {self.jd}\n"
+            f"Job Requirements:\n{jr_string}\n"
+            f"Headcount: {self.hc}"
         )
 
 
 class InterviewerAgent(AgentBase):
     """Interviewer agent."""
 
-    name: str  # Name of the job
-    model_config_name: str  # Model config name
-    job: Job  # Job object
-    system_prompt: Msg  # System prompt
-
     def __init__(
         self,
         name: str,
         model_config_name: str,
-        company_name: str,
+        memory_config: dict,
+        embedding_api: str,
         jd: str,
         jr: list,
         hc: int,
+        embedding: list,
+        env_agent: AgentBase,
         **kwargs,
     ) -> None:
         super().__init__(
             name=name,
             model_config_name=model_config_name,
-            to_dist=(
-                DistConf(host=kwargs["host"], port=kwargs["port"])
-                if kwargs["distributed"]
-                else None
-            ),
         )
         self.model_config_name = model_config_name
-        self.job = Job(name, company_name, jd, jr, hc)
-        
+        self.memory_config = memory_config
+        self.embedding_api = embedding_api
+        self.memory = setup_memory(memory_config)
+        self.memory.model = self.model
+        self.memory.embedding_api = embedding_api
+        self.job = Job(name=name, jd=jd, jr=jr, hc=hc)
+        self.embedding = embedding
+        self.env_agent = env_agent
+
+        self.update_system_prompt()
         self._lock = threading.Lock()
         self._state = "idle"
+
+    def update_system_prompt(self):
+        self.system_prompt = Msg("system", Template.system_prompt(self.job), role="system")
 
     def __getstate__(self) -> object:
         state = self.__dict__.copy()
         state.pop("model")
         memory_state = self.memory.__dict__.copy()
-        if "model" in memory_state:
-            memory_state["model"] = None
-        if "embedding_model" in memory_state:
-            memory_state["embedding_model"] = None
+        memory_state["model"] = None
         state["memory"] = memory_state
         return state
 
@@ -107,6 +107,7 @@ class InterviewerAgent(AgentBase):
         self.memory = setup_memory(self.memory_config)
         self.memory.__dict__.update(state["memory"])
         self.model = load_model_by_config_name(self.model_config_name)
+        self.memory.model = self.model
 
     @property
     def state(self):
@@ -117,21 +118,9 @@ class InterviewerAgent(AgentBase):
         if new_value not in InterviewerAgentStates:
             raise ValueError(f"Invalid state: {new_value}")
         self._state = new_value
-        message_manager.add_state(StateUnit(agent_id=self.id, state=new_value))
+        message_manager.add_state(StateUnit(agent_id=self.agent_id, state=new_value))
 
-    def set_id(self, id: int):
-        self.id = id
-        self.job.id = id
-
-    def get_id(self):
-        return self.id
-
-    def set_embedding(self, embedding_model):
-        self.embedding = embedding_model.encode(
-            str(self.job), normalize_embeddings=True
-        )
-
-    def send_message(self, prompt, response):
+    def _send_message(self, prompt, response):
         message_manager.add_message(MessageUnit(
             name=self.name,
             prompt="\n".join([p["content"] for p in prompt]),
@@ -140,57 +129,76 @@ class InterviewerAgent(AgentBase):
             agent_id=self.get_id(),
         ))
 
-    def init_system_prompt(self, company):
-        self.system_prompt = Msg(
-            "system", Template.system_prompt(self.job, company), role="system"
-        )
-
-    def acquire_lock(self):
+    def _acquire_lock(self):
         self._lock.acquire()
 
-    def release_lock(self):
+    def _release_lock(self):
         self._lock.release()
 
+    def get_attr_fun(self, attr):
+        if attr == "job":
+            job = {
+                "Position Name": self.job.name,
+                "Job Description": self.job.jd,
+                "Job Requirements": self.job.jr,
+                "Headcount": self.job.hc
+            }
+            return get_assistant_msg(job)
+        return get_assistant_msg(getattr(self, attr))
+
     @set_state("screening cv")
-    def screening_cv_fun(self, seeker: Seeker):
+    def screening_cv_fun(self, seeker_info: str):
         if self.job.hc <= 0:
             return Msg(self.name, "No headcount available", role="assistant")
 
-        msg = Msg("user", Template.screening_cv_prompt(seeker, self.job.hc), role="user")
+        msg = Msg("user", Template.screening_cv_prompt(seeker_info, self.job.hc), role="user")
         return self.reply(msg)
+    
+    def start_interview_fun(self, msg: Msg):
+        self._acquire_lock()
+        return self.reply(msg)
+    
+    def end_interview_fun(self, msg: Msg):
+        response = self.reply(Msg(
+            "assistant",
+            msg["content"] + Template.interview_closing_statement(),
+            role="assistant",
+        ))
+        self._release_lock()
+        return response
 
-    @set_state("making decision")
-    def make_decision_fun(self, seeker: Seeker):
-        msg = Msg("assistant", Template.make_decision_prompt(seeker), role="assistant")
-        return self.reply(msg)
+    @set_state("receiving notification")
+    def receive_notification_fun(self, seeker_name: str, is_accept: bool, **kwargs):
+        self.observe(get_assistant_msg(Template.receive_notification_observation(seeker_name, is_accept)))
+        if is_accept:
+            self.job.hc -= 1
+            self.update_system_prompt()
+        return get_assistant_msg("sucesss")
 
     @set_state("external interviewing")
     def external_interview_fun(self, query, **kwargs):
-        query_msg = Msg("assistant", query, role="assistant")
+        query_msg = get_assistant_msg(query)
         memory_msg = self.memory.get_memory(query_msg)
-        msg = Msg("assistant", "\n".join([p.content for p in memory_msg]) + query, "assistant")
+        msg = get_assistant_msg("\n".join([p["content"] for p in memory_msg]))
         prompt = self.model.format(self.system_prompt, msg)
         response = self.model(prompt)
         return response.text
     
-    @set_state("receiving notification")
-    def receive_notification_fun(self, seeker: Seeker, agree: bool, **kwargs):
-        self.observe(Msg("assistant", Template.receive_notification_observation(seeker, agree), role="assistant"))
-        self.job.hc -= 1 if agree else 0
-    
     def run_fun(self, **kwargs):
-        pass
+        return get_assistant_msg("Done")
 
     def reply(self, x: Optional[Union[Msg, Sequence[Msg]]] = None) -> Msg:
-        if x is not None and x.get("fun", None):
+        if x and x.get("fun", None):
             return getattr(self, f"{x.fun}_fun")(**getattr(x, "params", {}))
         else:
             memory = self.memory.get_memory(x)
-            self.memory.add(x)
-            msg = Msg("user", "\n".join([p.content for p in memory]) + x.content, "user")
+            if x:
+                self.memory.add(x)
+                msg = Msg("user", "\n".join([p["content"] for p in memory]) + x["content"], "user")
+            else:
+                msg = Msg("user", "\n".join([p["content"] for p in memory]), "user")
             prompt = self.model.format(self.system_prompt, msg)
             response = self.model(prompt)
-            self.send_message(prompt, response)
             msg = Msg(self.name, response.text, role="user")
             self.memory.add(msg)
             return msg

@@ -5,6 +5,7 @@ import os
 import json
 
 from agentscope.file_manager import file_manager, _DEFAULT_CFG_NAME
+from agentscope.message import Msg, serialize, deserialize
 
 from simulation.memory import *
 
@@ -35,3 +36,27 @@ def save_configs(configs):
 def setup_memory(memory_config):
     memory = eval(memory_config["class"])(**memory_config["args"])
     return memory
+
+
+def rpc_client_post(agent_client, fun=None, params=None, msg=None):
+    return deserialize(agent_client.call_agent_func(
+        func_name="_reply",
+        value=serialize(
+            Msg("assistant", msg, role="assistant", fun=fun, params=params)
+        )
+    ))
+
+
+def rpc_client_get(agent_client, msg):
+    return deserialize(agent_client.update_placeholder(msg["task_id"]))
+
+
+def rpc_client_post_and_get(agent_client, fun=None, params=None, msg=None):
+    return rpc_client_get(
+        agent_client,
+        rpc_client_post(agent_client, fun=fun, params=params, msg=msg)
+    )
+
+
+def get_assistant_msg(content=None, **kwargs):
+    return Msg("assistant", content, role="assistant", **kwargs)

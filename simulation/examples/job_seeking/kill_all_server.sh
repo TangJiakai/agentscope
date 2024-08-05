@@ -16,6 +16,7 @@ while read pid; do
     fi
 done < "${script_dir}/.pid"
 
+rm -rf "${script_dir}/log"
 rm "${script_dir}/.pid"
 
 echo "All servers stopped."

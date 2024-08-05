@@ -15,7 +15,7 @@ class MessageUnit(BaseModel):
 
 
 class StateUnit(BaseModel):
-    agent_id: int
+    agent_id: str
     state: str
 
 
