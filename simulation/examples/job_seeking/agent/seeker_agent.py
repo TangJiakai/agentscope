@@ -92,11 +92,11 @@ class SeekerAgent(AgentBase):
 
         self.seeker = Seeker(name, cv, trait)
         
-        self._update_system_prompt()
+        self._update_sys_prompt()
         self._state = "idle"
 
-    def _update_system_prompt(self):
-        self.system_prompt = Msg("system", Template.system_prompt(self.seeker), role="system")
+    def _update_sys_prompt(self):
+        self.sys_prompt = Msg("system", Template.sys_prompt(self.seeker), role="system")
 
     def __getstate__(self) -> object:
         state = self.__dict__.copy()
@@ -247,9 +247,9 @@ class SeekerAgent(AgentBase):
             msg = Msg("user", Template.make_final_decision_prompt(offer_interviewer_agent_infos), role="user")
             final_job_id = extract_agent_id(extract_dict(self.reply(msg)["content"])["result"])
         
-        if final_job_id == "-1":
+        if final_job_id != "-1":
             self.seeker.working_condition = offer_interviewer_agent_infos[final_job_id]["job"]["Position Name"]
-            self._update_system_prompt()
+            self._update_sys_prompt()
 
         results = []
         for agent_id, agent_info in offer_interviewer_agent_infos.items():
@@ -265,7 +265,7 @@ class SeekerAgent(AgentBase):
         query_msg = get_assistant_msg(query)
         memory_msg = self.memory.get_memory(query_msg)
         msg = get_assistant_msg("\n".join([p["content"] for p in memory_msg]) + query)
-        prompt = self.model.format(self.system_prompt, msg)
+        prompt = self.model.format(self.sys_prompt, msg)
         response = self.model(prompt)
         return Msg(self.name, response.text, "user")
 
@@ -295,7 +295,7 @@ class SeekerAgent(AgentBase):
                 msg = Msg("user", "\n".join([p["content"] for p in memory]) + x["content"], "user")
             else:
                 msg = Msg("user", "\n".join([p["content"] for p in memory]), "user")
-            prompt = self.model.format(self.system_prompt, msg)
+            prompt = self.model.format(self.sys_prompt, msg)
             response = self.model(prompt)
             msg = Msg(self.name, response.text, role="user")
             self.memory.add(msg)

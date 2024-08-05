@@ -77,7 +77,7 @@ class CompanyAgent(AgentBase):
         self.embedding = embedding
         self.env_agent = env_agent
 
-        self.system_prompt = Msg("system", Template.system_prompt(self.company), role="system")
+        self.sys_prompt = Msg("system", Template.sys_prompt(self.company), role="system")
         self._state = "idle"
 
     def __getstate__(self) -> object:
@@ -123,7 +123,7 @@ class CompanyAgent(AgentBase):
         query_msg = Msg("assistant", query, role="assistant")
         memory_msg = self.memory.get_memory(query_msg)
         msg = Msg("assistant", "\n".join([p.content for p in memory_msg]) + query, "assistant")
-        prompt = self.model.format(self.system_prompt, msg)
+        prompt = self.model.format(self.sys_prompt, msg)
         response = self.model(prompt)
         return response.text
     
@@ -140,7 +140,7 @@ class CompanyAgent(AgentBase):
                 msg = Msg("user", "\n".join([p["content"] for p in memory]) + x["content"], "user")
             else:
                 msg = Msg("user", "\n".join([p["content"] for p in memory]), "user")
-            prompt = self.model.format(self.system_prompt, msg)
+            prompt = self.model.format(self.sys_prompt, msg)
             response = self.model(prompt)
             msg = Msg(self.name, response.text, role="user")
             self.memory.add(msg)

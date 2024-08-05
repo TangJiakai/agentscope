@@ -87,12 +87,12 @@ class InterviewerAgent(AgentBase):
         self.embedding = embedding
         self.env_agent = env_agent
 
-        self.update_system_prompt()
+        self.update_sys_prompt()
         self._lock = threading.Lock()
         self._state = "idle"
 
-    def update_system_prompt(self):
-        self.system_prompt = Msg("system", Template.system_prompt(self.job), role="system")
+    def update_sys_prompt(self):
+        self.sys_prompt = Msg("system", Template.sys_prompt(self.job), role="system")
 
     def __getstate__(self) -> object:
         state = self.__dict__.copy()
@@ -172,7 +172,7 @@ class InterviewerAgent(AgentBase):
         self.observe(get_assistant_msg(Template.receive_notification_observation(seeker_name, is_accept)))
         if is_accept:
             self.job.hc -= 1
-            self.update_system_prompt()
+            self.update_sys_prompt()
         return get_assistant_msg("sucesss")
 
     @set_state("external interviewing")
@@ -180,7 +180,7 @@ class InterviewerAgent(AgentBase):
         query_msg = get_assistant_msg(query)
         memory_msg = self.memory.get_memory(query_msg)
         msg = get_assistant_msg("\n".join([p["content"] for p in memory_msg]))
-        prompt = self.model.format(self.system_prompt, msg)
+        prompt = self.model.format(self.sys_prompt, msg)
         response = self.model(prompt)
         return response.text
     
@@ -197,7 +197,7 @@ class InterviewerAgent(AgentBase):
                 msg = Msg("user", "\n".join([p["content"] for p in memory]) + x["content"], "user")
             else:
                 msg = Msg("user", "\n".join([p["content"] for p in memory]), "user")
-            prompt = self.model.format(self.system_prompt, msg)
+            prompt = self.model.format(self.sys_prompt, msg)
             response = self.model(prompt)
             msg = Msg(self.name, response.text, role="user")
             self.memory.add(msg)

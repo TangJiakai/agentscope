@@ -5,7 +5,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.
 import dill
 from loguru import logger
 import numpy as np
-from sentence_transformers import SentenceTransformer
 import faiss
 
 import agentscope
