@@ -1,15 +1,24 @@
 # General Simulation
 ## Pre-requisites
-### Launch Embedding Model
+### 1. Launch Embedding Model
 1. [optional] Run 
 ```python
 python simulation/examples/job_seeking/launch_emb_model.py
 ```
 to launch the embedding model server.
 
-2. Get the `embedding_api` (for example, http://localhost:8000/), and fill that URL into `simulation/examples/job_seeking/configs/simulation_config.yml`.
+2. Get the `embedding_api` (for example, [http://localhost:8000/](http://localhost:8000/)), and fill that URL into `simulation/examples/job_seeking/configs/simulation_config.yml`.
 
-### Config
+### 2. Launch LLM Model
+1. [optional] Run 
+```bash
+bash llmtuning/scripts/launch_llm.sh
+```
+to launch the LLM model server.
+
+2. Get the `base_url` (for example, [http://localhost:8000/](http://localhost:8083/v1)), and fill that URL into `simulation/examples/job_seeking/configs/model_configs.json`.
+
+### 3. Config
 Configure the following files in the configs directory of the specific scenario (e.g., `examples/job_seeking`):
 
     - simulation_config.yml
@@ -26,7 +35,14 @@ p.s.
 2. The `all_xx_agent_configs.json` file is used to store all configurations for xx-type agents (serving the frontend's agent quantity selection operations), while `xx_agent_configs.json` is the configuration file that the simulation will actually read later.
 
 ## Pipline
-1. 
-2. If you set `distributed` to `True` in `simulation_config.yml`, you need to perform the following operation:
-Run the script `launch_server.sh <server-num-per-host> <base-port>`
-3. Run `simulator.py`
+### 1. Launch Distributed Server
+Run the following command to launch the distributed server:
+```bash
+bash simulation/examples/job_seeking/launch_server.sh <server_num_per_host> <base_port>
+```
+
+### 2. Run Simulation
+Run the following command to run the simulation:
+```python
+python simulation/examples/job_seeking/simulator.py
+```
