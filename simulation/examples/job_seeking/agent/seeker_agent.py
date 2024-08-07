@@ -13,7 +13,6 @@ from agentscope.models import load_model_by_config_name
 from agentscope.rpc.rpc_agent_client import RpcAgentClient
 
 from simulation.examples.job_seeking.utils.utils import *
-from simulation.helpers.message import MessageUnit
 from simulation.helpers.utils import *
 
 
@@ -170,7 +169,7 @@ class SeekerAgent(AgentBase):
         msg = Msg("user", Template.determine_search_job_number_prompt(), role="user")
         response = self.reply(msg)["content"]
         search_job_number = int(extract_dict(response)["result"])
-        logger.info("Search job number: {}", search_job_number)
+
         return search_job_number
 
     @set_state("determining search jobs")
@@ -220,7 +219,7 @@ class SeekerAgent(AgentBase):
         )
         apply_ids = extract_agent_id(extract_dict(self.reply(msg)["content"])["result"])
         apply_ids = [apply_ids] if isinstance(apply_ids, str) else apply_ids
-        logger.info("Apply jobs: {}", apply_ids)
+
         if "-1" in apply_ids:
             return {}
         valid_ids = set(interviewer_agent_infos.keys())

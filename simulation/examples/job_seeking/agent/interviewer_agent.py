@@ -7,12 +7,10 @@ from typing import Union
 from typing import Sequence
 
 from agentscope.agents import AgentBase
-from agentscope.agents.agent import DistConf
 from agentscope.message import Msg
 from agentscope.models import load_model_by_config_name
 from loguru import logger
 
-from simulation.helpers.message import MessageUnit
 from simulation.helpers.utils import *
 
 scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

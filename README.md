@@ -46,3 +46,9 @@ Run the following command to run the simulation:
 ```python
 python simulation/examples/job_seeking/simulator.py
 ```
+
+### 3. Kill Distributed Server
+Run the following command to kill the distributed server:
+```bash
+bash simulation/examples/job_seeking/kill_all_server.sh
+```

@@ -15,7 +15,7 @@ base_port=$2
 
 for ((i=0; i<server_num_per_host; i++)); do
     port=$((base_port + i))
-    python "${script_dir}/launch_server.py" --base-port ${port} &
+    python "${script_dir}/launch_server.py" --base_port ${port} &
     echo $! >> "${script_dir}/.pid"
     echo "Started agent server on localhost:${port} with PID $!"
 done
