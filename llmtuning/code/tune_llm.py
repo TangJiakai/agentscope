@@ -17,12 +17,20 @@ from transformers import (
 from peft import LoraConfig, PeftModel, get_peft_model
 import torch
 import wandb
+import argparse
 
 from llmtuning.code.utils.constants import *
 from llmtuning.code.utils.utils import check_load_adapter, check_dirs
 
 wandb.init(mode="disabled")
 tqdm.pandas()
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse arguments"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--tuning_mode", required=True, type=str, help="sft or ppo")
+    return parser.parse_args()
 
 
 def formatting_prompts_func(example):
@@ -166,21 +174,25 @@ def ppo_train(tokenizer):
     trainer.save_pretrained(SAVE_DIR)
 
 
-def main():
+def main(args):
     tokenizer = AutoTokenizer.from_pretrained(
         LLM_DIR_PATH,
         trust_remote_code=True,
     )
     tokenizer.pad_token = tokenizer.eos_token
 
-    if os.path.isdir(SFT_FILE_PATH) and os.listdir(SFT_FILE_PATH):
-        sft_train(tokenizer)
-        print("SFT-Training completed!")
-
-    if os.path.isdir(PPO_FILE_PATH) and os.listdir(PPO_FILE_PATH):
-        ppo_train(tokenizer)
-        print(f"RLHF-Training completed! Saving the model to {SAVE_DIR}")
+    if args.tuning_mode == "sft":
+        if os.path.isdir(SFT_FILE_PATH) and os.listdir(SFT_FILE_PATH):
+            sft_train(tokenizer)
+            print("SFT-Training completed!")
+    elif args.tuning_mode == "ppo":
+        if os.path.isdir(PPO_FILE_PATH) and os.listdir(PPO_FILE_PATH):
+            ppo_train(tokenizer)
+            print(f"RLHF-Training completed! Saving the model to {SAVE_DIR}")
+    else:
+        raise ValueError(f"Invalid tuning mode {args.tuning_mode}")
 
 if __name__ == "__main__":
+    args = parse_args()
     check_dirs()
-    main()
+    main(args)
