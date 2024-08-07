@@ -7,7 +7,7 @@ from typing import Sequence
 
 from agentscope.agents import AgentBase
 from agentscope.message import Msg
-from agentscope.models import load_model_by_config_name
+from agentscope.manager import ModelManager
 from loguru import logger
 
 from simulation.helpers.message import MessageUnit
@@ -96,7 +96,9 @@ class CompanyAgent(AgentBase):
         self.__dict__.update(state)
         self.memory = setup_memory(self.memory_config)
         self.memory.__dict__.update(state["memory"])
-        self.model = load_model_by_config_name(self.model_config_name)
+        self.model = ModelManager.get_instance().get_model_by_config_name(
+            self.model_config_name
+        )
         self.memory.model = self.model
 
     @property
@@ -110,7 +112,9 @@ class CompanyAgent(AgentBase):
                 raise ValueError(f"Invalid state: {new_value}")
             self._state = new_value
             url = f"{self.backend_server_url}/api/state"
-            resp = requests.post(url, json={"agent_id": self.agent_id, "state": new_value})
+            resp = requests.post(
+                url, json={"agent_id": self.agent_id, "state": new_value}
+            )
             if resp.status_code != 200:
                 logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
 

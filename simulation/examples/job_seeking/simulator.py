@@ -8,7 +8,7 @@ import numpy as np
 import faiss
 
 import agentscope
-from agentscope.file_manager import file_manager
+from agentscope.manager import FileManager
 from agentscope.message import Msg
 from agentscope.agents.agent import DistConf
 
@@ -22,7 +22,7 @@ from simulation.helpers.events import (
 )
 from simulation.helpers.message import message_manager
 from simulation.helpers.constants import *
-from agentscope.constants import _DEFAULT_DIR
+from agentscope.constants import _DEFAULT_SAVE_DIR
 from simulation.examples.job_seeking.agent import *
 from simulation.helpers.emb_service import *
 from simulation.helpers.utils import *
@@ -42,9 +42,10 @@ class Simulator(BaseSimulator):
 
         global CUR_ROUND
         self.cur_round = CUR_ROUND
-        from agentscope import constants
-        if self.config["save_dir"]:
-            constants._DEFAULT_DIR = file_manager.dir = self.config["save_dir"] + "./runs"
+        # from agentscope import constants
+        # if self.config["save_dir"]:
+        #     file_manager = FileManager.get_instance()
+        #     constants._DEFAULT_DIR = file_manager.dir = self.config["save_dir"] + "./runs"
 
         self._from_scratch()
 
@@ -71,7 +72,7 @@ class Simulator(BaseSimulator):
             ),
             use_monitor=False,
             save_dir=(
-                self.config["save_dir"] if self.config["save_dir"] else _DEFAULT_DIR
+                self.config["save_dir"] if self.config["save_dir"] else _DEFAULT_SAVE_DIR
             ),
         )
 
@@ -241,8 +242,9 @@ class Simulator(BaseSimulator):
         logger.info("Simulation finished")
 
     def save(self):
+        file_manager = FileManager.get_instance()
+        save_path = os.path.join(file_manager.run_dir, f"ROUND-{self.cur_round}.pkl")
         global CUR_ROUND
-        save_path = os.path.join(file_manager.dir_root, f"ROUND-{self.cur_round}.pkl")
         self.cur_round = CUR_ROUND + 1
         CUR_ROUND = self.cur_round
         with open(save_path, "wb") as f:

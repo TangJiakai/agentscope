@@ -5,7 +5,8 @@ import glob
 import re
 from loguru import logger
 
-from agentscope.file_manager import file_manager, _DEFAULT_CFG_NAME
+from agentscope.constants import _DEFAULT_CFG_NAME
+from agentscope.manager import FileManager
 
 
 def setup_agents(agent_configs, recent_n):
@@ -68,8 +69,9 @@ def extract_agent_id(agent_id):
 
 
 def save_config(args):
+    file_manager = FileManager.get_instance()
     with open(
-        os.path.join(file_manager.dir_root, _DEFAULT_CFG_NAME),
+        os.path.join(file_manager.run_dir, _DEFAULT_CFG_NAME),
         "r+",
         encoding="utf-8",
     ) as file:

@@ -4,7 +4,8 @@ import yaml
 import os
 import json
 
-from agentscope.file_manager import file_manager, _DEFAULT_CFG_NAME
+from agentscope.constants import _DEFAULT_CFG_NAME
+from agentscope.manager import FileManager
 from agentscope.message import Msg, serialize, deserialize
 
 from simulation.memory import *
@@ -21,8 +22,9 @@ def load_json(file_path):
     
 
 def save_configs(configs):
+    file_manager = FileManager.get_instance()
     with open(
-        os.path.join(file_manager.dir_root, _DEFAULT_CFG_NAME),
+        os.path.join(file_manager.run_dir, _DEFAULT_CFG_NAME),
         "r+",
         encoding="utf-8",
     ) as file:
