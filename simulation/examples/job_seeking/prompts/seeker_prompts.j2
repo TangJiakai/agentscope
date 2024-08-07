@@ -120,3 +120,10 @@ Seeker:
 {{role}}:
 {% endmacro %}
 
+
+{# Prompt: external interview #}
+{% macro external_interview_prompt(query) %}
+You are participating in a simple interview where you need to answer a few questions. Let's begin with the Q&A. 
+Question: {{query}}
+Answer:
+{% endmacro %}

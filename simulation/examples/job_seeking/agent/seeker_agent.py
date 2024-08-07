@@ -364,7 +364,8 @@ class SeekerAgent(AgentBase):
     def external_interview_fun(self, query, **kwargs):
         query_msg = get_assistant_msg(query)
         memory_msg = self.memory.get_memory(query_msg)
-        msg = Msg("user", "\n".join([p["content"] for p in memory_msg]) + query, "user")
+        instruction = Template.external_interview_prompt(query)
+        msg = get_assistant_msg("\n".join([p["content"] for p in memory_msg]) + instruction)
         prompt = self.model.format(self.sys_prompt, msg)
         response = self.model(prompt)
         return Msg(self.name, response.text, "assistant")
