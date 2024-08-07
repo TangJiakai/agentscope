@@ -52,3 +52,8 @@ Run the following command to kill the distributed server:
 ```bash
 bash simulation/examples/job_seeking/kill_all_server.sh
 ```
+
+
+## Tool
+### Agentscope Studio
+You can run the command `as_studio` in the terminal to monitor the server.
