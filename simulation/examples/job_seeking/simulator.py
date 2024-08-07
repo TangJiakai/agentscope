@@ -16,6 +16,7 @@ from simulation.helpers.simulator import BaseSimulator
 from simulation.helpers.events import (
     play_event,
     stop_event,
+    kill_event,
     pause_success_event,
     check_pause,
 )
@@ -233,6 +234,9 @@ class Simulator(BaseSimulator):
                 break
             pause_success_event.set()
             check_pause()
+            if kill_event.is_set():
+                logger.info(f"Kill simulation by user at round {r}.")
+                return
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 

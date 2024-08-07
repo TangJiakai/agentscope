@@ -75,6 +75,7 @@ class AgentInfo(BaseModel):
     cls: str
     state: str
     profile: str
+    coordinates: List[float]
 
 
 class AgentStateInfo(BaseModel):

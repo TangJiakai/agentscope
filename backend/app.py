@@ -23,7 +23,12 @@ from loguru import logger
 
 from backend.utils.connection import manager
 from simulation.helpers.message import message_manager, MessageUnit, StateUnit
-from simulation.helpers.events import play_event, stop_event, pause_success_event
+from simulation.helpers.events import (
+    play_event,
+    stop_event,
+    kill_event,
+    pause_success_event,
+)
 from backend.utils.body_models import (
     Scene,
     ModelConfig,
@@ -55,15 +60,16 @@ templates = Jinja2Templates(directory=os.path.join(proj_path, "backend", "templa
 
 
 _scene = "job_seeking"
-simulation_thread: Thread
 events: Dict[str, Event] = {}
 queue = Queue()
 simulator = None
+simulation_thread: Thread
 lock = threading.Lock()
 distributed: bool = True
 distributed_args = DistributedArgs()
 cur_msgs: List[MessageUnit] = None
 backend_server_url: str = None
+agent_coordinates: Dict[str, List[float]] = {}
 
 
 @asynccontextmanager
@@ -219,6 +225,13 @@ def put_scene(scene_name: str):
 @app.get("/agents", response_model=List[AgentInfo])
 def get_agents(query: Optional[str] = None):
     agents = simulator.agents[:-1]
+    # assign agent coordinates
+    for agent in agents:
+        if agent.agent_id not in agent_coordinates:
+            agent_coordinates[agent.agent_id] = [
+                random.uniform(0, 1),
+                random.uniform(0, 1),
+            ]
 
     def fuzzy_search(agents, query):
         return [
@@ -252,6 +265,7 @@ def get_agents(query: Optional[str] = None):
                     params={"attr": "sys_prompt"},
                 )
             )["content"],
+            coordinates=agent_coordinates[agent.agent_id],
         )
         for agent in agents
     ]
@@ -340,6 +354,7 @@ def get_agent(id: str):
                     params={"attr": "sys_prompt"},
                 )
             )["content"],
+            coordinates=agent_coordinates[agent.agent_id],
         )
     else:
         return HTMLResponse(content="Agent not found.", status_code=404)
@@ -674,7 +689,7 @@ async def start():
 
     module_path = f"simulation.examples.{_scene}.simulator"
     Simulator = importlib.import_module(module_path).Simulator
-    global simulator
+    global simulator, simulation_thread
     simulator = Simulator()
     agents = simulator.agents[:-1]
     for agent in agents:
@@ -716,6 +731,30 @@ async def pause_and_resume():
 @app.post("/stop")
 async def stop():
     stop_event.set()
+    return {"status": "success"}
+
+
+@app.post("/reset")
+async def reset():
+    # Clean distributed servers
+    if distributed:
+        kill_server_sh_path = os.path.join(
+            proj_path, "simulation", "examples", _scene, "kill_all_server.sh"
+        )
+        run_sh(kill_server_sh_path)
+    global simulator, simulation_thread, cur_msgs
+    simulator = None
+    kill_event.set()
+    play_event.set()
+    simulation_thread.join()
+    simulation_thread = None
+    cur_msgs = None
+    message_manager.clear()
+    play_event.clear()
+    stop_event.clear()
+    kill_event.clear()
+    pause_success_event.clear()
+    message_manager.message_queue.put("Reset simulation.")
     return {"status": "success"}
 
 

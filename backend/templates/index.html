@@ -28,7 +28,8 @@
 
     <button id="startButton" style="margin-top: 20px; margin-right: 10px;">Start</button>
     <button id="pauseButton" style="margin-top: 20px; margin-right: 10px;">Pause/Resume</button>
-    <button id="stopButton" style="margin-top: 20px;">Stop</button>
+    <button id="stopButton" style="margin-top: 20px; margin-right: 10px;">Stop</button>
+    <button id="resetButton" style="margin-top: 20px;">Reset</button>
 
     <div style="margin-top: 20px;">
         <label for="userId">Agent ID:</label>
@@ -53,6 +54,7 @@
         const startButton = document.getElementById('startButton');
         const pauseButton = document.getElementById('pauseButton');
         const stopButton = document.getElementById('stopButton');
+        const resetButton = document.getElementById('resetButton');
 
         // 新增部分
         const userIdInput = document.getElementById('userId');
@@ -62,7 +64,7 @@
         const chatSendButton = document.getElementById('chatSendButton');
         let chatWs = null;
 
-        const ws = new WebSocket("ws://localhost:39000/ws");
+        const ws = new WebSocket("ws://localhost:9000/ws");
         ws.onmessage = function (event) {
             const message = event.data;
             try {
@@ -131,6 +133,25 @@
                 console.error("Error sending stop request:", error);
             });
         };
+        resetButton.onclick = function () {
+            // 清空输入框内容
+            inputText.value = '';
+            userIdInput.value = '';
+            chatInput.value = '';
+            msgsTbody.innerHTML = '';  // 清空消息表格
+            msgsTextDiv.innerHTML = '';  // 清空消息文本
+            chatBox.innerHTML = '';  // 清空聊天框
+            // 发送 reset 请求
+            fetch('/reset', { method: 'POST' }).then(response => {
+                if (response.ok) {
+                    console.log("Reset request sent successfully.");
+                } else {
+                    console.log("Failed to send reset request.");
+                }
+            }).catch(error => {
+                console.error("Error sending reset request:", error);
+            });
+        };
         sendButton.onclick = function () {
             const message = inputText.value;
             if (message) {
@@ -150,7 +171,7 @@
                 if (chatWs) {
                     chatWs.close();
                 }
-                chatWs = new WebSocket(`ws://localhost:39000/chat/${userId}`);
+                chatWs = new WebSocket(`ws://localhost:9000/chat/${userId}`);
                 chatWs.onmessage = function (event) {
                     const message = event.data;
                     const msgElement = document.createElement('div');
