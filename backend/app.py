@@ -66,7 +66,6 @@ simulator = None
 simulation_thread: Thread
 lock = threading.Lock()
 distributed: bool = True
-distributed_args = DistributedArgs()
 cur_msgs: List[MessageUnit] = None
 backend_server_url: str = None
 agent_coordinates: Dict[str, List[float]] = {}
@@ -516,18 +515,36 @@ def put_savedir(req: PathReq):
     return {"status": "success"}
 
 
-@app.post("/distributed")
-def configure_distributed(req: DistributedConfig):
-    global distributed, distributed_args
+@app.get("/distributed", response_model=DistributedConfig)
+def get_distributed_config():
     simulation_config_path = os.path.join(
         proj_path, "simulation", "examples", _scene, "configs", "simulation_config.yml"
     )
     with open(simulation_config_path, "r") as f:
         simulation_config = yaml.load(f)
-    simulation_config["distributed"] = distributed = req.distributed
+    return DistributedConfig(
+        distributed=True,
+        args=DistributedArgs(
+            host=simulation_config["host"],
+            base_port=simulation_config["base_port"],
+            server_num_per_host=simulation_config["server_num_per_host"],
+        ),
+    )
+
+
+@app.put("/distributed")
+def put_distributed_config(req: DistributedConfig):
+    global distributed
+    distributed = req.distributed
+    simulation_config_path = os.path.join(
+        proj_path, "simulation", "examples", _scene, "configs", "simulation_config.yml"
+    )
+    with open(simulation_config_path, "r") as f:
+        simulation_config = yaml.load(f)
+    simulation_config["base_port"] = req.args.base_port
+    simulation_config["server_num_per_host"] = req.args.server_num_per_host
     with open(simulation_config_path, "w") as f:
         yaml.dump(simulation_config, f)
-    distributed_args = req.args
     return {"status": "success"}
 
 
@@ -681,13 +698,18 @@ def post_messages(message: MessageUnit):
 @app.post("/start")
 async def start():
     # launch server
+    simulation_config_path = os.path.join(
+        proj_path, "simulation", "examples", _scene, "configs", "simulation_config.yml"
+    )
+    with open(simulation_config_path, "r") as f:
+        simulation_config = yaml.load(f)
     launch_server_sh_path = os.path.join(
         proj_path, "simulation", "examples", _scene, "launch_server.sh"
     )
     run_sh(
         launch_server_sh_path,
-        str(distributed_args.server_num_per_host),
-        str(distributed_args.base_port),
+        str(simulation_config["server_num_per_host"]),
+        str(simulation_config["base_port"]),
     )
     time.sleep(5)
 
