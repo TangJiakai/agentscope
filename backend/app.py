@@ -629,7 +629,11 @@ def chatgpt(req: GPTReq):
 def tune(mode: Literal["rewrite", "rate"]):
     # Tune LLM
     tune_llm_sh_path = os.path.join(proj_path, "llmtuning", "scripts", "tune_llm.sh")
-    run_sh(tune_llm_sh_path, mode)
+    if mode == "rewrite":
+        tuning_mode = "sft"
+    elif mode == "rate":
+        tuning_mode = "ppo"
+    run_sh(tune_llm_sh_path, tuning_mode)
     return {"status": "success"}
 
 
