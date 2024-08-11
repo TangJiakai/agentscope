@@ -2,20 +2,26 @@
     {
         "class": "JobAgent",
         "args": {
-            "name": "数据科学家",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "负责数据分析、建模和算法开发，优化公司产品的性能和用户体验。",
+            "name": "Data Scientist",
+            "jd": "Responsible for data analysis, modeling, and algorithm development to optimize product performance and user experience.",
             "jr": [
-                "计算机科学、统计学或相关领域硕士及以上学历",
-                "3年以上数据分析或数据挖掘经验",
-                "熟练使用Python、R等编程语言",
-                "具有深度学习和机器学习算法经验"
+                "Master's degree or higher in Computer Science, Statistics, or related field",
+                "3+ years of experience in data analysis or data mining",
+                "Proficient in programming languages such as Python and R",
+                "Experience with deep learning and machine learning algorithms"
             ],
-            "hc": 1,
-            "company_name": "盛世科技有限公司",
+            "company": "Tencent Holdings Limited, a multinational conglomerate holding company and one of the largest internet companies in China",
+            "salary": "USD 120,000 - 150,000 annually",
+            "benefits": [
+                "Health insurance",
+                "Retirement plans",
+                "Paid time off",
+                "Employee stock options"
+            ],
+            "location": "Shenzhen, Guangdong, China",
+            "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 12010
+            "port": 12100
         }
     },
     {
@@ -31,10 +37,9 @@
                 "具有React、Vue.js等框架的实际项目经验",
                 "具备良好的团队协作和沟通能力"
             ],
-            "hc": 2,
             "company_name": "盛世科技有限公司",
             "host": "localhost",
-            "port": 12011
+            "port": 12100
         }
     },
     {
@@ -50,10 +55,9 @@
                 "具有优秀的组织、协调和沟通能力",
                 "PMP认证优先"
             ],
-            "hc": 1,
             "company_name": "盛世科技有限公司",
             "host": "localhost",
-            "port": 12011
+            "port": 12100
         }
     },
     {
@@ -69,10 +73,9 @@
                 "具有医疗软件开发经验者优先",
                 "具备良好的代码编写和问题解决能力"
             ],
-            "hc": 2,
             "company_name": "未来医疗科技有限公司",
             "host": "localhost",
-            "port": 12012
+            "port": 12100
         }
     },
     {
@@ -88,10 +91,9 @@
                 "具有医疗行业背景或相关经验者优先",
                 "优秀的市场分析和产品规划能力"
             ],
-            "hc": 1,
             "company_name": "未来医疗科技有限公司",
             "host": "localhost",
-            "port": 12013
+            "port": 12101
         }
     },
     {
@@ -107,10 +109,9 @@
                 "具备医疗软件支持经验者优先",
                 "能够适应出差"
             ],
-            "hc": 3,
             "company_name": "未来医疗科技有限公司",
             "host": "localhost",
-            "port": 12013
+            "port": 12101
         }
     },
     {
@@ -126,10 +127,9 @@
                 "熟悉废水处理和空气净化技术",
                 "具有良好的项目管理和沟通能力"
             ],
-            "hc": 1,
             "company_name": "绿源环保科技有限公司",
             "host": "localhost",
-            "port": 12014
+            "port": 12101
         }
     },
     {
@@ -145,10 +145,9 @@
                 "熟悉新能源设备的设计和应用",
                 "具备创新思维和团队合作精神"
             ],
-            "hc": 1,
             "company_name": "绿源环保科技有限公司",
             "host": "localhost",
-            "port": 12014
+            "port": 12101
         }
     },
     {
@@ -164,10 +163,9 @@
                 "具有环保行业背景者优先",
                 "优秀的市场分析和客户拓展能力"
             ],
-            "hc": 1,
             "company_name": "绿源环保科技有限公司",
             "host": "localhost",
-            "port": 12014
+            "port": 12101
         }
     },
     {
@@ -183,10 +181,9 @@
                 "熟悉AutoCAD、PKPM等设计软件",
                 "具备优秀的分析能力和团队协作精神"
             ],
-            "hc": 2,
             "company_name": "天瑞建筑工程有限公司",
             "host": "localhost",
-            "port": 12015
+            "port": 12101
         }
     },
     {
@@ -202,10 +199,9 @@
                 "熟悉工程管理流程及相关法律法规",
                 "具有良好的领导力和沟通能力"
             ],
-            "hc": 1,
             "company_name": "天瑞建筑工程有限公司",
             "host": "localhost",
-            "port": 12015
+            "port": 12101
         }
     },
     {
@@ -221,10 +217,9 @@
                 "具备安全工程师资格证书",
                 "具备细致、负责的工作态度"
             ],
-            "hc": 1,
             "company_name": "天瑞建筑工程有限公司",
             "host": "localhost",
-            "port": 12015
+            "port": 12102
         }
     },
     {
@@ -240,10 +235,9 @@
                 "熟悉中餐或西餐烹饪技术",
                 "具备优秀的团队管理和沟通能力"
             ],
-            "hc": 1,
             "company_name": "悦味餐饮管理有限公司",
             "host": "localhost",
-            "port": 12015
+            "port": 12102
         }
     },
     {
@@ -259,10 +253,9 @@
                 "具备出色的创意和策划能力",
                 "优秀的沟通和协调能力"
             ],
-            "hc": 1,
             "company_name": "悦味餐饮管理有限公司",
             "host": "localhost",
-            "port": 12016
+            "port": 12102
         }
     },
     {
@@ -278,10 +271,9 @@
                 "具备良好的服务意识和管理能力",
                 "能够有效处理突发事件和顾客投诉"
             ],
-            "hc": 1,
             "company_name": "悦味餐饮管理有限公司",
             "host": "localhost",
-            "port": 12016
+            "port": 12102
         }
     },
     {
@@ -297,10 +289,9 @@
                 "2年以上教学经验",
                 "具备良好的沟通能力和亲和力"
             ],
-            "hc": 2,
             "company_name": "阳光教育培训机构",
             "host": "localhost",
-            "port": 12016
+            "port": 12102
         }
     },
     {
@@ -316,10 +307,9 @@
                 "具备优秀的沟通和谈判能力",
                 "具有耐心和责任感"
             ],
-            "hc": 1,
             "company_name": "阳光教育培训机构",
             "host": "localhost",
-            "port": 12016
+            "port": 12102
         }
     },
     {
@@ -335,10 +325,9 @@
                 "具备出色的创意和策划能力",
                 "优秀的沟通和协调能力"
             ],
-            "hc": 1,
             "company_name": "阳光教育培训机构",
             "host": "localhost",
-            "port": 12017
+            "port": 12102
         }
     },
     {
@@ -354,10 +343,9 @@
                 "具备良好的销售技巧和服务意识",
                 "具有团队协作和自我管理能力"
             ],
-            "hc": 1,
             "company_name": "康泰保险有限公司",
             "host": "localhost",
-            "port": 12017
+            "port": 12102
         }
     },
     {
@@ -373,10 +361,9 @@
                 "具备良好的分析和解决问题能力",
                 "具有耐心和细致的工作态度"
             ],
-            "hc": 2,
             "company_name": "康泰保险有限公司",
             "host": "localhost",
-            "port": 12017
+            "port": 12102
         }
     },
     {
@@ -392,10 +379,9 @@
                 "具备优秀的分析能力和沟通能力",
                 "具有相关专业资格证书优先"
             ],
-            "hc": 1,
             "company_name": "康泰保险有限公司",
             "host": "localhost",
-            "port": 12017
+            "port": 12102
         }
     }
 ]

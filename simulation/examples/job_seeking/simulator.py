@@ -12,7 +12,6 @@ from agentscope.manager import FileManager
 from agentscope.message import Msg
 from agentscope.agents.agent import DistConf
 
-from simulation.helpers.simulator import BaseSimulator
 from simulation.helpers.events import (
     play_event,
     stop_event,
@@ -35,18 +34,13 @@ COMPANY_AGENT_CONFIG = "company_agent_configs.json"
 scene_path = os.path.dirname(os.path.abspath(__file__))
 
 
-class Simulator(BaseSimulator):
+class Simulator:
     def __init__(self):
         super().__init__()
         self.config = load_yaml(os.path.join(scene_path, CONFIG_DIR, SIMULATION_CONFIG))
 
         global CUR_ROUND
         self.cur_round = CUR_ROUND
-        # from agentscope import constants
-        # if self.config["save_dir"]:
-        #     file_manager = FileManager.get_instance()
-        #     constants._DEFAULT_DIR = file_manager.dir = self.config["save_dir"] + "./runs"
-
         self._from_scratch()
 
     def _from_scratch(self):
@@ -75,11 +69,6 @@ class Simulator(BaseSimulator):
                 self.config["save_dir"] if self.config["save_dir"] else _DEFAULT_SAVE_DIR
             ),
         )
-
-    @staticmethod
-    def load(file_path):
-        with open(file_path, "rb") as f:
-            return dill.load(f)
 
     def _init_agents(self):
         # Load configs
@@ -215,7 +204,6 @@ class Simulator(BaseSimulator):
         results = []
         for agent in self.agents:
             results.append(agent(Msg("system", None, role="system", fun="run")))
-
         for res in results:
             print(res["content"])
 
@@ -240,6 +228,10 @@ class Simulator(BaseSimulator):
                 return
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
+
+    def load(file_path):
+        with open(file_path, "rb") as f:
+            return dill.load(f)
 
     def save(self):
         file_manager = FileManager.get_instance()

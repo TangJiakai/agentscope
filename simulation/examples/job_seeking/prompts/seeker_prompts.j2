@@ -1,12 +1,6 @@
-{# Prompt: system prompt. #}
-{% macro sys_prompt(seeker) %}
+{##################################### Profile #####################################}
+{% macro profile(seeker) %}
 You are a job seeker.
-{% if seeker.status == "unemployed" %}
-Your current status is unemployed, and you need to find a suitable and ideal job.
-{% else %}
-Your current status is employed.
-{% endif %}
-
 Your basic information is as follows:
 Name: {{seeker.name}}
 Resume Description: {{seeker.cv}}
@@ -15,115 +9,85 @@ Working Condition: {{seeker.working_condition}}
 {% endmacro %}
 
 
-{# Prompt: determine if seeking jobs #}
-{% macro determine_if_seeking_prompt() %}
-Based on your personal situation, please determine whether you would choose to search for a job by outputting 'yes' or 'no'.
 
+{##################################### Instruction #####################################}
+{% macro determine_if_seeking_instruction() %}
+You are a job seeker.
+Based on your personal situation, please determine whether you would choose to search for a job.
 If the expected utility of searching for a job is greater than the utility of not searching, you will proceed with job searching. Your expected utility from job searching is determined as follows:
 1. Based on your memories, experiences, and reflections, you have certain expectations about the potential job, including factors such as salary and work intensity that affect utility.
-2. Your current utility is the utility provided by your current job (refer to Job Condition). If you are not currently employed, it is the potential unemployment benefits or minimum wage guarantee you receive.
+2. Your current utility is the utility provided by your current job (refer to Working Condition). If you are not currently employed, it is the potential unemployment benefits or minimum wage guarantee you receive.
 3. You will compare the utility of potential job opportunities against your current utility, taking into account the costs of job searching, resume submissions, and interviews. If the expected utility of job searching is greater, you will proceed with job searching.
-Answer:
 {% endmacro %}
 
-
-{# Prompt: Determine the number of job searches. #}
-{% macro determine_search_job_number_prompt() %}
-Now you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. However, the more effort you invest in this, the more your utility will decrease accordingly. Based on your current personal situation, please choose an integer between 1-5 to maximize the total discounted utility to the present value across all periods. Do not provide any additional thought process.
-
-You should respond in the following format, which can be loaded by json.loads in Python:
-{
-    "result": "an integer between 1 and 5"
-}
-Answer:
+{% macro determine_search_job_number_instruction() %}
+You are a job seeker.
+Now you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. 
+However, the more effort you invest in this, the more your utility will decrease accordingly. 
+Based on your current personal situation, please choose an integer to maximize the total discounted utility to the present value across all periods. 
 {% endmacro %}
 
-
-{# Memory: determine_search_jobs_memory #}
-{% macro determine_search_jobs_memory(interviewer_agent_infos) %}
-The job information you have currently searched is as follows (string in <> represents job ID):
-{% for id, info in interviewer_agent_infos.items() %}
-- <{{id}}> {{info["job"]}}
-{% endfor %}
-{% endmacro %}
-
-
-{# Prompt: apply for jobs #}
-{% macro determine_apply_jobs_prompt(interviewer_agent_infos) %}
+{% macro determine_apply_jobs_instruction() %}
+You are a job seeker.
 When deciding whether to submit a job application, your goal is to maximize the total discounted utility to the present value across all periods.
-You have already searched {{interviewer_agent_infos | length}} jobs as follows (string in <> represents ID):
-{% for id, info in interviewer_agent_infos.items() %}
-- <{{id}}> {{info["job"]}}
-{% endfor %}
+{% endmacro %}
 
-You need to respond in the following format, which can be loaded by json.loads in Python:
-{
-    "result": "a list of ID strings"
-}
+{% macro make_final_decision_instruction() %}
+You are a job seeker.
+To maximize individual multi-period discounted expected utility, You have to either
+Accept the best offer (output the ID)
+Or 
+Decline all offers and continue searching for other positions (output -1).
+{% endmacro %}
+
+{% macro external_interview_instruction() %}
+You are participating in a simple interview where you need to answer some questions.
+{% endmacro %}
+
+{% macro interview_opening_instruction() %}
+You are a job applicant currently attending an interview.
+Due to time constraints, please ensure the conversation is concise.
+{% endmacro %}
+
+
+
+{##################################### Memory #####################################}
+{% macro determine_search_jobs_memory(interviewer_agent_infos) %}
+The jobs you have currently searched is as follows:
+{% for id, info in interviewer_agent_infos.items() %}
+- {{info["job"]}}
+{% endfor %}
+{% endmacro %}
+
+
+
+{##################################### Observation #####################################}
+{% macro make_choice_observation(actions) %}
+Please make a choice from the actions below:
+{% for action in actions %}
+    {{loop.index0}}. {{action}}
+{% endfor %}
 Answer:
 {% endmacro %}
 
-
-{# Observation: Jobs for which you have obtained interview opportunities #}
 {% macro apply_job_observation(cv_passed_interviewer_agent_infos) %}
-In the current round, you have received interview opportunities for the following jobs (string in <> represents ID):
-{% for id, info in cv_passed_interviewer_agent_infos.items() %}
-- <{{id}}> {{info["job"]}}
+You have received interview opportunities for the following jobs:
+{% for info in cv_passed_interviewer_agent_infos.values() %}
+- {{info["job"]}}
 {% endfor %}
 {% endmacro %}
 
+{% macro determine_apply_jobs_observation(job_info, actions) %}
+Would you like to submit your resume for the following positions?
+{{job_info}}
+{{make_choice_observation(actions)}}
+{% endmacro %}
 
-{# Observation: Interview Memory #}
-{% macro interview_observation(job, is_success) %}
+{% macro interview_observation(job, success) %}
 In the current round, you participated in the interview for position {{job}}. The final interview result is:
-{% if is_success %}
+{% if success %}
 Success
 {% else %}
 Failure
 {% endif %}
-{% endmacro %}
-
-
-{# Prompt: make final decision #}
-{% macro make_final_decision_prompt(offer_interviewer_agent_infos) %}
-In the current round, you have received offers for the following jobs (string in <> represents job ID):
-{% for id, info in offer_interviewer_agent_infos.items() %}
-- <{{id}}> {{info["job"]}}
-{% endfor %}
-
-Based on the above circumstances, to maximize individual multi-period discounted expected utility, You have to either
-Only Accept the **one** best offer (output the ID string of the selected offer within '<>').
-Or 
-Decline all offers and continue searching for other positions (output the string -1).
-
-You need to respond in the following format, which can be loaded by json.loads in Python:
-{
-    "result": "one ID string or -1"
-}
-Answer:
-{% endmacro %}
-
-
-{# Prompt: interview opening statement #}
-{% macro interview_opening_statement(seeker, job) %}
-The interviewer will ask the seeker {{seeker.name}} about the following position in this interview:
-{{job}}
-
-Due to time constraints, both parties should be as concise and clear as possible.
-First, please have {{seeker.name}} introduce yourself.
-Seeker:
-{% endmacro %}
-
-
-{# Prompt: turn-taking in the interview #}
-{% macro interview_turn_taking(role) %}
-{{role}}:
-{% endmacro %}
-
-
-{# Prompt: external interview #}
-{% macro external_interview_prompt(query) %}
-You are participating in a simple interview where you need to answer a few questions. Let's begin with the Q&A. 
-Question: {{query}}
-Answer:
 {% endmacro %}

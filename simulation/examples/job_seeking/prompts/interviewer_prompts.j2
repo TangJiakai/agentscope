@@ -1,6 +1,7 @@
-{# Prompt: system prompt #}
-{% macro sys_prompt(job) %}
-You are an interviewer for position {{job.name}}. The specific information for the position is as follows:
+{##################################### Profile #####################################}
+{% macro profile(job) %}
+You are an interviewer. 
+The basic information for the position is as follows:
 Position Title: {{job.name}}
 Position Description: {{job.jd}}
 Position Requirements: 
@@ -10,20 +11,18 @@ Position Requirements:
 {% endmacro %}
 
 
-{# Prompt: Screening cv of job seeker #}
-{% macro screening_cv_prompt(seeker, hc) %}
-Currently, you have received the following resume from the job seeker:
-{{seeker}}
 
-Based on the number of resumes you have previously screened and the remaining {{hc}} headcounts, please decide whether this job seeker should pass the resume screening and move on to the next stage of the interview process in order to maximize the company's benefits while minimizing costs.
-If you decide to pass the resume, please output 'yes'; otherwise, output 'no'.
-You cannot refuse to answer; you must provide your decision to the job seeker.
-Answer:
+{##################################### Instruction #####################################}
+{% macro screening_cv_instruction(seeker) %}
+Please decide whether to allow the candidate to pass the resume screening based on their information.
 {% endmacro %}
 
+{% macro interview_opening_instruction() %}
+You are an interviewer currently attending an interview.
+Due to time constraints, please ensure the conversation is concise.
+{% endmacro %}
 
-{# Prompt: interview closing statement #}
-{% macro interview_closing_statement() %}
+{% macro interview_closing_instruction() %}
 The interview is now over. 
 Finally, please consider the interview situation and decide whether to hire the seeker. 
 If yes, please output 'yes'; otherwise, output 'no'. 
@@ -32,12 +31,26 @@ Interviewer:
 {% endmacro %}
 
 
-{# Observation: Receive notification from the seeker #}
+
+{##################################### Observation #####################################}
+{% macro make_choice_observation(actions) %}
+Please make a choice from the actions below:
+{% for action in actions %}
+    {{loop.index0}}. {{action}}
+{% endfor %}
+{% endmacro %}
+
+{% macro receive_cv_observation(seeker_info) %}
+The information of the job seeker is as follows:
+{{seeker_info}}
+{% endmacro %}
+
+
 {% macro receive_notification_observation(seeker_name, is_accept) %}
-You have received a notification from job seeker {{seeker_name}}. The notification is as follows:
+Job seeker {{seeker_name}} chose to
 {% if is_accept %}
-{{seeker_name}} has agreed to the job offer.
+{{seeker_name}} accept the offer.
 {% else %}
-{{seeker_name}} has rejected the job offer.
+{{seeker_name}} reject the offer.
 {% endif %}
 {% endmacro %}

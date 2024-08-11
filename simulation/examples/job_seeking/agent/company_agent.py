@@ -1,17 +1,13 @@
 import os
 import requests
-from typing import Optional
 from jinja2 import Environment, FileSystemLoader
-from typing import Union
-from typing import Sequence
 
-from agentscope.agents import AgentBase
 from agentscope.message import Msg
-from agentscope.manager import ModelManager
 from loguru import logger
 
-from simulation.helpers.message import MessageUnit
 from simulation.helpers.utils import *
+from simulation.helpers.constants import * 
+from simulation.helpers.base_agent import BaseAgent
 
 scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 file_loader = FileSystemLoader(os.path.join(scene_path, "prompts"))
@@ -21,7 +17,6 @@ Template = env.get_template("company_prompts.j2").module
 
 CompanyAgentStates = [
     "idle",
-    "external interviewing",
 ]
 
 
@@ -51,7 +46,7 @@ def set_state(flag: str):
     return decorator
 
 
-class CompanyAgent(AgentBase):
+class CompanyAgent(BaseAgent):
     """company agent."""
 
     def __init__(
@@ -62,7 +57,7 @@ class CompanyAgent(AgentBase):
         embedding_api: str,
         cd: str,
         embedding: list,
-        env_agent: AgentBase,
+        env_agent: BaseAgent,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -82,24 +77,11 @@ class CompanyAgent(AgentBase):
         self.sys_prompt = Msg(
             "system", Template.sys_prompt(self.company), role="system"
         )
+        self._update_profile()
         self._state = "idle"
-
-    def __getstate__(self) -> object:
-        state = self.__dict__.copy()
-        state.pop("model")
-        memory_state = self.memory.__dict__.copy()
-        memory_state["model"] = None
-        state["memory"] = memory_state
-        return state
-
-    def __setstate__(self, state: object) -> None:
-        self.__dict__.update(state)
-        self.memory = setup_memory(self.memory_config)
-        self.memory.__dict__.update(state["memory"])
-        self.model = ModelManager.get_instance().get_model_by_config_name(
-            self.model_config_name
-        )
-        self.memory.model = self.model
+    
+    def _update_profile(self):
+        self._profile = self.company.__str__()
 
     @property
     def state(self):
@@ -134,46 +116,6 @@ class CompanyAgent(AgentBase):
             if resp.status_code != 200:
                 logger.error(f"Failed to send message: {self.agent_id}")
 
-    def set_attr_fun(self, attr: str, value, **kwargs):
-        setattr(self, attr, value)
-        return get_assistant_msg("success")
-
-    def get_attr_fun(self, attr):
-        if attr == "sys_prompt":
-            return self.sys_prompt
-        return get_assistant_msg(getattr(self, attr))
-
-    @set_state("external interviewing")
-    def external_interview_fun(self, query, **kwargs):
-        query_msg = Msg("assistant", query, role="assistant")
-        memory_msg = self.memory.get_memory(query_msg)
-        msg = Msg(
-            "assistant", "\n".join([p.content for p in memory_msg]) + query, "assistant"
-        )
-        prompt = self.model.format(self.sys_prompt, msg)
-        response = self.model(prompt)
-        return response.text
-
     def run_fun(self, **kwargs):
         return Msg("assistant", "Done", role="assistant")
 
-    def reply(self, x: Optional[Union[Msg, Sequence[Msg]]] = None) -> Msg:
-        if x and x.get("fun", None):
-            return getattr(self, f"{x.fun}_fun")(**getattr(x, "params", {}))
-        else:
-            memory = self.memory.get_memory(x)
-            if x:
-                self.memory.add(x)
-                msg = Msg(
-                    "user",
-                    "\n".join([p["content"] for p in memory]) + x["content"],
-                    "user",
-                )
-            else:
-                msg = Msg("user", "\n".join([p["content"] for p in memory]), "user")
-            prompt = self.model.format(self.sys_prompt, msg)
-            response = self.model(prompt)
-            self._send_message(prompt, response)
-            msg = Msg(self.name, response.text, role="user")
-            self.memory.add(msg)
-            return msg

@@ -1,10 +1,9 @@
 [
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "数据科学家",
             "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
             "jd": "负责数据分析、建模和算法开发，优化公司产品的性能和用户体验。",
             "jr": [
                 "计算机科学、统计学或相关领域硕士及以上学历",
@@ -12,14 +11,13 @@
                 "熟练使用Python、R等编程语言",
                 "具有深度学习和机器学习算法经验"
             ],
-            "hc": 1,
             "company_name": "盛世科技有限公司",
             "host": "localhost",
-            "port": 12000
+            "port": 12100
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "前端开发工程师",
             "model_config_name": "Llama3",
@@ -31,14 +29,13 @@
                 "具有React、Vue.js等框架的实际项目经验",
                 "具备良好的团队协作和沟通能力"
             ],
-            "hc": 2,
             "company_name": "盛世科技有限公司",
             "host": "localhost",
-            "port": 12000
+            "port": 12100
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "项目经理",
             "model_config_name": "Llama3",
@@ -50,14 +47,13 @@
                 "具有优秀的组织、协调和沟通能力",
                 "PMP认证优先"
             ],
-            "hc": 1,
             "company_name": "盛世科技有限公司",
             "host": "localhost",
-            "port": 12000
+            "port": 12100
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "医疗软件开发工程师",
             "model_config_name": "Llama3",
@@ -69,14 +65,13 @@
                 "具有医疗软件开发经验者优先",
                 "具备良好的代码编写和问题解决能力"
             ],
-            "hc": 2,
             "company_name": "未来医疗科技有限公司",
             "host": "localhost",
-            "port": 12000
+            "port": 12100
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "产品经理",
             "model_config_name": "Llama3",
@@ -88,14 +83,13 @@
                 "具有医疗行业背景或相关经验者优先",
                 "优秀的市场分析和产品规划能力"
             ],
-            "hc": 1,
             "company_name": "未来医疗科技有限公司",
             "host": "localhost",
-            "port": 12001
+            "port": 12101
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "客户支持工程师",
             "model_config_name": "Llama3",
@@ -107,14 +101,13 @@
                 "具备医疗软件支持经验者优先",
                 "能够适应出差"
             ],
-            "hc": 3,
             "company_name": "未来医疗科技有限公司",
             "host": "localhost",
-            "port": 12001
+            "port": 12101
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "环保工程师",
             "model_config_name": "Llama3",
@@ -126,14 +119,13 @@
                 "熟悉废水处理和空气净化技术",
                 "具有良好的项目管理和沟通能力"
             ],
-            "hc": 1,
             "company_name": "绿源环保科技有限公司",
             "host": "localhost",
-            "port": 12001
+            "port": 12101
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "新能源研发工程师",
             "model_config_name": "Llama3",
@@ -145,14 +137,13 @@
                 "熟悉新能源设备的设计和应用",
                 "具备创新思维和团队合作精神"
             ],
-            "hc": 1,
             "company_name": "绿源环保科技有限公司",
             "host": "localhost",
-            "port": 12001
+            "port": 12101
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "市场营销经理",
             "model_config_name": "Llama3",
@@ -164,14 +155,13 @@
                 "具有环保行业背景者优先",
                 "优秀的市场分析和客户拓展能力"
             ],
-            "hc": 1,
             "company_name": "绿源环保科技有限公司",
             "host": "localhost",
-            "port": 12001
+            "port": 12101
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "结构工程师",
             "model_config_name": "Llama3",
@@ -183,14 +173,13 @@
                 "熟悉AutoCAD、PKPM等设计软件",
                 "具备优秀的分析能力和团队协作精神"
             ],
-            "hc": 2,
             "company_name": "天瑞建筑工程有限公司",
             "host": "localhost",
-            "port": 12001
+            "port": 12101
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "施工项目经理",
             "model_config_name": "Llama3",
@@ -202,14 +191,13 @@
                 "熟悉工程管理流程及相关法律法规",
                 "具有良好的领导力和沟通能力"
             ],
-            "hc": 1,
             "company_name": "天瑞建筑工程有限公司",
             "host": "localhost",
-            "port": 12001
+            "port": 12101
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "安全工程师",
             "model_config_name": "Llama3",
@@ -221,14 +209,13 @@
                 "具备安全工程师资格证书",
                 "具备细致、负责的工作态度"
             ],
-            "hc": 1,
             "company_name": "天瑞建筑工程有限公司",
             "host": "localhost",
-            "port": 12002
+            "port": 12102
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "厨师长",
             "model_config_name": "Llama3",
@@ -240,14 +227,13 @@
                 "熟悉中餐或西餐烹饪技术",
                 "具备优秀的团队管理和沟通能力"
             ],
-            "hc": 1,
             "company_name": "悦味餐饮管理有限公司",
             "host": "localhost",
-            "port": 12002
+            "port": 12102
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "市场推广经理",
             "model_config_name": "Llama3",
@@ -259,14 +245,13 @@
                 "具备出色的创意和策划能力",
                 "优秀的沟通和协调能力"
             ],
-            "hc": 1,
             "company_name": "悦味餐饮管理有限公司",
             "host": "localhost",
-            "port": 12002
+            "port": 12102
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "餐厅经理",
             "model_config_name": "Llama3",
@@ -278,14 +263,13 @@
                 "具备良好的服务意识和管理能力",
                 "能够有效处理突发事件和顾客投诉"
             ],
-            "hc": 1,
             "company_name": "悦味餐饮管理有限公司",
             "host": "localhost",
-            "port": 12002
+            "port": 12102
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "数学教师",
             "model_config_name": "Llama3",
@@ -297,14 +281,13 @@
                 "2年以上教学经验",
                 "具备良好的沟通能力和亲和力"
             ],
-            "hc": 2,
             "company_name": "阳光教育培训机构",
             "host": "localhost",
-            "port": 12002
+            "port": 12102
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "课程顾问",
             "model_config_name": "Llama3",
@@ -316,14 +299,13 @@
                 "具备优秀的沟通和谈判能力",
                 "具有耐心和责任感"
             ],
-            "hc": 1,
             "company_name": "阳光教育培训机构",
             "host": "localhost",
-            "port": 12002
+            "port": 12102
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "市场推广专员",
             "model_config_name": "Llama3",
@@ -335,14 +317,13 @@
                 "具备出色的创意和策划能力",
                 "优秀的沟通和协调能力"
             ],
-            "hc": 1,
             "company_name": "阳光教育培训机构",
             "host": "localhost",
-            "port": 12002
+            "port": 12102
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "保险代理人",
             "model_config_name": "Llama3",
@@ -354,14 +335,13 @@
                 "具备良好的销售技巧和服务意识",
                 "具有团队协作和自我管理能力"
             ],
-            "hc": 1,
             "company_name": "康泰保险有限公司",
             "host": "localhost",
-            "port": 12002
+            "port": 12102
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "理赔专员",
             "model_config_name": "Llama3",
@@ -373,14 +353,13 @@
                 "具备良好的分析和解决问题能力",
                 "具有耐心和细致的工作态度"
             ],
-            "hc": 2,
             "company_name": "康泰保险有限公司",
             "host": "localhost",
-            "port": 12002
+            "port": 12102
         }
     },
     {
-        "class": "JobAgent",
+        "class": "InterviewerAgent",
         "args": {
             "name": "风险管理经理",
             "model_config_name": "Llama3",
@@ -392,10 +371,9 @@
                 "具备优秀的分析能力和沟通能力",
                 "具有相关专业资格证书优先"
             ],
-            "hc": 1,
             "company_name": "康泰保险有限公司",
             "host": "localhost",
-            "port": 12002
+            "port": 12102
         }
     }
 ]

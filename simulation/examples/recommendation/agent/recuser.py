@@ -8,6 +8,7 @@ from agentscope.message import Msg
 from agentscope.rpc.rpc_agent_client import RpcAgentClient
 
 from simulation.helpers.base_agent import BaseAgent
+from simulation.examples.job_seeking.utils.utils import *
 from simulation.helpers.utils import *
 from simulation.helpers.constants import *
 
@@ -20,13 +21,6 @@ Template = env.get_template("seeker_prompts.j2").module
 
 SeekerAgentStates = [
     "idle",
-    "determining if seeking",
-    "determining search job number",
-    "determining search jobs",
-    "determining jobs to apply",
-    "applying jobs",
-    "interviewing",
-    "making final decision",
 ]
 
 
@@ -44,7 +38,7 @@ def set_state(flag: str):
     return decorator
 
 
-class Seeker(object):
+class User(object):
     def __init__(self, name: str, cv: str, trait: str):
         self.name = name
         self.cv = cv
@@ -59,8 +53,8 @@ class Seeker(object):
         )
 
 
-class SeekerAgent(BaseAgent):
-    """seeker agent."""
+class RecUserAgent(BaseAgent):
+    """recuser agent."""
 
     def __init__(
         self,
@@ -199,18 +193,21 @@ class SeekerAgent(BaseAgent):
     def _determine_apply_job_fun(self, interviewer_agent_infos: dict, **kwargs):
         """Determine which jobs to apply."""
         instruction = Template.determine_apply_jobs_instruction()
-        apply_interviewer_agent_infos = {}
-        selection=["yes", "no"]
-        for job_id, agent_info in interviewer_agent_infos.items():
-            job_info = agent_info["job"]
-            observation = Template.determine_apply_jobs_observation(job_info, selection)
-            msg = Msg("user", None, role="user")
-            msg.instruction = instruction
-            msg.observation = observation
-            msg.selection_num = len(selection)
-            response = selection[int(self.reply(msg)["content"])]
-            if response == "yes":
-                apply_interviewer_agent_infos[job_id] = agent_info
+        observation = Template.determine_apply_jobs_observation(interviewer_agent_infos)
+        msg = Msg("user", None, role="user")
+        msg.instruction = instruction
+        msg.observation = observation
+        apply_ids = extract_agent_id(extract_dict(self.reply(msg)["content"])["result"])
+        apply_ids = [apply_ids] if isinstance(apply_ids, str) else apply_ids
+
+        if "-1" in apply_ids:
+            return {}
+        valid_ids = set(interviewer_agent_infos.keys())
+        apply_interviewer_agent_infos = {
+            agent_id: interviewer_agent_infos[agent_id]
+            for agent_id in apply_ids
+            if agent_id in valid_ids
+        }
 
         return apply_interviewer_agent_infos
 
@@ -259,10 +256,10 @@ class SeekerAgent(BaseAgent):
                 "user",
                 format_instruction + format_profile + format_memory + format_observation,
                 role="user",
-            ))).text
+            )))
             
             for _ in range(MAX_INTERVIEW_ROUND + 1):
-                observation += answer
+                observation += answer["content"]
                 if _ == MAX_INTERVIEW_ROUND:
                     result = rpc_client_post_and_get(
                         agent_info["agent_client"],
@@ -296,7 +293,7 @@ class SeekerAgent(BaseAgent):
                     msg = get_assistant_msg()
                     msg.instruction = instruction
                     msg.observation = observation
-                    answer = self.reply(msg)["content"]
+                    answer = self.reply(msg)
                 else:
                     memory = self.memory.get_memory(get_assistant_msg(instruction + observation))
                     format_memory = MEMORY_BEGIN + "\n- ".join([m["content"] for m in memory]) + MEMORY_END
@@ -305,7 +302,7 @@ class SeekerAgent(BaseAgent):
                         "user",
                         format_instruction + format_profile + format_memory + format_observation,
                         role="user",
-                    ))).text
+                    )))
 
             if "yes" in result["content"]:
                 offer_interviewer_agent_infos[agent_id] = agent_info
@@ -367,27 +364,16 @@ class SeekerAgent(BaseAgent):
                 return
 
         search_job_number = self._determine_search_job_number_fun()
-        logger.info(f"Search job number: {search_job_number}")
-        
         interviewer_agent_infos = self._determine_search_jobs_fun(search_job_number)
-        logger.info(f"Search jobs: {interviewer_agent_infos.keys()}")
-
         apply_interviewer_agent_infos = self._determine_apply_job_fun(
             interviewer_agent_infos
         )
-        logger.info(f"Apply jobs: {apply_interviewer_agent_infos.keys()}")
-
         cv_passed_interviewer_agent_infos = self._apply_job_fun(
             apply_interviewer_agent_infos
         )
-        logger.info(f"CV passed jobs: {cv_passed_interviewer_agent_infos.keys()}")
-
         offer_interviewer_agent_infos = self._interview_fun(
             cv_passed_interviewer_agent_infos
         )
-        logger.info(f"Offer jobs: {offer_interviewer_agent_infos.keys()}")
-
         final_job_id = self._make_final_decision_fun(offer_interviewer_agent_infos)
-        logger.info(f"Final job: {final_job_id}")
 
         return get_assistant_msg(final_job_id)

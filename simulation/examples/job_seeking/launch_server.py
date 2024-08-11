@@ -9,6 +9,7 @@ from agentscope.server import RpcAgentServerLauncher
 from simulation.helpers.constants import *
 from simulation.helpers.utils import load_yaml
 from simulation.helpers.constants import *
+from simulation.helpers.base_agent import BaseAgent
 
 from agent import *
 
@@ -39,7 +40,7 @@ def setup_participant_agent_server(host: str, port: int) -> None:
         host=host,
         port=port,
         max_pool_size=16384,
-        # custom_agent_classes=[SeekerAgent, InterviewerAgent, CompanyAgent, EnvironmentAgent],
+        custom_agent_classes=[BaseAgent, SeekerAgent, InterviewerAgent, CompanyAgent, EnvironmentAgent],
         studio_url="http://127.0.0.1:5000",
     )
     assistant_server_launcher.launch(in_subprocess=False)
