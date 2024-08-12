@@ -254,10 +254,9 @@ class SeekerAgent(BaseAgent):
             memory = self.memory.get_memory(get_assistant_msg(instruction))
             format_memory = MEMORY_BEGIN + "\n- ".join([m["content"] for m in memory]) + MEMORY_END
             observation = "Seeker:"
-            format_observation = OBSERVATION_BEGIN + observation + OBSERVATION_END
             answer = self.model(self.model.format(Msg(
                 "user",
-                format_instruction + format_profile + format_memory + format_observation,
+                format_instruction + format_profile + format_memory + observation,
                 role="user",
             ))).text
             
@@ -300,10 +299,9 @@ class SeekerAgent(BaseAgent):
                 else:
                     memory = self.memory.get_memory(get_assistant_msg(instruction + observation))
                     format_memory = MEMORY_BEGIN + "\n- ".join([m["content"] for m in memory]) + MEMORY_END
-                    format_observation = OBSERVATION_BEGIN + observation + OBSERVATION_END
                     answer = self.model(self.model.format(Msg(
                         "user",
-                        format_instruction + format_profile + format_memory + format_observation,
+                        format_instruction + format_profile + format_memory + observation,
                         role="user",
                     ))).text
 
