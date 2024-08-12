@@ -3,7 +3,7 @@
 ### 1. Launch Embedding Model
 1. [optional] Run 
 ```python
-python simulation/examples/job_seeking/launch_emb_model.py
+python simulation/tools/launch_emb_model.py
 ```
 to launch the embedding model server.
 
@@ -54,6 +54,5 @@ bash simulation/examples/job_seeking/kill_all_server.sh
 ```
 
 
-## Tool
-### Agentscope Studio
+### Monitor
 You can run the command `as_studio` in the terminal to monitor the server.

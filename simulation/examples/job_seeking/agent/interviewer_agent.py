@@ -42,18 +42,34 @@ def set_state(flag: str):
 
 
 class Job(dict):
-    def __init__(self, name: str, jd: str, jr: List[str]):
-        super().__init__(name=name, jd=jd, jr=jr)
+    def __init__(self, 
+                name: str, 
+                jd: str, 
+                jr: List[str], 
+                company: str,
+                salary: str,
+                benefits: List[str],
+                location: str,):
+        super().__init__(name=name, jd=jd, jr=jr, company=company, salary=salary, benefits=benefits, location=location)
         self.name = name
         self.jd = jd
         self.jr = jr
+        self.company = company
+        self.salary = salary
+        self.benefits = benefits
+        self.location = location
 
     def __str__(self):
         jr_string = "\n".join([f"- {r}" for r in self.jr])
+        benefits_string = "\n".join([f"- {b}" for b in self.benefits])
         return (
             f"Position Name: {self.name}\n"
             f"Job Description: {self.jd}\n"
             f"Job Requirements:\n{jr_string}"
+            f"Company: {self.company}\n"
+            f"Salary: {self.salary}\n"
+            f"Benefits:\n{benefits_string}"
+            f"Location: {self.location}\n"
         )
 
 
@@ -68,6 +84,10 @@ class InterviewerAgent(BaseAgent):
         embedding_api: str,
         jd: str,
         jr: list,
+        company: str,
+        salary: str,
+        benefits: List[str],
+        location: str,
         embedding: list,
         env_agent: BaseAgent,
         **kwargs,
@@ -82,7 +102,7 @@ class InterviewerAgent(BaseAgent):
         self.memory = setup_memory(memory_config)
         self.memory.model = self.model
         self.memory.embedding_api = embedding_api
-        self.job = Job(name=name, jd=jd, jr=jr)
+        self.job = Job(name=name, jd=jd, jr=jr, company=company, salary=salary, benefits=benefits, location=location)
         self.embedding = embedding
         self.env_agent = env_agent
 
@@ -130,7 +150,11 @@ class InterviewerAgent(BaseAgent):
             job = {
                 "Position Name": self.job.name,
                 "Job Description": self.job.jd,
-                "Job Requirements": self.job.jr
+                "Job Requirements": self.job.jr,
+                "Company": self.job.company,
+                "Salary": self.job.salary,
+                "Benefits": self.job.benefits,
+                "Location": self.job.location,
             }
             return get_assistant_msg(job)
         return super().get_attr_fun(attr)
@@ -140,7 +164,7 @@ class InterviewerAgent(BaseAgent):
         msg = get_assistant_msg()
         msg.instruction = Template.screening_cv_instruction()
         selection = ["yes", "no"]
-        msg.observation = Template.make_choice_observation(selection)
+        msg.observation = Template.screening_cv_observation(seeker_info, selection)
         msg.selection_num = len(selection)
         response = selection[int(self.reply(msg)["content"])]
         return get_assistant_msg(response)
@@ -164,10 +188,10 @@ class InterviewerAgent(BaseAgent):
             format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
             memory = self.memory.get_memory(get_assistant_msg(instruction + observation))
             format_memory = MEMORY_BEGIN + "\n- ".join([m["content"] for m in memory]) + MEMORY_END
-            format_observation = OBSERVATION_BEGIN + observation + OBSERVATION_END + "Interviewer:"
+            observation = observation + "Interviewer:"
             response = self.model(self.model.format(Msg(
                 "user",
-                format_instruction + format_profile + format_memory + format_observation,
+                format_instruction + format_profile + format_memory + observation,
                 role="user",
             )))
             return get_assistant_msg(response.text)

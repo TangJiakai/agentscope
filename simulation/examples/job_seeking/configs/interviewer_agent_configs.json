@@ -2,378 +2,101 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "数据科学家",
-            "model_config_name": "Llama3",
-            "jd": "负责数据分析、建模和算法开发，优化公司产品的性能和用户体验。",
+            "name": "AI Ethics Consultant",
+            "jd": "Provide guidance on ethical implications of AI technologies and develop frameworks for responsible AI deployment.",
             "jr": [
-                "计算机科学、统计学或相关领域硕士及以上学历",
-                "3年以上数据分析或数据挖掘经验",
-                "熟练使用Python、R等编程语言",
-                "具有深度学习和机器学习算法经验"
+                "PhD in Philosophy, Ethics, or related field",
+                "5+ years of experience in AI ethics or policy",
+                "Strong understanding of machine learning technologies and their societal impacts",
+                "Excellent communication and stakeholder engagement skills"
             ],
-            "company_name": "盛世科技有限公司",
+            "company": "Accenture, a global professional services company specializing in IT services and consulting.",
+            "salary": "USD 130,000 - 160,000 annually",
+            "benefits": [
+                "Comprehensive health coverage",
+                "Flexible working hours",
+                "Professional development opportunities",
+                "Wellness programs"
+            ],
+            "location": "Dublin, Ireland",
+            "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 12100
+            "port": 12000
         }
     },
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "前端开发工程师",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "负责公司网站和应用程序的前端开发，确保用户界面的美观性和功能性。",
+            "name": "Machine Learning Engineer",
+            "jd": "Design and implement machine learning models to improve product features and user engagement.",
             "jr": [
-                "计算机科学或相关专业本科及以上学历",
-                "精通HTML、CSS、JavaScript等前端技术",
-                "具有React、Vue.js等框架的实际项目经验",
-                "具备良好的团队协作和沟通能力"
+                "Bachelor's or Master's degree in Computer Science or Engineering",
+                "2+ years of experience in machine learning and software development",
+                "Proficient in Python, TensorFlow, and scikit-learn",
+                "Experience with cloud services like AWS or Azure"
             ],
-            "company_name": "盛世科技有限公司",
+            "company": "Google, a multinational technology company specializing in Internet-related services and products.",
+            "salary": "USD 110,000 - 140,000 annually",
+            "benefits": [
+                "Generous paid time off",
+                "Health and wellness programs",
+                "Tuition reimbursement",
+                "On-site fitness centers"
+            ],
+            "location": "Mountain View, California, USA",
+            "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 12100
+            "port": 12000
         }
     },
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "项目经理",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "负责公司各项目的统筹管理，确保项目按时、按质、按量完成。",
+            "name": "AI Product Manager",
+            "jd": "Lead the development and launch of AI-driven products, collaborating with engineering and design teams.",
             "jr": [
-                "项目管理或相关领域本科及以上学历",
-                "5年以上项目管理经验，熟悉敏捷开发流程",
-                "具有优秀的组织、协调和沟通能力",
-                "PMP认证优先"
+                "Bachelor's degree in Business, Computer Science, or related field",
+                "4+ years of experience in product management, preferably in AI or tech",
+                "Strong analytical and problem-solving skills",
+                "Experience with Agile methodologies"
             ],
-            "company_name": "盛世科技有限公司",
+            "company": "Microsoft, a leading global technology company known for its software products and services.",
+            "salary": "USD 120,000 - 150,000 annually",
+            "benefits": [
+                "Stock options",
+                "Health insurance",
+                "Flexible work arrangements",
+                "Employee discounts"
+            ],
+            "location": "Redmond, Washington, USA",
+            "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 12100
+            "port": 12000
         }
     },
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "医疗软件开发工程师",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "负责医疗信息系统的设计与开发，确保系统的稳定性和安全性。",
+            "name": "AI Research Scientist",
+            "jd": "Conduct cutting-edge research in artificial intelligence and publish findings in scientific journals.",
             "jr": [
-                "计算机科学或相关专业本科及以上学历",
-                "熟悉Java、C#等编程语言",
-                "具有医疗软件开发经验者优先",
-                "具备良好的代码编写和问题解决能力"
+                "PhD in Computer Science, AI, or related field",
+                "3+ years of research experience in AI or machine learning",
+                "Expertise in neural networks and natural language processing",
+                "Strong programming skills in Python and C++"
             ],
-            "company_name": "未来医疗科技有限公司",
-            "host": "localhost",
-            "port": 12100
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "产品经理",
+            "company": "OpenAI, an AI research organization focused on ensuring that artificial general intelligence benefits all of humanity.",
+            "salary": "USD 140,000 - 180,000 annually",
+            "benefits": [
+                "Health insurance",
+                "Paid parental leave",
+                "Professional growth opportunities",
+                "Collaborative work environment"
+            ],
+            "location": "San Francisco, California, USA",
             "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "负责医疗产品的规划、设计和推广，协调各部门资源，推动产品落地。",
-            "jr": [
-                "医学、计算机或相关专业本科及以上学历",
-                "3年以上产品管理经验",
-                "具有医疗行业背景或相关经验者优先",
-                "优秀的市场分析和产品规划能力"
-            ],
-            "company_name": "未来医疗科技有限公司",
             "host": "localhost",
-            "port": 12100
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "客户支持工程师",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "为客户提供技术支持和培训，解决客户在使用产品过程中遇到的问题。",
-            "jr": [
-                "计算机科学或相关专业本科及以上学历",
-                "具有良好的沟通能力和服务意识",
-                "具备医疗软件支持经验者优先",
-                "能够适应出差"
-            ],
-            "company_name": "未来医疗科技有限公司",
-            "host": "localhost",
-            "port": 12101
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "环保工程师",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "负责环保项目的设计、实施和优化，确保项目符合环保标准。",
-            "jr": [
-                "环境工程或相关专业本科及以上学历",
-                "3年以上环保工程经验",
-                "熟悉废水处理和空气净化技术",
-                "具有良好的项目管理和沟通能力"
-            ],
-            "company_name": "绿源环保科技有限公司",
-            "host": "localhost",
-            "port": 12101
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "新能源研发工程师",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "负责新能源技术的研究与开发，推动新能源项目的实施。",
-            "jr": [
-                "能源工程或相关专业硕士及以上学历",
-                "具有太阳能、风能或其他新能源领域的研发经验",
-                "熟悉新能源设备的设计和应用",
-                "具备创新思维和团队合作精神"
-            ],
-            "company_name": "绿源环保科技有限公司",
-            "host": "localhost",
-            "port": 12101
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "市场营销经理",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "负责公司环保产品和解决方案的市场推广和销售，制定市场营销策略。",
-            "jr": [
-                "市场营销或相关专业本科及以上学历",
-                "5年以上市场营销经验",
-                "具有环保行业背景者优先",
-                "优秀的市场分析和客户拓展能力"
-            ],
-            "company_name": "绿源环保科技有限公司",
-            "host": "localhost",
-            "port": 12101
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "结构工程师",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "负责建筑结构设计、施工方案制定及现场技术支持。",
-            "jr": [
-                "土木工程或相关专业本科及以上学历",
-                "5年以上结构设计经验",
-                "熟悉AutoCAD、PKPM等设计软件",
-                "具备优秀的分析能力和团队协作精神"
-            ],
-            "company_name": "天瑞建筑工程有限公司",
-            "host": "localhost",
-            "port": 12101
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "施工项目经理",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "负责施工项目的全面管理，确保工程按期完工。",
-            "jr": [
-                "建筑工程管理或相关专业本科及以上学历",
-                "8年以上施工项目管理经验",
-                "熟悉工程管理流程及相关法律法规",
-                "具有良好的领导力和沟通能力"
-            ],
-            "company_name": "天瑞建筑工程有限公司",
-            "host": "localhost",
-            "port": 12101
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "安全工程师",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "负责施工现场的安全管理，制定和实施安全生产计划。",
-            "jr": [
-                "安全工程或相关专业本科及以上学历",
-                "3年以上建筑施工安全管理经验",
-                "具备安全工程师资格证书",
-                "具备细致、负责的工作态度"
-            ],
-            "company_name": "天瑞建筑工程有限公司",
-            "host": "localhost",
-            "port": 12101
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "厨师长",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "负责餐厅的厨房管理，确保食品质量和出品速度。",
-            "jr": [
-                "烹饪相关专业毕业或具有同等经验",
-                "5年以上餐饮行业工作经验",
-                "熟悉中餐或西餐烹饪技术",
-                "具备优秀的团队管理和沟通能力"
-            ],
-            "company_name": "悦味餐饮管理有限公司",
-            "host": "localhost",
-            "port": 12101
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "市场推广经理",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "负责餐饮品牌的市场推广和活动策划，提升品牌知名度和美誉度。",
-            "jr": [
-                "市场营销或相关专业本科及以上学历",
-                "3年以上市场推广经验，具有餐饮行业背景者优先",
-                "具备出色的创意和策划能力",
-                "优秀的沟通和协调能力"
-            ],
-            "company_name": "悦味餐饮管理有限公司",
-            "host": "localhost",
-            "port": 12101
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "餐厅经理",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "全面负责餐厅的日常运营管理，提升顾客满意度和运营效率。",
-            "jr": [
-                "酒店管理或相关专业本科及以上学历",
-                "5年以上餐厅管理经验",
-                "具备良好的服务意识和管理能力",
-                "能够有效处理突发事件和顾客投诉"
-            ],
-            "company_name": "悦味餐饮管理有限公司",
-            "host": "localhost",
-            "port": 12102
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "数学教师",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "负责中小学数学课程的教学工作，制定教学计划和辅导方案。",
-            "jr": [
-                "数学或教育相关专业本科及以上学历",
-                "具有教师资格证",
-                "2年以上教学经验",
-                "具备良好的沟通能力和亲和力"
-            ],
-            "company_name": "阳光教育培训机构",
-            "host": "localhost",
-            "port": 12102
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "课程顾问",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "为家长和学生提供课程咨询，制定学习计划和跟踪学习进度。",
-            "jr": [
-                "教育或市场营销相关专业本科及以上学历",
-                "具有销售或客户服务经验",
-                "具备优秀的沟通和谈判能力",
-                "具有耐心和责任感"
-            ],
-            "company_name": "阳光教育培训机构",
-            "host": "localhost",
-            "port": 12102
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "市场推广专员",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "负责教育机构的市场推广和宣传工作，策划并执行市场活动。",
-            "jr": [
-                "市场营销或相关专业本科及以上学历",
-                "2年以上市场推广经验",
-                "具备出色的创意和策划能力",
-                "优秀的沟通和协调能力"
-            ],
-            "company_name": "阳光教育培训机构",
-            "host": "localhost",
-            "port": 12102
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "保险代理人",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "负责开拓保险市场，提供专业的保险咨询和服务。",
-            "jr": [
-                "金融或保险相关专业本科及以上学历",
-                "具有保险从业资格证",
-                "具备良好的销售技巧和服务意识",
-                "具有团队协作和自我管理能力"
-            ],
-            "company_name": "康泰保险有限公司",
-            "host": "localhost",
-            "port": 12102
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "理赔专员",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "负责处理保险理赔案件，确保理赔流程的顺利进行。",
-            "jr": [
-                "法律或金融相关专业本科及以上学历",
-                "3年以上保险理赔经验",
-                "具备良好的分析和解决问题能力",
-                "具有耐心和细致的工作态度"
-            ],
-            "company_name": "康泰保险有限公司",
-            "host": "localhost",
-            "port": 12102
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "风险管理经理",
-            "model_config_name": "Llama3",
-            "embedding_model_config_name": "chatgpt",
-            "jd": "负责公司风险管理体系的建立和维护，评估和控制各类风险。",
-            "jr": [
-                "风险管理或金融相关专业硕士及以上学历",
-                "5年以上风险管理经验",
-                "具备优秀的分析能力和沟通能力",
-                "具有相关专业资格证书优先"
-            ],
-            "company_name": "康泰保险有限公司",
-            "host": "localhost",
-            "port": 12102
+            "port": 12000
         }
     }
 ]
