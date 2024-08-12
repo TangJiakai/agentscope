@@ -149,6 +149,7 @@ Downloads
 .vscode/
 .pid
 national-brain/
-job_seeking_old/
 test.py
 nohup.out
+simulation/examples/recommendation/configs/item_infos.json
+simulation/examples/recommendation/configs/recuser_agent_configs.json
