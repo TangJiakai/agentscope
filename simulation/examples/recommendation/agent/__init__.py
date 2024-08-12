@@ -1,19 +1,13 @@
-from .seeker_agent import SeekerAgent, SeekerAgentStates
-from .interviewer_agent import InterviewerAgent, InterviewerAgentStates
-from .company_agent import CompanyAgent, CompanyAgentStates
+from .recuser_agent import RecUserAgent, RecUserAgentStates
 from .environment_agent import EnvironmentAgent
 
 
 ALL_AGENT_STATES = {
-    "SeekerAgent": SeekerAgentStates,
-    "InterviewerAgent": InterviewerAgentStates,
-    "CompanyAgent": CompanyAgentStates,
+    "RecUserAgent": RecUserAgentStates,
 }
 
 __all__ = [
-    "SeekerAgent", 
-    "InterviewerAgent", 
-    "CompanyAgent", 
+    "RecUserAgent", 
     "EnvironmentAgent",
     "ALL_AGENT_STATES",
 ]

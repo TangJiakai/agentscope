@@ -29,7 +29,6 @@ from simulation.helpers.utils import *
 CUR_ROUND = 1
 SEEKER_AGENT_CONFIG = "seeker_agent_configs.json"
 INTERVIEWER_AGENT_CONFIG = "interviewer_agent_configs.json"
-COMPANY_AGENT_CONFIG = "company_agent_configs.json"
 
 scene_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -78,13 +77,10 @@ class Simulator:
         interviewer_configs = load_json(
             os.path.join(scene_path, CONFIG_DIR, INTERVIEWER_AGENT_CONFIG)
         )
-        company_configs = load_json(
-            os.path.join(scene_path, CONFIG_DIR, COMPANY_AGENT_CONFIG)
-        )
         memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
 
         # Prepare agent args
-        for config in seeker_configs + interviewer_configs + company_configs:
+        for config in seeker_configs + interviewer_configs:
             memory_config["args"]["embedding_size"] = get_embedding_dimension(
                 self.config["embedding_api"]
             )
@@ -105,12 +101,6 @@ class Simulator:
             )
             config["args"]["embedding"] = get_embedding(
                 f"{name} {jd} {' '.join(jr)}", self.config["embedding_api"]
-            )
-
-        for config in company_configs:
-            name, cd = config["args"]["name"], config["args"]["cd"]
-            config["args"]["embedding"] = get_embedding(
-                f"{name} {cd}", self.config["embedding_api"]
             )
 
         # Init agents
@@ -138,16 +128,6 @@ class Simulator:
                 ),
             )
             for config in interviewer_configs
-        ]
-        company_agents = [
-            CompanyAgent(
-                env_agent=env_agent,
-                **config["args"],
-                to_dist=DistConf(
-                    host=config["args"]["host"], port=config["args"]["port"]
-                ),
-            )
-            for config in company_configs
         ]
 
         index = faiss.IndexFlatL2(get_embedding_dimension(self.config["embedding_api"]))
@@ -179,7 +159,7 @@ class Simulator:
             res["content"]
 
         agent_distribution_infos = {}
-        for agent in seeker_agents + interviewer_agents + company_agents:
+        for agent in seeker_agents + interviewer_agents:
             agent_distribution_infos[agent.agent_id] = {
                 "host": agent.host,
                 "port": agent.port,
@@ -187,12 +167,15 @@ class Simulator:
             }
         env_agent(
             get_assistant_msg(
-                fun="set_agent_distribution_infos",
-                params={"agent_distribution_infos": agent_distribution_infos},
+                fun="set_attr",
+                params={
+                    "attr": "agent_distribution_infos",
+                    "value": agent_distribution_infos,
+                },
             )
         )["content"]
 
-        self.agents = seeker_agents + interviewer_agents + company_agents + [env_agent]
+        self.agents = seeker_agents + interviewer_agents + [env_agent]
 
     def get_agent_by_id(self, agent_id: str):
         for agent in self.agents:

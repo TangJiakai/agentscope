@@ -1,0 +1,13 @@
+# general settings
+model_configs_path: model_configs.json
+project_name: recommendation
+round_n: 2
+save_dir: 
+embedding_api: http://localhost:8000/
+load_simulator_path: 
+host: localhost
+base_port: 12100
+server_num_per_host: 3
+
+# custom settings
+recuser_agent_configs_path: recuser_agent_configs.json

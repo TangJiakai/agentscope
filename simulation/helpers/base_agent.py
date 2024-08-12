@@ -75,32 +75,32 @@ class BaseAgent(AgentBase):
             format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
             observation = ""
             format_observation = ""
-            prompt_content = ""
+            prompt_content = []
             memory_query = ""
             if x and hasattr(x, "instruction"):
                 instruction = x.instruction
                 memory_query += instruction
                 format_instruction = INSTRUCTION_BEGIN + instruction + INSTRUCTION_END
-                prompt_content += format_instruction
+                prompt_content.append(format_instruction)
 
             if x and hasattr(x, "observation"):
                 observation = x.observation
                 memory_query += observation
                 format_observation = OBSERVATION_BEGIN + observation + OBSERVATION_END
-                prompt_content += format_observation
+                prompt_content.append(format_observation)
 
             if x and x["content"]:
                 memory_query += x["content"]
-                prompt_content += OBSERVATION_BEGIN + x["content"] + OBSERVATION_END
+                prompt_content.append(OBSERVATION_BEGIN + x["content"] + OBSERVATION_END)
 
-            memory = self.memory.get_memory(get_assistant_msg(prompt_content))
-            format_memory = ""
+            memory = self.memory.get_memory(get_assistant_msg(memory_query))
             if len(memory) > 0:
-                format_memory = MEMORY_BEGIN + "\n- ".join([m["content"] for m in memory]) + MEMORY_END
+                insert_index = -2 if len(prompt_content) > 1 else -1
+                prompt_content.insert(insert_index, MEMORY_BEGIN + "\n- ".join([m["content"] for m in memory]) + MEMORY_END)
 
             prompt_msg = self.model.format(Msg(
                 "user", 
-                format_instruction + format_profile + format_memory + format_observation, 
+                prompt_content, 
                 role="user"
             ))
             

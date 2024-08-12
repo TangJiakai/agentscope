@@ -85,7 +85,7 @@
             ],
             "company_name": "未来医疗科技有限公司",
             "host": "localhost",
-            "port": 12101
+            "port": 12100
         }
     },
     {
@@ -211,7 +211,7 @@
             ],
             "company_name": "天瑞建筑工程有限公司",
             "host": "localhost",
-            "port": 12102
+            "port": 12101
         }
     },
     {
@@ -229,7 +229,7 @@
             ],
             "company_name": "悦味餐饮管理有限公司",
             "host": "localhost",
-            "port": 12102
+            "port": 12101
         }
     },
     {
@@ -247,7 +247,7 @@
             ],
             "company_name": "悦味餐饮管理有限公司",
             "host": "localhost",
-            "port": 12102
+            "port": 12101
         }
     },
     {
