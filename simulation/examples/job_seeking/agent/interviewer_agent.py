@@ -5,6 +5,7 @@ from typing import List
 from jinja2 import Environment, FileSystemLoader
 
 from agentscope.message import Msg
+from agentscope.rpc import async_func
 from loguru import logger
 
 from simulation.helpers.utils import *
@@ -22,7 +23,6 @@ InterviewerAgentStates = [
     "screening cv",
     "making decision",
     "receiving notification",
-    "external interviewing",
 ]
 
 
@@ -125,28 +125,33 @@ class InterviewerAgent(BaseAgent):
             if resp.status_code != 200:
                 logger.error(f"Failed to send message: {self.agent_id}")
 
-    def get_attr_fun(self, attr):
+    def get_attr(self, attr):
         if attr == "job":
             job = {
                 "Position Name": self.job.name,
                 "Job Description": self.job.jd,
-                "Job Requirements": self.job.jr
+                "Job Requirements": self.job.jr,
             }
-            return get_assistant_msg(job)
-        return super().get_attr_fun(attr)
+            return job
+            # return get_assistant_msg(job)
+        elif attr == "sys_prompt":
+            return self.sys_prompt
+        return super().get_attr(attr)
 
+    @async_func
     @set_state("screening cv")
-    def screening_cv_fun(self, seeker_info: str):
+    def screening_cv(self, seeker_info: str):
         msg = get_assistant_msg()
         msg.instruction = Template.screening_cv_instruction()
         selection = ["yes", "no"]
         msg.observation = Template.make_choice_observation(selection)
         msg.selection_num = len(selection)
         response = selection[int(self.reply(msg)["content"])]
-        return get_assistant_msg(response)
+        return response
+        # return get_assistant_msg(response)
 
     @set_state("interviewing")
-    def interview_fun(self, msg: Msg):
+    def interview(self, msg: Msg):
         observation = msg["content"]
         if hasattr(msg, "end") and msg.end:
             instruction = Template.interview_closing_instruction()
@@ -157,7 +162,8 @@ class InterviewerAgent(BaseAgent):
             msg.observation = observation
             msg.selection = selection
             response = selection[int(self.reply(msg)["content"])]
-            return get_assistant_msg(response)
+            return response
+            # return get_assistant_msg(response)
         else:
             instruction = Template.interview_opening_instruction()
             format_instruction = PROFILE_BEGIN + instruction + PROFILE_END
@@ -170,10 +176,12 @@ class InterviewerAgent(BaseAgent):
                 format_instruction + format_profile + format_memory + format_observation,
                 role="user",
             )))
-            return get_assistant_msg(response.text)
+            return response.text
+            # return get_assistant_msg(response.text)
 
+    @async_func
     @set_state("receiving notification")
-    def receive_notification_fun(self, seeker_name: str, is_accept: bool, **kwargs):
+    def receive_notification(self, seeker_name: str, is_accept: bool, **kwargs):
         self.observe(
             get_assistant_msg(
                 Template.receive_notification_observation(seeker_name, is_accept)
@@ -181,5 +189,6 @@ class InterviewerAgent(BaseAgent):
         )
         return get_assistant_msg("sucesss")
 
-    def run_fun(self, **kwargs):
-        return get_assistant_msg("Done")
+    @async_func
+    def run(self, **kwargs):
+        return "Done"
