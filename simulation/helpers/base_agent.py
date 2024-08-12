@@ -55,9 +55,7 @@ class BaseAgent(AgentBase):
             INSTRUCTION_END
         memory = self.memory.get_memory(get_assistant_msg(observation))
         format_memory = MEMORY_BEGIN + "\n- ".join([m["content"] for m in memory]) + MEMORY_END
-        format_observation = OBSERVATION_BEGIN + \
-            "Question:" + observation + \
-            "Answer:" + MEMORY_END
+        format_observation = "Question:" + observation + "Answer:"
         response = self.model.format(get_assistant_msg(
             format_instruction + format_profile + format_memory + format_observation))
         return Msg(self.name, response.text, "user")
@@ -74,7 +72,6 @@ class BaseAgent(AgentBase):
             format_instruction = ""
             format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
             observation = ""
-            format_observation = ""
             prompt_content = []
             memory_query = ""
             if x and hasattr(x, "instruction"):
@@ -83,15 +80,16 @@ class BaseAgent(AgentBase):
                 format_instruction = INSTRUCTION_BEGIN + instruction + INSTRUCTION_END
                 prompt_content.append(format_instruction)
 
+            prompt_content.append(format_profile)
+
             if x and hasattr(x, "observation"):
                 observation = x.observation
                 memory_query += observation
-                format_observation = OBSERVATION_BEGIN + observation + OBSERVATION_END
-                prompt_content.append(format_observation)
+                prompt_content.append(observation)
 
             if x and x["content"]:
                 memory_query += x["content"]
-                prompt_content.append(OBSERVATION_BEGIN + x["content"] + OBSERVATION_END)
+                prompt_content.append(x["content"])
 
             memory = self.memory.get_memory(get_assistant_msg(memory_query))
             if len(memory) > 0:

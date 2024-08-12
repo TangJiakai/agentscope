@@ -146,7 +146,10 @@ class RecUserAgent(BaseAgent):
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        return self(msg)["content"]
+        feeling = self(msg)["content"]
+        
+        logger.info(f"[{self.name}] feels {feeling}")
+        return feeling
 
     def rating_item_fun(self, movie):
         instruction = Template.rating_item_instruction()
@@ -163,6 +166,9 @@ class RecUserAgent(BaseAgent):
         msg.observation = observation
         msg.selection_num = len(action)
         action = action[int(self(msg)["content"])]
+
+        logger.info(f"[{self.name}] rated {action}")
+
         return action
 
     @set_state("watching")
@@ -186,10 +192,10 @@ class RecUserAgent(BaseAgent):
         msg.selection_num = len(selection)
         action = selection[int(self(msg)["content"])].split(":")
 
+        logger.info(f"[{self.name}] selected {action}")
+
         feeling = self.generate_feeling_fun(action)
         rating = self.rating_item_fun(action)
-
-        return feeling + rating
 
     @set_state("chatting")
     def conversation_fun(self):
@@ -219,9 +225,12 @@ class RecUserAgent(BaseAgent):
 
         self.observe(get_assistant_msg(instruction + observation))
         friend_agent.observe(get_assistant_msg(instruction + observation))
+
+        logger.info(f"[{self.name}] had a conversation with {friend_agent_id}: {observation}")
+
         return instruction + observation
     
-    @set_state("posting")
+    @set_state("chatting")
     def respond_conversation_fun(self, observation: str):
         instruction = Template.conversation_instruction()
         format_instruction = INSTRUCTION_BEGIN + instruction + INSTRUCTION_END
@@ -250,6 +259,8 @@ class RecUserAgent(BaseAgent):
                 msg=f"{self.name} posted: {response}",
             )
 
+        logger.info(f"[{self.name}] posted: {response}")
+
         return response
 
     def run_fun(self, **kwargs):
@@ -266,7 +277,6 @@ class RecUserAgent(BaseAgent):
         msg.selection_num = len(selection)
         
         action = selection[int(self(msg)["content"])].split(":")[0].strip().lower()
-        res = getattr(self, f"{action}_fun")()
+        getattr(self, f"{action}_fun")()
         
-        return get_assistant_msg(f"[{self.name}]Action[{action}]:\n{res}")
-        # return get_assistant_msg("success")
+        return get_assistant_msg("success")
