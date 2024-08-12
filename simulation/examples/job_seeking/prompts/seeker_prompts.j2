@@ -63,7 +63,7 @@ The jobs you have currently searched is as follows:
 
 {##################################### Observation #####################################}
 {% macro make_choice_observation(actions) %}
-Please make a choice from the actions below:
+Please make a choice from the actions below (return the index of the action):
 {% for action in actions %}
     {{loop.index0}}. {{action}}
 {% endfor %}

@@ -72,7 +72,7 @@ def setup_memory(memory_config):
     return memory
 
 
-def rpc_client_post(agent_client, fun=None, params=None, msg=None):
+def rpc_client_post(agent_client, msg=None, fun=None, params=None):
     return deserialize(agent_client.call_agent_func(
         func_name="_reply",
         value=serialize(
@@ -85,10 +85,10 @@ def rpc_client_get(agent_client, msg):
     return deserialize(agent_client.update_placeholder(msg["task_id"]))
 
 
-def rpc_client_post_and_get(agent_client, fun=None, params=None, msg=None):
+def rpc_client_post_and_get(agent_client, msg=None, fun=None, params=None):
     return rpc_client_get(
         agent_client,
-        rpc_client_post(agent_client, fun=fun, params=params, msg=msg)
+        rpc_client_post(agent_client, msg=msg, fun=fun, params=params)
     )
 
 

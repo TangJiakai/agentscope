@@ -141,7 +141,7 @@ class SeekerAgent(BaseAgent):
     @set_state("determining if seeking")
     def _determine_if_seeking_fun(self, **kwargs):
         instruction = Template.determine_if_seeking_instruction()
-        selection=["yes", "no"]
+        selection = ["yes", "no"]
         observation = Template.make_choice_observation(selection)
         msg = Msg("user", None, role="user")
         msg.instruction = instruction

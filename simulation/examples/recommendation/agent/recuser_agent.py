@@ -1,0 +1,272 @@
+import random
+import os
+import requests
+import jinja2
+from loguru import logger
+
+from agentscope.message import Msg
+from agentscope.rpc.rpc_agent_client import RpcAgentClient
+
+from simulation.helpers.base_agent import BaseAgent
+from simulation.helpers.utils import *
+from simulation.helpers.constants import *
+
+
+scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+file_loader = jinja2.FileSystemLoader(os.path.join(scene_path, "prompts"))
+env = jinja2.Environment(loader=file_loader)
+Template = env.get_template("recuser_prompts.j2").module
+
+
+RecUserAgentStates = [
+    "idle",
+    "watching",
+    "chatting",
+    "posting",
+]
+
+def set_state(flag: str):
+    def decorator(func):
+        def wrapper(self, *args, **kwargs):
+            init_state = self.state
+            self.state = flag
+            try:
+                return func(self, *args, **kwargs)
+            finally:
+                self.state = init_state
+
+        return wrapper
+    return decorator
+
+
+class RecUser(object):
+    def __init__(self, 
+                name: str, 
+                gender: str, 
+                age: int,
+                traits: str,
+                status: str,
+                interest: str,
+                feature: str,
+        ):
+        self.name = name
+        self.gender = gender
+        self.age = age
+        self.traits = traits
+        self.status = status
+        self.interest = interest
+        self.feature = feature
+
+    def __str__(self):
+        return (
+            f"Name: {self.name}\n"
+            f"Gender: {self.gender}\n"
+            f"Age: {self.age}\n"
+            f"Traits: {self.traits}\n"
+            f"Status: {self.status}\n"
+            f"Interest: {self.interest}\n"
+            f"Feature: {self.feature}\n"
+        )
+
+
+class RecUserAgent(BaseAgent):
+    """recuser agent."""
+
+    def __init__(
+        self,
+        name: str,
+        model_config_name: str,
+        memory_config: dict,
+        embedding_api: str,
+        gender: str, 
+        age: int,
+        traits: str,
+        status: str,
+        interest: str,
+        feature: str,
+        env_agent: BaseAgent,
+        relationship: dict = {},
+        **kwargs,
+    ) -> None:
+        super().__init__(
+            name=name,
+            model_config_name=model_config_name,
+        )
+        self.memory_config = memory_config
+        self.embedding_api = embedding_api
+        self.memory = setup_memory(memory_config)
+        self.memory.embedding_api = embedding_api
+        self.memory.model = self.model
+        self.env_agent = env_agent
+        self.relationship = relationship
+
+        self.recuser = RecUser(name, gender, age, traits, status, interest, feature)
+        self._update_profile()
+        self._state = "idle"
+
+    def _update_profile(self):
+        self._profile = self.recuser.__str__()
+
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, new_value):
+        if hasattr(self, "backend_server_url"):
+            if new_value not in RecUserAgentStates:
+                raise ValueError(f"Invalid state: {new_value}")
+            self._state = new_value
+            url = f"{self.backend_server_url}/api/state"
+            resp = requests.post(
+                url, json={"agent_id": self.agent_id, "state": new_value}
+            )
+            if resp.status_code != 200:
+                logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
+
+    def _send_message(self, prompt, response):
+        if hasattr(self, "backend_server_url"):
+            url = f"{self.backend_server_url}/api/message"
+            resp = requests.post(
+                url,
+                json={
+                    "name": self.name,
+                    "prompt": "\n".join([p["content"] for p in prompt]),
+                    "completion": response.text,
+                    "agent_type": type(self).__name__,
+                    "agent_id": self.agent_id,
+                },
+            )
+            if resp.status_code != 200:
+                logger.error(f"Failed to send message: {self.agent_id}")
+
+    def generate_feeling_fun(self, movie):
+        instruction = Template.generate_feeling_instruction()
+        observation = Template.generate_feeling_observation(movie)
+        msg = get_assistant_msg()
+        msg.instruction = instruction
+        msg.observation = observation
+        return self(msg)["content"]
+
+    def rating_item_fun(self, movie):
+        instruction = Template.rating_item_instruction()
+        action = [
+            "Rating 1: Very poor quality, unenjoyable, with major flaws.",
+            "Rating 2: Noticeable issues, disappointing, with a few redeeming moments.",
+            "Rating 3: Decent but unremarkable, watchable with some strengths and weaknesses.",
+            "Rating 4: Well-made and enjoyable, with minor flaws.",
+            "Rating 5: Outstanding in all aspects, highly enjoyable, and memorable."
+        ]
+        observation = Template.make_choice_observation(action)
+        msg = get_assistant_msg()
+        msg.instruction = instruction
+        msg.observation = observation
+        msg.selection_num = len(action)
+        action = action[int(self(msg)["content"])]
+        return action
+
+    @set_state("watching")
+    def recommend_fun(self):
+        user_info = self._profile + \
+            "\nMemory:" + "\n- ".join([m["content"] for m in self.memory.get_memory()])
+        selection = self.env_agent(
+            Msg(
+                "user",
+                content=None,
+                role="assistant",
+                fun="recommend4user",
+                params={"user_info": user_info},
+            )
+        )["content"]
+        instruction = Template.recommend_instruction()
+        observation = Template.make_choice_observation(selection)
+        msg = get_assistant_msg()
+        msg.instruction = instruction
+        msg.observation = observation
+        msg.selection_num = len(selection)
+        action = selection[int(self(msg)["content"])].split(":")
+
+        feeling = self.generate_feeling_fun(action)
+        rating = self.rating_item_fun(action)
+
+        return feeling + rating
+
+    @set_state("chatting")
+    def conversation_fun(self):
+        MAX_CONVERSATION_NUM = 2
+        
+        friend_agent_id = random.choice(list(self.relationship.keys()))
+        friend_agent = RpcAgentClient(**self.relationship[friend_agent_id])
+        instruction = Template.conversation_instruction()
+        format_instruction = INSTRUCTION_BEGIN + instruction + INSTRUCTION_END
+        format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
+        memory = self.memory.get_memory(get_assistant_msg(instruction))
+        format_memory = MEMORY_BEGIN + "\n- ".join([m["content"] for m in memory]) + MEMORY_END
+        observation = ""
+
+        for _ in range(MAX_CONVERSATION_NUM):
+            observation += f"{self.name}:"
+            observation += self.model(self.model.format(Msg(
+                "user",
+                format_instruction + format_profile + format_memory + observation,
+                role="user",
+            ))).text
+            observation += rpc_client_post_and_get(
+                friend_agent,
+                fun="respond_conversation",
+                params={"observation": observation},
+            )["content"]
+
+        self.observe(get_assistant_msg(instruction + observation))
+        friend_agent.observe(get_assistant_msg(instruction + observation))
+        return instruction + observation
+    
+    @set_state("posting")
+    def respond_conversation_fun(self, observation: str):
+        instruction = Template.conversation_instruction()
+        format_instruction = INSTRUCTION_BEGIN + instruction + INSTRUCTION_END
+        format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
+        memory = self.memory.get_memory(get_assistant_msg(instruction))
+        format_memory = MEMORY_BEGIN + "\n- ".join([m["content"] for m in memory]) + MEMORY_END
+        response = self.model(self.model.format(Msg(
+            "user",
+            format_instruction + format_profile + format_memory + observation + f"\n{self.name}:",
+            role="user",
+        )))
+        return get_assistant_msg(f"\n{self.name}: {response.text}")
+    
+    @set_state("posting")
+    def post_fun(self):
+        instruction = Template.post_instruction()
+        msg = get_assistant_msg()
+        msg.instruction = instruction
+        msg.observation = "Please give your post content."
+        response = self(msg)["content"]
+        
+        for agent in self.relationship:
+            rpc_client_post_and_get(
+                RpcAgentClient(**self.relationship[agent]),
+                fun="_observe",
+                msg=f"{self.name} posted: {response}",
+            )
+
+        return response
+
+    def run_fun(self, **kwargs):
+        instruction = Template.start_action_instruction()
+        selection = [
+            "Recommend: Request the website to recommend a batch of movies to watch.",
+            "Conversation: Start a conversation with a good friend about a movie you've recently heard about or watched.",
+            "Post: Post in your social circle expressing your recent thoughts on movie-related topics."
+        ]
+        observation = Template.make_choice_observation(selection)
+        msg = get_assistant_msg(instruction + observation)
+        msg.instruction = instruction
+        msg.observation = observation
+        msg.selection_num = len(selection)
+        
+        action = selection[int(self(msg)["content"])].split(":")[0].strip().lower()
+        res = getattr(self, f"{action}_fun")()
+        
+        return get_assistant_msg(f"[{self.name}]Action[{action}]:\n{res}")
+        # return get_assistant_msg("success")
