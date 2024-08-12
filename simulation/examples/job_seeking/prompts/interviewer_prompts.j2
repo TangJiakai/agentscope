@@ -40,11 +40,11 @@ Please make a choice from the actions below:
 {% endfor %}
 {% endmacro %}
 
-{% macro receive_cv_observation(seeker_info) %}
+{% macro screening_cv_observation(seeker_info, actions) %}
 The information of the job seeker is as follows:
 {{seeker_info}}
+{{ make_choice_observation(actions) }}
 {% endmacro %}
-
 
 {% macro receive_notification_observation(seeker_name, is_accept) %}
 Job seeker {{seeker_name}} chose to
