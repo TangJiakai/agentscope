@@ -142,21 +142,8 @@ class Simulator:
                 interviewer_agents[index].agent_id for index in list(job_index[0])
             ]
 
-        results = []
         for agent, config in zip(seeker_agents, seeker_configs):
-            results.append(
-                agent(
-                    get_assistant_msg(
-                        fun="set_attr",
-                        params={
-                            "attr": "job_ids_pool",
-                            "value": config["args"]["job_ids_pool"],
-                        },
-                    )
-                )
-            )
-        for res in results:
-            res["content"]
+            agent.set_attr(attr="job_ids_pool", value=config["args"]["job_ids_pool"])
 
         agent_distribution_infos = {}
         for agent in seeker_agents + interviewer_agents:
@@ -165,15 +152,7 @@ class Simulator:
                 "port": agent.port,
                 "agent_id": agent.agent_id,
             }
-        env_agent(
-            get_assistant_msg(
-                fun="set_attr",
-                params={
-                    "attr": "agent_distribution_infos",
-                    "value": agent_distribution_infos,
-                },
-            )
-        )["content"]
+        env_agent.set_attr(attr="all_agents", value=seeker_agents + interviewer_agents)
 
         self.agents = seeker_agents + interviewer_agents + [env_agent]
 
@@ -186,9 +165,9 @@ class Simulator:
     def _one_round(self):
         results = []
         for agent in self.agents:
-            results.append(agent(Msg("system", None, role="system", fun="run")))
+            results.append(agent.run())
         for res in results:
-            print(res["content"])
+            print(res.get())
 
     def run(self):
         play_event.set()

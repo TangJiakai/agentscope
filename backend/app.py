@@ -184,15 +184,7 @@ async def websocket_chat_endpoint(websocket: WebSocket, id: str):
             logger.info(f"Receive chat message: {data}")
             if data == "exit":
                 break
-            resp = agent(
-                Msg(
-                    "user",
-                    None,
-                    role="user",
-                    fun="external_interview",
-                    params={"query": data},
-                )
-            )["content"]
+            resp = agent.external_interview(data).content
             await manager.send_to_agent(id, resp)
     except WebSocketDisconnect:
         await manager.disconnect(websocket, id)
@@ -246,24 +238,8 @@ def get_agents(query: Optional[str] = None):
             name=agent.name,
             id=agent.agent_id,
             cls=agent._init_settings["class_name"],
-            state=agent(
-                Msg(
-                    "user",
-                    None,
-                    role="user",
-                    fun="get_attr",
-                    params={"attr": "state"},
-                )
-            )["content"],
-            profile=agent(
-                Msg(
-                    "user",
-                    None,
-                    role="user",
-                    fun="get_attr",
-                    params={"attr": "sys_prompt"},
-                )
-            )["content"],
+            state=agent.get_attr(attr="state"),
+            profile=agent.get_attr(attr="sys_prompt"),
             coordinates=agent_coordinates[agent.agent_id],
         )
         for agent in agents
@@ -335,24 +311,8 @@ def get_agent(id: str):
             name=agent.name,
             id=agent.agent_id,
             cls=agent._init_settings["class_name"],
-            state=agent(
-                Msg(
-                    "user",
-                    None,
-                    role="user",
-                    fun="get_attr",
-                    params={"attr": "state"},
-                )
-            )["content"],
-            profile=agent(
-                Msg(
-                    "user",
-                    None,
-                    role="user",
-                    fun="get_attr",
-                    params={"attr": "sys_prompt"},
-                )
-            )["content"],
+            state=agent.get_attr(attr="state"),
+            profile=agent.get_attr(attr="sys_prompt"),
             coordinates=agent_coordinates[agent.agent_id],
         )
     else:
