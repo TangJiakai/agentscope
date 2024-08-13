@@ -2,6 +2,9 @@ import faiss
 from loguru import logger
 import numpy as np
 
+from agentscope.agents import RpcAgent
+from agentscope.rpc import async_func
+
 from simulation.helpers.utils import *
 from simulation.helpers.base_agent import BaseAgent
 from simulation.helpers.emb_service import *
@@ -20,7 +23,7 @@ class EnvironmentAgent(BaseAgent):
         self.item_infos = item_infos
         self.embedding_api = embedding_api
         self.index = self._build_index(item_infos)
-        self.agent_distribution_infos = None
+        self.all_agents: list[RpcAgent] = None
 
     def __getstate__(self) -> object:
         state = super().__getstate__()
@@ -46,20 +49,18 @@ class EnvironmentAgent(BaseAgent):
         logger.info("Index built!")
         return index
     
-    def recommend4user_fun(self, user_info, k=5):
+    def recommend4user(self, user_info, k=5):
         user_emb = get_embedding(user_info, self.embedding_api)
         _, indices = self.index.search(np.array([user_emb]), k)
         return get_assistant_msg([
             "\n".join([f"{k}: {v}" for k, v in self.item_infos[i].items()])
-            for i in indices[0] 
+            for i in indices[0]
         ])
 
-    def get_agent_distribution_infos_fun(self, agent_ids: list):
-        agent_infos = {
-            agent_id: self.agent_distribution_infos[agent_id]
-            for agent_id in agent_ids
-        } 
-        return get_assistant_msg(agent_infos)
-        
-    def run_fun(self, **kwargs):
-        return get_assistant_msg("Done")
+    def get_agents_by_ids(self, agent_ids: list[str]):
+        agents = [agent for agent in self.all_agents if agent.agent_id in agent_ids]
+        return agents
+    
+    @async_func
+    def run(self, **kwargs):
+        return "Done"

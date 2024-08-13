@@ -22,14 +22,6 @@ class EnvironmentAgent(BaseAgent):
     def get_agents_by_ids(self, agent_ids: list[str]):
         agents = [agent for agent in self.all_agents if agent.agent_id in agent_ids]
         return agents
-
-    def get_agent_distribution_infos(self, agent_ids: list):
-        agent_infos = {
-            agent_id: self.agent_distribution_infos[agent_id]
-            for agent_id in agent_ids
-        } 
-        # return get_assistant_msg(agent_infos)
-        return agent_infos
     
     @async_func
     def run(self, **kwargs):
