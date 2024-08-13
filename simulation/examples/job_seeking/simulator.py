@@ -145,13 +145,6 @@ class Simulator:
         for agent, config in zip(seeker_agents, seeker_configs):
             agent.set_attr(attr="job_ids_pool", value=config["args"]["job_ids_pool"])
 
-        agent_distribution_infos = {}
-        for agent in seeker_agents + interviewer_agents:
-            agent_distribution_infos[agent.agent_id] = {
-                "host": agent.host,
-                "port": agent.port,
-                "agent_id": agent.agent_id,
-            }
         env_agent.set_attr(attr="all_agents", value=seeker_agents + interviewer_agents)
 
         self.agents = seeker_agents + interviewer_agents + [env_agent]

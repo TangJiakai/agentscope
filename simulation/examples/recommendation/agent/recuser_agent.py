@@ -4,7 +4,9 @@ import requests
 import jinja2
 from loguru import logger
 
+from agentscope.agents import RpcAgent
 from agentscope.message import Msg
+from agentscope.rpc import async_func
 from agentscope.rpc.rpc_agent_client import RpcAgentClient
 
 from simulation.helpers.base_agent import BaseAgent
@@ -85,7 +87,7 @@ class RecUserAgent(BaseAgent):
         interest: str,
         feature: str,
         env_agent: BaseAgent,
-        relationship: dict = {},
+        relationship: dict[str, RpcAgent] = {},
         **kwargs,
     ) -> None:
         super().__init__(
@@ -140,7 +142,7 @@ class RecUserAgent(BaseAgent):
             if resp.status_code != 200:
                 logger.error(f"Failed to send message: {self.agent_id}")
 
-    def generate_feeling_fun(self, movie):
+    def generate_feeling(self, movie):
         instruction = Template.generate_feeling_instruction()
         observation = Template.generate_feeling_observation(movie)
         msg = get_assistant_msg()
@@ -151,7 +153,7 @@ class RecUserAgent(BaseAgent):
         logger.info(f"[{self.name}] feels {feeling}")
         return feeling
 
-    def rating_item_fun(self, movie):
+    def rating_item(self, movie):
         instruction = Template.rating_item_instruction()
         action = [
             "Rating 1: Very poor quality, unenjoyable, with major flaws.",
@@ -160,7 +162,7 @@ class RecUserAgent(BaseAgent):
             "Rating 4: Well-made and enjoyable, with minor flaws.",
             "Rating 5: Outstanding in all aspects, highly enjoyable, and memorable."
         ]
-        observation = Template.make_choice_observation(action)
+        observation = Template.rating_item_observation(movie, action)
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
@@ -172,18 +174,10 @@ class RecUserAgent(BaseAgent):
         return action
 
     @set_state("watching")
-    def recommend_fun(self):
+    def recommend(self):
         user_info = self._profile + \
             "\nMemory:" + "\n- ".join([m["content"] for m in self.memory.get_memory()])
-        selection = self.env_agent(
-            Msg(
-                "user",
-                content=None,
-                role="assistant",
-                fun="recommend4user",
-                params={"user_info": user_info},
-            )
-        )["content"]
+        selection = self.env_agent.recommend4user(user_info)
         instruction = Template.recommend_instruction()
         observation = Template.make_choice_observation(selection)
         msg = get_assistant_msg()
@@ -194,15 +188,15 @@ class RecUserAgent(BaseAgent):
 
         logger.info(f"[{self.name}] selected {action}")
 
-        feeling = self.generate_feeling_fun(action)
-        rating = self.rating_item_fun(action)
+        feeling = self.generate_feeling(action)
+        rating = self.rating_item(action)
 
     @set_state("chatting")
-    def conversation_fun(self):
+    def conversation(self):
         MAX_CONVERSATION_NUM = 2
         
         friend_agent_id = random.choice(list(self.relationship.keys()))
-        friend_agent = RpcAgentClient(**self.relationship[friend_agent_id])
+        friend_agent = self.relationship[friend_agent_id]
         instruction = Template.conversation_instruction()
         format_instruction = INSTRUCTION_BEGIN + instruction + INSTRUCTION_END
         format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
@@ -217,11 +211,7 @@ class RecUserAgent(BaseAgent):
                 format_instruction + format_profile + format_memory + observation,
                 role="user",
             ))).text
-            observation += rpc_client_post_and_get(
-                friend_agent,
-                fun="respond_conversation",
-                params={"observation": observation},
-            )["content"]
+            observation += friend_agent.respond_conversation(observation)["content"]
 
         self.observe(get_assistant_msg(instruction + observation))
         friend_agent.observe(get_assistant_msg(instruction + observation))
@@ -231,7 +221,7 @@ class RecUserAgent(BaseAgent):
         return instruction + observation
     
     @set_state("chatting")
-    def respond_conversation_fun(self, observation: str):
+    def respond_conversation(self, observation: str):
         instruction = Template.conversation_instruction()
         format_instruction = INSTRUCTION_BEGIN + instruction + INSTRUCTION_END
         format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
@@ -245,25 +235,22 @@ class RecUserAgent(BaseAgent):
         return get_assistant_msg(f"\n{self.name}: {response.text}")
     
     @set_state("posting")
-    def post_fun(self):
+    def post(self):
         instruction = Template.post_instruction()
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = "Please give your post content."
         response = self(msg)["content"]
         
-        for agent in self.relationship:
-            rpc_client_post_and_get(
-                RpcAgentClient(**self.relationship[agent]),
-                fun="_observe",
-                msg=f"{self.name} posted: {response}",
-            )
+        for agent in self.relationship.values():
+            agent.observe(get_assistant_msg(f"{self.name} posted: {response}"))
 
         logger.info(f"[{self.name}] posted: {response}")
 
         return response
 
-    def run_fun(self, **kwargs):
+    @async_func
+    def run(self, **kwargs):
         instruction = Template.start_action_instruction()
         selection = [
             "Recommend: Request the website to recommend a batch of movies to watch.",
@@ -277,6 +264,6 @@ class RecUserAgent(BaseAgent):
         msg.selection_num = len(selection)
         
         action = selection[int(self(msg)["content"])].split(":")[0].strip().lower()
-        getattr(self, f"{action}_fun")()
+        getattr(self, action)()
         
-        return get_assistant_msg("success")
+        return "success"

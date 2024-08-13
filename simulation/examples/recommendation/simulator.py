@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 import dill
 from loguru import logger
@@ -62,15 +63,15 @@ class Simulator:
             ),
             use_monitor=False,
             save_dir=(
-                self.config["save_dir"] if self.config["save_dir"] else _DEFAULT_SAVE_DIR
+                self.config["save_dir"]
+                if self.config["save_dir"]
+                else _DEFAULT_SAVE_DIR
             ),
         )
 
     def _init_agents(self):
         # Load configs
-        agent_configs = load_json(
-            os.path.join(scene_path, CONFIG_DIR, AGENT_CONFIG)
-        )
+        agent_configs = load_json(os.path.join(scene_path, CONFIG_DIR, AGENT_CONFIG))
         memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
         item_infos = load_json(os.path.join(scene_path, CONFIG_DIR, ITEM_INFOS))
 
@@ -117,34 +118,13 @@ class Simulator:
                 "agent_id": agent.agent_id,
             }
 
-        results = []
         for i, agent in enumerate(agents):
-            results.append(
-                agent(
-                    get_assistant_msg(
-                        fun="set_attr",
-                        params={
-                            "attr": "relationship",
-                            "value": {
-                                agents[j].agent_id: agent_distribution_infos[agents[j].agent_id] 
-                                for j in agent_relationships[i]
-                            },
-                        },
-                    )
-                )
+            agent.set_attr(
+                "relationship",
+                {agents[j].agent_id: agents[j] for j in agent_relationships[i]},
             )
-        for res in results:
-            res["content"]
-        
-        env_agent(
-            get_assistant_msg(
-                fun="set_attr",
-                params={
-                    "attr": "agent_distribution_infos",
-                    "value": agent_distribution_infos,
-                },
-            )
-        )["content"]
+
+        env_agent.set_attr(attr="all_agents", value=agents)
 
         self.agents = agents + [env_agent]
 
@@ -157,9 +137,9 @@ class Simulator:
     def _one_round(self):
         results = []
         for agent in self.agents:
-            results.append(agent(Msg("system", None, role="system", fun="run")))
+            results.append(agent.run())
         for res in results:
-            print(res["content"])
+            print(res.get())
 
     def run(self):
         play_event.set()
