@@ -62,7 +62,7 @@ class BaseAgent(AgentBase):
         return response.text
     
     def post_intervention(self, intervention: str, **kwargs):
-        self.observe("assistant", intervention, role="assistant")
+        self.observe(Msg("assistant", intervention, role="assistant"))
         return get_assistant_msg("success")
     
     def reply(self, x: Optional[Union[Msg, Sequence[Msg]]] = None) -> Msg:
