@@ -3,6 +3,8 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 import dill
+import time
+from concurrent import futures
 from loguru import logger
 
 import agentscope
@@ -93,6 +95,7 @@ class Simulator:
             )
         
         # Init env
+        logger.info("Init environment")
         env = RecommendationEnv(
             name="env",
             item_infos=item_infos,
@@ -101,16 +104,26 @@ class Simulator:
         )
 
         # Init agents
-        agents = [
-            RecUserAgent(
-                env=env,
-                **config["args"],
-                to_dist=DistConf(
-                    host=config["args"]["host"], port=config["args"]["port"]
-                ),
-            )
-            for config in agent_configs
-        ]
+        ist = time.time()
+        logger.info(f"Init {len(agent_configs)} recuser agents")
+        agents = []
+        tasks = []
+        with futures.ThreadPoolExecutor() as executor:
+            for config in agent_configs:
+                tasks.append(
+                    executor.submit(
+                        RecUserAgent,
+                        env=env,
+                        **config["args"],
+                        to_dist=DistConf(
+                            host=config["args"]["host"], port=config["args"]["port"]
+                        ),
+                    ),
+                )
+            for task in tasks:
+                agents.append(task.result())
+        iet = time.time()
+        logger.info(f"Init agents time: {iet - ist:.2f}s")
 
         agent_distribution_infos = {}
         for agent in agents:

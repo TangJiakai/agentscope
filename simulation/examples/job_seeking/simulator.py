@@ -3,6 +3,8 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 import dill
+import time
+from concurrent import futures
 from loguru import logger
 import numpy as np
 import faiss
@@ -106,32 +108,51 @@ class Simulator:
             )
 
         # Init env
+        logger.info("Init environment")
         env = JobSeekingEnv(
             name="environment",
             to_dist=DistConf(host=self.config["host"], port=self.config["base_port"]),
         )
 
         # Init agents
-        seeker_agents = [
-            SeekerAgent(
-                env=env,
-                **config["args"],
-                to_dist=DistConf(
-                    host=config["args"]["host"], port=config["args"]["port"]
-                ),
-            )
-            for config in seeker_configs
-        ]
-        interviewer_agents = [
-            InterviewerAgent(
-                env=env,
-                **config["args"],
-                to_dist=DistConf(
-                    host=config["args"]["host"], port=config["args"]["port"]
-                ),
-            )
-            for config in interviewer_configs
-        ]
+        ist = time.time()
+        logger.info(f"Init {len(seeker_configs)} seeker agents")
+        seeker_agents = []
+        tasks = []
+        with futures.ThreadPoolExecutor() as executor:
+            for config in seeker_configs:
+                tasks.append(
+                    executor.submit(
+                        SeekerAgent,
+                        env=env,
+                        **config["args"],
+                        to_dist=DistConf(
+                            host=config["args"]["host"], port=config["args"]["port"]
+                        ),
+                    ),
+                )
+            for task in tasks:
+                seeker_agents.append(task.result())
+        
+        logger.info(f"Init {len(interviewer_configs)} interviewer agents")
+        interviewer_agents = []
+        tasks = []
+        with futures.ThreadPoolExecutor() as executor:
+            for config in interviewer_configs:
+                tasks.append(
+                    executor.submit(
+                        InterviewerAgent,
+                        env=env,
+                        **config["args"],
+                        to_dist=DistConf(
+                            host=config["args"]["host"], port=config["args"]["port"]
+                        ),
+                    ),
+                )
+            for task in tasks:
+                interviewer_agents.append(task.result())
+        iet = time.time()
+        logger.info(f"Init agents time: {iet - ist:.2f}s")
 
         index = faiss.IndexFlatL2(get_embedding_dimension(self.config["embedding_api"]))
         index.add(
