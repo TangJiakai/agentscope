@@ -21,6 +21,7 @@ from simulation.helpers.message import message_manager
 from simulation.helpers.constants import *
 from agentscope.constants import _DEFAULT_SAVE_DIR
 from simulation.examples.recommendation.agent import *
+from simulation.examples.recommendation.env import RecommendationEnv
 from simulation.helpers.emb_service import *
 from simulation.helpers.utils import *
 
@@ -90,18 +91,19 @@ class Simulator:
             config["args"]["embedding"] = get_embedding(
                 interest, self.config["embedding_api"]
             )
-
-        # Init agents
-        env_agent = EnvironmentAgent(
-            name="environment",
+        
+        # Init env
+        env = RecommendationEnv(
+            name="env",
             item_infos=item_infos,
             embedding_api=self.config["embedding_api"],
             to_dist=DistConf(host=self.config["host"], port=self.config["base_port"]),
         )
 
+        # Init agents
         agents = [
             RecUserAgent(
-                env_agent=env_agent,
+                env=env,
                 **config["args"],
                 to_dist=DistConf(
                     host=config["args"]["host"], port=config["args"]["port"]
@@ -124,9 +126,9 @@ class Simulator:
                 {agents[j].agent_id: agents[j] for j in agent_relationships[i]},
             )
 
-        env_agent.set_attr(attr="all_agents", value=agents)
+        env.set_attr(attr="all_agents", value=agents)
 
-        self.agents = agents + [env_agent]
+        self.agents = agents
 
     def get_agent_by_id(self, agent_id: str):
         for agent in self.agents:

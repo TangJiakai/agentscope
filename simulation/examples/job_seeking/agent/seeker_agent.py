@@ -10,6 +10,7 @@ from agentscope.rpc import async_func
 from simulation.helpers.base_agent import BaseAgent
 from simulation.helpers.utils import *
 from simulation.helpers.constants import *
+from simulation.examples.job_seeking.env import JobSeekingEnv
 
 
 scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -72,7 +73,7 @@ class SeekerAgent(BaseAgent):
         cv: str,
         trait: str,
         embedding: list,
-        env_agent: BaseAgent,
+        env: JobSeekingEnv,
         job_ids_pool: list[str] = [],
         **kwargs,
     ) -> None:
@@ -87,7 +88,7 @@ class SeekerAgent(BaseAgent):
         self.memory.model = self.model
         self.job_ids_pool = job_ids_pool
         self.embedding = embedding
-        self.env_agent = env_agent
+        self.env = env
 
         self.seeker = Seeker(name, cv, trait)
         self._update_profile()
@@ -171,7 +172,7 @@ class SeekerAgent(BaseAgent):
             range(len(self.job_ids_pool)), search_job_number
         )
         search_job_ids = [self.job_ids_pool[i] for i in search_job_indices]
-        search_interviewer_agents = self.env_agent.get_agents_by_ids(search_job_ids)
+        search_interviewer_agents = self.env.get_agents_by_ids(search_job_ids)
         interviewer_agent_infos = {
             agent.agent_id: agent for agent in search_interviewer_agents
         }

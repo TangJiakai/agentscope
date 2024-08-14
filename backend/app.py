@@ -215,7 +215,7 @@ def put_scene(scene_name: str):
 
 @app.get("/agents", response_model=List[AgentInfo])
 def get_agents(query: Optional[str] = None):
-    agents = simulator.agents[:-1]
+    agents = simulator.agents
     # assign agent coordinates
     for agent in agents:
         if agent.agent_id not in agent_coordinates:
@@ -332,7 +332,7 @@ def get_agent(id: str):
 
 @app.post("/intervention")
 def post_intervention(intervention: InterventionMsg):
-    agents = simulator.agents[:-1]
+    agents = simulator.agents
     for agent in agents:
         agent(
             Msg(
@@ -677,17 +677,9 @@ async def start():
     Simulator = importlib.import_module(module_path).Simulator
     global simulator, simulation_thread
     simulator = Simulator()
-    agents = simulator.agents[:-1]
+    agents = simulator.agents
     for agent in agents:
-        agent(
-            Msg(
-                "system",
-                None,
-                role="system",
-                fun="set_attr",
-                params={"attr": "backend_server_url", "value": backend_server_url},
-            )
-        )["content"]
+        agent.set_attr("backend_server_url", backend_server_url)
     simulation_thread = Thread(target=simulator.run)
     simulation_thread.start()
     return {"status": "success"}
