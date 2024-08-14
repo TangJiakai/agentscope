@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import os
-from typing import Optional, List
+from typing import Optional, List, Sequence, Union
 from jinja2 import Environment, FileSystemLoader
 
 from agentscope.models import ModelResponse
@@ -97,7 +97,7 @@ class ShortLongReflectionMemory(ShortLongMemory):
             for insight in insights:
                 self.add_ltm_memory(Msg("user", insight, role="user"))
 
-    def add(self, memory: Msg = None):
+    def add(self, memory: Union[Sequence[Msg], Msg, None] = None):
         if memory is None: return
 
         super().add(memory)

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from agentscope.message import (Msg)
+from typing import Sequence, Union
+from agentscope.message import Msg
 
 
 class NoneMemory:
@@ -9,12 +10,8 @@ class NoneMemory:
     ) -> None:
         pass
 
-    def add(self, memory: Msg = None):
+    def add(self, memory: Union[Sequence[Msg], Msg, None] = None):
         pass
 
     def get_memory(self, query: Msg = None):
         return []
-
-
-
-        

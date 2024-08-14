@@ -2,7 +2,7 @@
 from datetime import datetime
 import re
 import os
-from typing import Optional
+from typing import Optional, Sequence, Union
 from jinja2 import Environment, FileSystemLoader
 from typing import Optional
 import math
@@ -113,7 +113,7 @@ class ShortLongMemory(ShortMemory):
         rescored_docs.sort(key=lambda x: x[1], reverse=True)
         return [x[0] for x in rescored_docs[:self.ltm_K]]
 
-    def add(self, memory: Msg = None):
+    def add(self, memory: Union[Sequence[Msg], Msg, None] = None):
         if memory is None: return None
 
         ltm_memory_unit = super().add(memory)
