@@ -9,7 +9,6 @@ import faiss
 
 import agentscope
 from agentscope.manager import FileManager
-from agentscope.message import Msg
 from agentscope.agents.agent import DistConf
 
 from simulation.helpers.events import (
@@ -23,6 +22,7 @@ from simulation.helpers.message import message_manager
 from simulation.helpers.constants import *
 from agentscope.constants import _DEFAULT_SAVE_DIR
 from simulation.examples.job_seeking.agent import *
+from simulation.examples.job_seeking.env import JobSeekingEnv
 from simulation.helpers.emb_service import *
 from simulation.helpers.utils import *
 
@@ -65,7 +65,9 @@ class Simulator:
             ),
             use_monitor=False,
             save_dir=(
-                self.config["save_dir"] if self.config["save_dir"] else _DEFAULT_SAVE_DIR
+                self.config["save_dir"]
+                if self.config["save_dir"]
+                else _DEFAULT_SAVE_DIR
             ),
         )
 
@@ -103,15 +105,16 @@ class Simulator:
                 f"{name} {jd} {' '.join(jr)}", self.config["embedding_api"]
             )
 
-        # Init agents
-        env_agent = EnvironmentAgent(
+        # Init env
+        env = JobSeekingEnv(
             name="environment",
             to_dist=DistConf(host=self.config["host"], port=self.config["base_port"]),
         )
 
+        # Init agents
         seeker_agents = [
             SeekerAgent(
-                env_agent=env_agent,
+                env=env,
                 **config["args"],
                 to_dist=DistConf(
                     host=config["args"]["host"], port=config["args"]["port"]
@@ -121,7 +124,7 @@ class Simulator:
         ]
         interviewer_agents = [
             InterviewerAgent(
-                env_agent=env_agent,
+                env=env,
                 **config["args"],
                 to_dist=DistConf(
                     host=config["args"]["host"], port=config["args"]["port"]
@@ -145,9 +148,9 @@ class Simulator:
         for agent, config in zip(seeker_agents, seeker_configs):
             agent.set_attr(attr="job_ids_pool", value=config["args"]["job_ids_pool"])
 
-        env_agent.set_attr(attr="all_agents", value=seeker_agents + interviewer_agents)
+        env.set_attr(attr="all_agents", value=seeker_agents + interviewer_agents)
 
-        self.agents = seeker_agents + interviewer_agents + [env_agent]
+        self.agents = seeker_agents + interviewer_agents
 
     def get_agent_by_id(self, agent_id: str):
         for agent in self.agents:

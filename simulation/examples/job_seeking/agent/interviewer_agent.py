@@ -11,6 +11,8 @@ from loguru import logger
 from simulation.helpers.utils import *
 from simulation.helpers.constants import *
 from simulation.helpers.base_agent import BaseAgent
+from simulation.examples.job_seeking.env import JobSeekingEnv
+
 
 scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 file_loader = FileSystemLoader(os.path.join(scene_path, "prompts"))
@@ -89,7 +91,7 @@ class InterviewerAgent(BaseAgent):
         benefits: List[str],
         location: str,
         embedding: list,
-        env_agent: BaseAgent,
+        env: JobSeekingEnv,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -104,7 +106,7 @@ class InterviewerAgent(BaseAgent):
         self.memory.embedding_api = embedding_api
         self.job = Job(name=name, jd=jd, jr=jr, company=company, salary=salary, benefits=benefits, location=location)
         self.embedding = embedding
-        self.env_agent = env_agent
+        self.env = env
 
         self.update_profile()
         self._state = "idle"

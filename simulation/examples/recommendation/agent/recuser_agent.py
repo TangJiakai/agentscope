@@ -9,6 +9,7 @@ from agentscope.message import Msg
 from agentscope.rpc import async_func
 from agentscope.rpc.rpc_agent_client import RpcAgentClient
 
+from simulation.examples.recommendation.env import RecommendationEnv
 from simulation.helpers.base_agent import BaseAgent
 from simulation.helpers.utils import *
 from simulation.helpers.constants import *
@@ -86,7 +87,7 @@ class RecUserAgent(BaseAgent):
         status: str,
         interest: str,
         feature: str,
-        env_agent: BaseAgent,
+        env: RecommendationEnv,
         relationship: dict[str, RpcAgent] = {},
         **kwargs,
     ) -> None:
@@ -99,7 +100,7 @@ class RecUserAgent(BaseAgent):
         self.memory = setup_memory(memory_config)
         self.memory.embedding_api = embedding_api
         self.memory.model = self.model
-        self.env_agent = env_agent
+        self.env = env
         self.relationship = relationship
 
         self.recuser = RecUser(name, gender, age, traits, status, interest, feature)
@@ -177,7 +178,7 @@ class RecUserAgent(BaseAgent):
     def recommend(self):
         user_info = self._profile + \
             "\nMemory:" + "\n- ".join([m["content"] for m in self.memory.get_memory()])
-        selection = self.env_agent.recommend4user(user_info)
+        selection = self.env.recommend4user(user_info)
         instruction = Template.recommend_instruction()
         observation = Template.make_choice_observation(selection)
         msg = get_assistant_msg()

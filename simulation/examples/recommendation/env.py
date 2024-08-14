@@ -1,18 +1,16 @@
-import faiss
-from loguru import logger
-import numpy as np
+from typing import List
 
+import faiss
+import numpy as np
+from loguru import logger
 from agentscope.agents import RpcAgent
-from agentscope.rpc import async_func
+from agentscope.environment import BasicEnv
 
 from simulation.helpers.utils import *
-from simulation.helpers.base_agent import BaseAgent
 from simulation.helpers.emb_service import *
 
 
-class EnvironmentAgent(BaseAgent):
-    """environment agent."""
-
+class RecommendationEnv(BasicEnv):
     def __init__(
         self,
         name: str,
@@ -20,7 +18,7 @@ class EnvironmentAgent(BaseAgent):
         item_infos: list,
         **kwargs,
     ) -> None:
-        super().__init__(name)
+        super().__init__(name=name)
         self.item_infos = item_infos
         self.embedding_api = embedding_api
         self.index = self._build_index(item_infos)
@@ -58,10 +56,10 @@ class EnvironmentAgent(BaseAgent):
             for i in indices[0]
         ])
 
-    def get_agents_by_ids(self, agent_ids: list[str]):
+    def set_attr(self, attr: str, value, **kwargs) -> str:
+        setattr(self, attr, value)
+        return "success"
+
+    def get_agents_by_ids(self, agent_ids: List[str]) -> List[RpcAgent]:
         agents = [agent for agent in self.all_agents if agent.agent_id in agent_ids]
         return agents
-
-    @async_func
-    def run(self, **kwargs):
-        return "Done"

@@ -43,11 +43,10 @@ class BaseAgent(AgentBase):
 
     def set_attr(self, attr: str, value, **kwargs):
         setattr(self, attr, value)
-        return get_assistant_msg("success")
+        return "success"
 
     def get_attr(self, attr: str):
         return getattr(self, attr)
-        # return get_assistant_msg(getattr(self, attr))
 
     def external_interview(self, observation, **kwargs):
         format_profile = PROFILE_BEGIN + self._profile + PROFILE_END

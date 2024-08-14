@@ -1,5 +1,4 @@
 from .recuser_agent import RecUserAgent, RecUserAgentStates
-from .environment_agent import EnvironmentAgent
 
 
 ALL_AGENT_STATES = {
@@ -7,7 +6,6 @@ ALL_AGENT_STATES = {
 }
 
 __all__ = [
-    "RecUserAgent", 
-    "EnvironmentAgent",
+    "RecUserAgent",
     "ALL_AGENT_STATES",
 ]
