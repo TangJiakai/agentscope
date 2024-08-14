@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from typing import Sequence, Union
 from agentscope.message import Msg
 
 
@@ -12,10 +13,13 @@ class ShortMemory:
         self.stm_K = stm_K
         self.stm_memory = []
 
-    def add(self, memory: Msg = None):
+    def add(self, memory: Union[Sequence[Msg], Msg, None] = None):
         if memory is None: return None
 
-        self.stm_memory.append(memory)
+        if isinstance(memory, Msg):
+            self.stm_memory.append(memory)
+        elif isinstance(memory, Sequence):
+            self.stm_memory.extend(memory)
         if len(self.stm_memory) > self.stm_K:
             return self.stm_memory.pop(0)
         return None
