@@ -159,9 +159,6 @@ class InterviewerAgent(BaseAgent):
                 "Location": self.job.location,
             }
             return job
-            # return get_assistant_msg(job)
-        elif attr == "sys_prompt":
-            return self.sys_prompt
         return super().get_attr(attr)
 
     @async_func

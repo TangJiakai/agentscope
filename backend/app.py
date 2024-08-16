@@ -239,7 +239,7 @@ def get_agents(query: Optional[str] = None):
             id=agent.agent_id,
             cls=agent._init_settings["class_name"],
             state=agent.get_attr(attr="state"),
-            profile=agent.get_attr(attr="sys_prompt"),
+            profile=agent.get_attr(attr="_profile"),
             coordinates=agent_coordinates[agent.agent_id],
         )
         for agent in agents
@@ -312,7 +312,7 @@ def get_agent(id: str):
             id=agent.agent_id,
             cls=agent._init_settings["class_name"],
             state=agent.get_attr(attr="state"),
-            profile=agent.get_attr(attr="sys_prompt"),
+            profile=agent.get_attr(attr="_profile"),
             coordinates=agent_coordinates[agent.agent_id],
         )
     else:
