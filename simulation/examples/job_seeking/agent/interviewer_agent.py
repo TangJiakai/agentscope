@@ -11,7 +11,7 @@ from loguru import logger
 from simulation.helpers.utils import *
 from simulation.helpers.constants import *
 from simulation.helpers.base_agent import BaseAgent
-from simulation.examples.job_seeking.env import JobSeekingEnv
+from simulation.helpers.base_env import BaseEnv
 
 
 scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -91,7 +91,7 @@ class InterviewerAgent(BaseAgent):
         benefits: List[str],
         location: str,
         embedding: list,
-        env: JobSeekingEnv,
+        env: BaseEnv,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -159,9 +159,6 @@ class InterviewerAgent(BaseAgent):
                 "Location": self.job.location,
             }
             return job
-            # return get_assistant_msg(job)
-        elif attr == "sys_prompt":
-            return self.sys_prompt
         return super().get_attr(attr)
 
     @async_func
@@ -174,36 +171,18 @@ class InterviewerAgent(BaseAgent):
         msg.selection_num = len(selection)
         response = selection[int(self.reply(msg)["content"])]
         return response
-        # return get_assistant_msg(response)
 
     @set_state("interviewing")
-    def interview(self, msg: Msg):
-        observation = msg["content"]
-        if hasattr(msg, "end") and msg.end:
-            instruction = Template.interview_closing_instruction()
-            selection = ["yes", "no"]
-            observation = observation + Template.make_choice_observation(selection)
-            msg = get_assistant_msg()
-            msg.instruction = instruction
-            msg.observation = observation
-            msg.selection = selection
-            response = selection[int(self.reply(msg)["content"])]
-            return response
-            # return get_assistant_msg(response)
-        else:
-            instruction = Template.interview_opening_instruction()
-            format_instruction = PROFILE_BEGIN + instruction + PROFILE_END
-            format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
-            memory = self.memory.get_memory(get_assistant_msg(instruction + observation))
-            format_memory = MEMORY_BEGIN + "\n- ".join([m["content"] for m in memory]) + MEMORY_END
-            observation = observation + "Interviewer:"
-            response = self.model(self.model.format(Msg(
-                "user",
-                format_instruction + format_profile + format_memory + observation,
-                role="user",
-            )))
-            return response.text
-            # return get_assistant_msg(response.text)
+    def interview(self, dialog: str):
+        instruction = Template.interview_closing_instruction()
+        selection = ["yes", "no"]
+        observation = Template.make_interview_decision_observation(dialog, selection)
+        msg = get_assistant_msg()
+        msg.instruction = instruction
+        msg.observation = observation
+        msg.selection_num = len(selection)
+        response = selection[int(self.reply(msg)["content"])]
+        return response
 
     @async_func
     @set_state("receiving notification")

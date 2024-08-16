@@ -1,4 +1,4 @@
-from typing import Optional, Union, Sequence
+from typing import Any, Optional, Union, Sequence
 
 from agentscope.agents import AgentBase
 from agentscope.message import Msg
@@ -21,6 +21,10 @@ class BaseAgent(AgentBase):
         )
         self._profile = ""
 
+    @property
+    def profile(self):
+        return self._profile
+
     def __getstate__(self) -> object:
         state = self.__dict__.copy()
         state.pop("model", None)
@@ -41,7 +45,7 @@ class BaseAgent(AgentBase):
             )
             self.memory.model = self.model
 
-    def set_attr(self, attr: str, value, **kwargs):
+    def set_attr(self, attr: str, value: Any, **kwargs):
         setattr(self, attr, value)
         return "success"
 
@@ -56,13 +60,47 @@ class BaseAgent(AgentBase):
         memory = self.memory.get_memory(get_assistant_msg(observation))
         format_memory = MEMORY_BEGIN + "\n- ".join([m["content"] for m in memory]) + MEMORY_END
         format_observation = "Question:" + observation + "Answer:"
-        response = self.model.format(get_assistant_msg(
-            format_instruction + format_profile + format_memory + format_observation))
+        response = self.model(self.model.format(get_assistant_msg(
+            format_instruction + format_profile + format_memory + format_observation)))
+        return response.text
+
+    def session_chat(self, announcement, participants, **kwargs):
+        MAX_CONVERSATION_NUM = 2
+        msg = get_assistant_msg()
+        msg.instruction = announcement
+        msg.observation = "\nThe dialogue proceeds as follows:\n"
+        for _ in range(MAX_CONVERSATION_NUM):
+            for p in participants:
+                msg.observation += f"{p.name}:"
+                response = self(msg)["content"]
+                msg.observation += response + "\n"
+        return msg.observation
+
+    def script_chat(self, announcement, participants, **kwargs):
+        format_instruction = INSTRUCTION_BEGIN + announcement + INSTRUCTION_END
+        profile = ""
+        for p in participants:
+            profile += "\n" + p.name + ": " + p.profile
+        format_profile = PROFILE_BEGIN + profile + PROFILE_END
+        memory = ""
+        for p in participants:
+            memory += "\n" + p.name + ": " + "\n\t- ".join([m["content"] for m in p.memory.get_memory()])
+        format_memory = MEMORY_BEGIN + memory + MEMORY_END
+        observation = "The dialogue proceeds as follows:\n"
+        response = self.model(self.model.format(get_assistant_msg(
+            format_instruction + format_profile + format_memory + observation)))
         return response.text
     
-    def post_intervention(self, intervention: str, **kwargs):
-        self.observe(Msg("assistant", intervention, role="assistant"))
-        return get_assistant_msg("success")
+    def chat(self, announcement, participants, mode="session", **kwargs):
+        if mode == "session":
+            return self.session_chat(announcement, participants, **kwargs)
+        elif mode == "script":
+            return self.script_chat(announcement, participants, **kwargs)
+        
+    def post(self, content, participants, **kwargs):
+        for p in participants:
+            p.observe(get_assistant_msg(f"{self.name} posted: {content}"))
+        return content
     
     def reply(self, x: Optional[Union[Msg, Sequence[Msg]]] = None) -> Msg:
         instruction = ""
@@ -106,5 +144,6 @@ class BaseAgent(AgentBase):
 
         self._send_message(prompt_msg, response)
         add_memory_msg = Msg("user", instruction + observation + response.text, role="user")
-        self.observe(add_memory_msg)
+        if not hasattr(x, "no_memory"):
+            self.observe(add_memory_msg)
         return get_assistant_msg(response.text)

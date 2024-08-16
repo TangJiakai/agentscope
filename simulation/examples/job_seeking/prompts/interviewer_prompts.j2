@@ -25,9 +25,6 @@ Due to time constraints, please ensure the conversation is concise.
 {% macro interview_closing_instruction() %}
 The interview is now over. 
 Finally, please consider the interview situation and decide whether to hire the seeker. 
-If yes, please output 'yes'; otherwise, output 'no'. 
-Be sure to provide one of these options and do not refuse to answer.
-Interviewer:
 {% endmacro %}
 
 
@@ -45,6 +42,16 @@ The information of the job seeker is as follows:
 {{seeker_info}}
 {{ make_choice_observation(actions) }}
 {% endmacro %}
+
+{% macro make_interview_decision_observation(dialog, actions) %}
+The interview is over.
+The conversation is as follows:
+{{dialog}}
+
+You need to make a final decision based on the interview.
+{{ make_choice_observation(actions) }}
+{% endmacro %}
+
 
 {% macro receive_notification_observation(seeker_name, is_accept) %}
 Job seeker {{seeker_name}} chose to

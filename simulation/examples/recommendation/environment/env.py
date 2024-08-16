@@ -55,11 +55,3 @@ class RecommendationEnv(BasicEnv):
             "\n".join([f"{k}: {v}" for k, v in self.item_infos[i].items()])
             for i in indices[0]
         ])
-
-    def set_attr(self, attr: str, value, **kwargs) -> str:
-        setattr(self, attr, value)
-        return "success"
-
-    def get_agents_by_ids(self, agent_ids: List[str]) -> List[RpcAgent]:
-        agents = [agent for agent in self.all_agents if agent.agent_id in agent_ids]
-        return agents

@@ -24,7 +24,7 @@ from simulation.helpers.message import message_manager
 from simulation.helpers.constants import *
 from agentscope.constants import _DEFAULT_SAVE_DIR
 from simulation.examples.job_seeking.agent import *
-from simulation.examples.job_seeking.env import JobSeekingEnv
+from simulation.helpers.base_env import BaseEnv
 from simulation.helpers.emb_service import *
 from simulation.helpers.utils import *
 
@@ -109,7 +109,7 @@ class Simulator:
 
         # Init env
         logger.info("Init environment")
-        env = JobSeekingEnv(
+        env = BaseEnv(
             name="environment",
             to_dist=DistConf(host=self.config["host"], port=self.config["base_port"]),
         )
@@ -169,15 +169,9 @@ class Simulator:
         for agent, config in zip(seeker_agents, seeker_configs):
             agent.set_attr(attr="job_ids_pool", value=config["args"]["job_ids_pool"])
 
-        env.set_attr(attr="all_agents", value=seeker_agents + interviewer_agents)
+        env.set_attr(attr="all_agents", value={agent.agent_id: agent for agent in seeker_agents + interviewer_agents})
 
         self.agents = seeker_agents + interviewer_agents
-
-    def get_agent_by_id(self, agent_id: str):
-        for agent in self.agents:
-            if agent.agent_id == agent_id:
-                return agent
-        return None
 
     def _one_round(self):
         results = []
