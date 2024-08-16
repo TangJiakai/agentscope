@@ -9,7 +9,7 @@ from agentscope.message import Msg
 from agentscope.rpc import async_func
 from agentscope.rpc.rpc_agent_client import RpcAgentClient
 
-from simulation.examples.recommendation.env import RecommendationEnv
+from simulation.examples.recommendation.environment.env import RecommendationEnv
 from simulation.helpers.base_agent import BaseAgent
 from simulation.helpers.utils import *
 from simulation.helpers.constants import *
@@ -194,32 +194,17 @@ class RecUserAgent(BaseAgent):
 
     @set_state("chatting")
     def conversation(self):
-        MAX_CONVERSATION_NUM = 2
-        
         friend_agent_id = random.choice(list(self.relationship.keys()))
         friend_agent = self.relationship[friend_agent_id]
-        instruction = Template.conversation_instruction()
-        format_instruction = INSTRUCTION_BEGIN + instruction + INSTRUCTION_END
-        format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
-        memory = self.memory.get_memory(get_assistant_msg(instruction))
-        format_memory = MEMORY_BEGIN + "\n- ".join([m["content"] for m in memory]) + MEMORY_END
-        observation = ""
+        announcement = Template.conversation_instruction()
+        dialog_observation = self.chat(announcement, [self, friend_agent])
 
-        for _ in range(MAX_CONVERSATION_NUM):
-            observation += f"{self.name}:"
-            observation += self.model(self.model.format(Msg(
-                "user",
-                format_instruction + format_profile + format_memory + observation,
-                role="user",
-            ))).text
-            observation += friend_agent.respond_conversation(observation)["content"]
+        self.observe(get_assistant_msg(announcement + dialog_observation))
+        friend_agent.observe(get_assistant_msg(announcement + dialog_observation))
 
-        self.observe(get_assistant_msg(instruction + observation))
-        friend_agent.observe(get_assistant_msg(instruction + observation))
+        logger.info(f"[{self.name}] had a conversation with {friend_agent_id}: {dialog_observation}")
 
-        logger.info(f"[{self.name}] had a conversation with {friend_agent_id}: {observation}")
-
-        return instruction + observation
+        return dialog_observation
     
     @set_state("chatting")
     def respond_conversation(self, observation: str):

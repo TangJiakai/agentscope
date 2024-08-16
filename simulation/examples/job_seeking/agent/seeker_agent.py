@@ -10,7 +10,7 @@ from agentscope.rpc import async_func
 from simulation.helpers.base_agent import BaseAgent
 from simulation.helpers.utils import *
 from simulation.helpers.constants import *
-from simulation.examples.job_seeking.env import JobSeekingEnv
+from simulation.helpers.base_env import BaseEnv
 
 
 scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -73,7 +73,7 @@ class SeekerAgent(BaseAgent):
         cv: str,
         trait: str,
         embedding: list,
-        env: JobSeekingEnv,
+        env: BaseEnv,
         job_ids_pool: list[str] = [],
         **kwargs,
     ) -> None:
@@ -172,10 +172,7 @@ class SeekerAgent(BaseAgent):
             range(len(self.job_ids_pool)), search_job_number
         )
         search_job_ids = [self.job_ids_pool[i] for i in search_job_indices]
-        search_interviewer_agents = self.env.get_agents_by_ids(search_job_ids)
-        interviewer_agent_infos = {
-            agent.agent_id: agent for agent in search_interviewer_agents
-        }
+        interviewer_agent_infos = self.env.get_agents_by_ids(search_job_ids)
         for agent in interviewer_agent_infos.values():
             agent.job = agent.get_attr("job")
 
@@ -211,7 +208,7 @@ class SeekerAgent(BaseAgent):
         for (agent_id, agent), result in zip(
             apply_interviewer_agent_infos.items(), results
         ):
-            if "yes" in result.get():
+            if "yes" == result.get():
                 cv_passed_interviewer_agent_infos[agent_id] = agent
         if len(cv_passed_interviewer_agent_infos) > 0:
             self.observe(
@@ -225,81 +222,13 @@ class SeekerAgent(BaseAgent):
     @set_state("interviewing")
     def _interview_fun(self, cv_passed_interviewer_agent_infos: dict, **kwargs):
         """Interview."""
-        MAX_INTERVIEW_ROUND = 1
         offer_interviewer_agent_infos = {}
         for agent_id, agent in cv_passed_interviewer_agent_infos.items():
-            format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
-            instruction = Template.interview_opening_instruction()
-            format_instruction = INSTRUCTION_BEGIN + instruction + INSTRUCTION_END
-            memory = self.memory.get_memory(get_assistant_msg(instruction))
-            format_memory = (
-                MEMORY_BEGIN + "\n- ".join([m["content"] for m in memory]) + MEMORY_END
-            )
-            observation = "Seeker:"
-            answer = self.model(
-                self.model.format(
-                    Msg(
-                        "user",
-                        format_instruction
-                        + format_profile
-                        + format_memory
-                        + observation,
-                        role="user",
-                    )
-                )
-            ).text
-
-            for _ in range(MAX_INTERVIEW_ROUND + 1):
-                observation += answer
-                if _ == MAX_INTERVIEW_ROUND:
-                    result = agent.interview(
-                        msg=Msg(
-                            "user",
-                            observation,
-                            role="user",
-                            end=True,
-                        )
-                    )
-                    break
-                else:
-                    observation += "\nInterviewer:"
-                    question = agent.interview(
-                        msg=Msg(
-                            "user",
-                            observation,
-                            role="user",
-                        )
-                    )
-
-                observation += question + "\nSeeker:"
-                if _ == MAX_INTERVIEW_ROUND - 1:
-                    msg = get_assistant_msg()
-                    msg.instruction = instruction
-                    msg.observation = observation
-                    answer = self.reply(msg)["content"]
-                else:
-                    memory = self.memory.get_memory(
-                        get_assistant_msg(instruction + observation)
-                    )
-                    format_memory = (
-                        MEMORY_BEGIN
-                        + "\n- ".join([m["content"] for m in memory])
-                        + MEMORY_END
-                    )
-                    answer = self.model(
-                        self.model.format(
-                            Msg(
-                                "user",
-                                format_instruction
-                                + format_profile
-                                + format_memory
-                                + observation,
-                                role="user",
-                            )
-                        )
-                    ).text
-
-            if "yes" in result:
+            announcement = Template.interview_announcement_instruction()
+            dialog_observation = self.chat(announcement, [self, agent])
+            self.observe(get_assistant_msg(announcement + dialog_observation))
+            result = agent.interview(dialog_observation)
+            if "yes" == result:
                 offer_interviewer_agent_infos[agent_id] = agent
                 self.observe(
                     get_assistant_msg(

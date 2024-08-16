@@ -23,7 +23,7 @@ from simulation.helpers.message import message_manager
 from simulation.helpers.constants import *
 from agentscope.constants import _DEFAULT_SAVE_DIR
 from simulation.examples.recommendation.agent import *
-from simulation.examples.recommendation.env import RecommendationEnv
+from simulation.examples.recommendation.environment.env import RecommendationEnv
 from simulation.helpers.emb_service import *
 from simulation.helpers.utils import *
 
@@ -125,21 +125,13 @@ class Simulator:
         iet = time.time()
         logger.info(f"Init agents time: {iet - ist:.2f}s")
 
-        agent_distribution_infos = {}
-        for agent in agents:
-            agent_distribution_infos[agent.agent_id] = {
-                "host": agent.host,
-                "port": agent.port,
-                "agent_id": agent.agent_id,
-            }
-
         for i, agent in enumerate(agents):
             agent.set_attr(
                 "relationship",
                 {agents[j].agent_id: agents[j] for j in agent_relationships[i]},
             )
 
-        env.set_attr(attr="all_agents", value=agents)
+        env.set_attr(attr="all_agents", value={agent.agent_id: agent for agent in agents})
 
         self.agents = agents
 

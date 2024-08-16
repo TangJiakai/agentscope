@@ -21,7 +21,7 @@
             "location": "Dublin, Ireland",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 12000
+            "port": 12100
         }
     },
     {
@@ -46,7 +46,7 @@
             "location": "Mountain View, California, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 12000
+            "port": 12100
         }
     },
     {
@@ -71,7 +71,7 @@
             "location": "Redmond, Washington, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 12000
+            "port": 12101
         }
     },
     {
@@ -96,7 +96,7 @@
             "location": "San Francisco, California, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 12000
+            "port": 12101
         }
     }
 ]

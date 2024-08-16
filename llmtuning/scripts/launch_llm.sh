@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export CUDA_VISIBLE_DEVICES=7
+export CUDA_VISIBLE_DEVICES=2
 export API_HOST=0.0.0.0 
 export API_PORT=8083
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
