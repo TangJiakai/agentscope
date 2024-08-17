@@ -1,4 +1,4 @@
-from functools import wraps
+import tiktoken
 import yaml
 import os
 import json
@@ -8,7 +8,7 @@ import glob
 
 from agentscope.constants import _DEFAULT_CFG_NAME
 from agentscope.manager import FileManager
-from agentscope.message import Msg, serialize, deserialize
+from agentscope.message import Msg
 
 from simulation.memory import *
 
@@ -72,25 +72,27 @@ def setup_memory(memory_config):
     return memory
 
 
-def rpc_client_post(agent_client, msg=None, fun=None, params=None):
-    return deserialize(agent_client.call_agent_func(
-        func_name="_reply",
-        value=serialize(
-            Msg("assistant", msg, role="assistant", fun=fun, params=params)
-        )
-    ))
-
-
-def rpc_client_get(agent_client, msg):
-    return deserialize(agent_client.update_placeholder(msg["task_id"]))
-
-
-def rpc_client_post_and_get(agent_client, msg=None, fun=None, params=None):
-    return rpc_client_get(
-        agent_client,
-        rpc_client_post(agent_client, msg=msg, fun=fun, params=params)
-    )
-
-
 def get_assistant_msg(content=None, **kwargs):
     return Msg("assistant", content, role="assistant", **kwargs)
+
+
+def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
+    """Returns the number of tokens in a text string."""
+    encoding = tiktoken.get_encoding(encoding_name)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
+
+
+def get_memory_until_limit(memory, existing_prompt, limit=6000):
+    """
+    Get memory until the total length of memory is less than limit
+    """
+    memory_content = ""
+    limit -= num_tokens_from_string(existing_prompt)
+    for m in memory:
+        if num_token:=num_tokens_from_string(m["content"]) < limit:
+            memory_content += "\n- " + m["content"]
+            limit -= num_token
+        else:
+            break
+    return memory_content
