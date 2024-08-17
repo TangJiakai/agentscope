@@ -1,16 +1,14 @@
-from typing import List
-
 import faiss
 import numpy as np
 from loguru import logger
 from agentscope.agents import RpcAgent
-from agentscope.environment import BasicEnv
 
 from simulation.helpers.utils import *
 from simulation.helpers.emb_service import *
+from simulation.helpers.base_env import BaseEnv
 
 
-class RecommendationEnv(BasicEnv):
+class RecommendationEnv(BaseEnv):
     def __init__(
         self,
         name: str,

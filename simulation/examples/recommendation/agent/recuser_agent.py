@@ -7,7 +7,6 @@ from loguru import logger
 from agentscope.agents import RpcAgent
 from agentscope.message import Msg
 from agentscope.rpc import async_func
-from agentscope.rpc.rpc_agent_client import RpcAgentClient
 
 from simulation.examples.recommendation.environment.env import RecommendationEnv
 from simulation.helpers.base_agent import BaseAgent

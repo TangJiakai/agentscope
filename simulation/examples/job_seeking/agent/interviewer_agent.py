@@ -4,7 +4,6 @@ import requests
 from typing import List
 from jinja2 import Environment, FileSystemLoader
 
-from agentscope.message import Msg
 from agentscope.rpc import async_func
 from loguru import logger
 
