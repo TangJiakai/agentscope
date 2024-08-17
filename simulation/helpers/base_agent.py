@@ -58,8 +58,10 @@ class BaseAgent(AgentBase):
             "You are participating in a simple interview where you need to answer some questions." + \
             INSTRUCTION_END
         memory = self.memory.get_memory(get_assistant_msg(observation))
-        format_memory = MEMORY_BEGIN + "\n- ".join([m["content"] for m in memory]) + MEMORY_END
         format_observation = "Question:" + observation + "Answer:"
+        format_memory = MEMORY_BEGIN + \
+            get_memory_until_limit(memory, format_instruction + format_profile + format_observation) + \
+            MEMORY_END
         response = self.model(self.model.format(get_assistant_msg(
             format_instruction + format_profile + format_memory + format_observation)))
         return response.text
@@ -84,7 +86,8 @@ class BaseAgent(AgentBase):
         format_profile = PROFILE_BEGIN + profile + PROFILE_END
         memory = ""
         for p in participants:
-            memory += "\n" + p.name + ": " + "\n\t- ".join([m["content"] for m in p.memory.get_memory()])
+            memory += "\n" + p.name + ": " + get_memory_until_limit(p.memory.get_memory(),
+                    format_instruction + format_profile + memory)
         format_memory = MEMORY_BEGIN + memory + MEMORY_END
         observation = "The dialogue proceeds as follows:\n"
         response = self.model(self.model.format(get_assistant_msg(
@@ -129,7 +132,10 @@ class BaseAgent(AgentBase):
         memory = self.memory.get_memory(get_assistant_msg(memory_query))
         if len(memory) > 0:
             insert_index = -2 if len(prompt_content) > 1 else -1
-            prompt_content.insert(insert_index, MEMORY_BEGIN + "\n- ".join([m["content"] for m in memory]) + MEMORY_END)
+            memory_content = get_memory_until_limit(memory, "\n".join(prompt_content))
+            prompt_content.insert(insert_index, MEMORY_BEGIN + memory_content + MEMORY_END)
+
+        prompt_content = "\n".join(prompt_content)
 
         prompt_msg = self.model.format(Msg(
             "user", 
