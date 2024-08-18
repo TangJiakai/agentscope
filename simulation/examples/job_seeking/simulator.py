@@ -1,3 +1,4 @@
+from datetime import timedelta
 import os
 import sys
 
@@ -227,4 +228,8 @@ class Simulator:
 
 if __name__ == "__main__":
     simulator = Simulator()
+    start_time = time.time()
     simulator.run()
+    end_time = time.time()
+    formatted_time = str(timedelta(seconds=end_time - start_time))
+    logger.info(f"Total time: {formatted_time}")

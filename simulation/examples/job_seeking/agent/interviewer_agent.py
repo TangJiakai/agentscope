@@ -23,6 +23,7 @@ InterviewerAgentStates = [
     "idle",
     "screening cv",
     "making decision",
+    "interviewing",
     "receiving notification",
 ]
 
@@ -152,7 +153,7 @@ class InterviewerAgent(BaseAgent):
         guided_choice = ["yes", "no"]
         msg.observation = Template.screening_cv_observation(seeker_info, guided_choice)
         msg.guided_choice = guided_choice
-        response = self.reply(msg)["content"]
+        response = self.reply(msg)
         return response
 
     @set_state("interviewing")
@@ -164,7 +165,7 @@ class InterviewerAgent(BaseAgent):
         msg.instruction = instruction
         msg.observation = observation
         msg.guided_choice = guided_choice
-        response = self.reply(msg)["content"]
+        response = self.reply(msg)
         return response
 
     @async_func

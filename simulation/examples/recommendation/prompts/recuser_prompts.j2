@@ -46,11 +46,12 @@ Answer:
 {% macro make_choice_observation(actions) %}
 Please make a choice from the actions below:
 {% for action in actions %}
-    {{loop.index0}}. {{action}}
+    - {{action}}
 {% endfor %}
 Answer:
 {% endmacro %}
 
 {% macro generate_feeling_observation(movie) %}
 You have finished watching the movie: {{movie}}. Please generate a feeling about the movie.
+Answer:
 {% endmacro %}

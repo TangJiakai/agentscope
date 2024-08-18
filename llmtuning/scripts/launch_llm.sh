@@ -1,13 +1,10 @@
 #!/bin/bash
 
 export CUDA_VISIBLE_DEVICES=2
-export VLLM_WORKER_MULTIPROC_METHOD=spawn
-
-PARENT_PARENT_DIR="$(realpath "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")"
+# export VLLM_WORKER_MULTIPROC_METHOD=spawn
 
 
 if [ -f "saves/adapter_config.json" ]; then
-    # llamafactory-cli api "$PARENT_PARENT_DIR/configs/llama3_lora.yaml" &
     python -m vllm.entrypoints.openai.api_server \
         --model /data/pretrain_dir/Meta-Llama-3-8B-Instruct \
         --trust-remote-code \
@@ -20,7 +17,6 @@ if [ -f "saves/adapter_config.json" ]; then
         --enable-lora \
         --lora-modules lora=saves 
 else
-    # llamafactory-cli api "$PARENT_PARENT_DIR/configs/llama3.yaml" &
     python -m vllm.entrypoints.openai.api_server \
         --model /data/pretrain_dir/Meta-Llama-3-8B-Instruct \
         --trust-remote-code \
