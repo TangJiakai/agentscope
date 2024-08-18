@@ -139,10 +139,10 @@ class SeekerAgent(BaseAgent):
     @set_state("determining search job number")
     def _determine_search_job_number(self, **kwargs):
         """Set search job number."""
-        SearchJobNumber = 10
+        SearchJobNumber = 5
 
         instruction = Template.determine_search_job_number_instruction()
-        guided_choice = list(map(str, range(1, SearchJobNumber + 1)))
+        guided_choice = list(map(str, range(3, SearchJobNumber + 1)))
         observation = Template.make_choice_observation(guided_choice)
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
@@ -160,6 +160,7 @@ class SeekerAgent(BaseAgent):
         interviewer_agent_infos = self.env.get_agents_by_ids(search_job_ids)
         for agent in interviewer_agent_infos.values():
             agent.job = agent.get_attr("job")
+            logger
 
         return interviewer_agent_infos
 
@@ -168,7 +169,7 @@ class SeekerAgent(BaseAgent):
         """Determine which jobs to apply."""
         instruction = Template.determine_apply_jobs_instruction()
         apply_interviewer_agent_infos = {}
-        guided_choice = ["no", "yes"]
+        guided_choice = ["yes", "no"]
         for job_id, agent in interviewer_agent_infos.items():
             job_info = agent.job
             observation = Template.determine_apply_jobs_observation(job_info, guided_choice)
@@ -188,14 +189,14 @@ class SeekerAgent(BaseAgent):
         """Apply jobs."""
         results = []
         for agent in apply_interviewer_agent_infos.values():
-            result = agent.screening_cv(str(self.seeker))
+            results.append(agent.screening_cv(str(self.seeker)))
 
         cv_passed_interviewer_agent_infos = {}
         for (agent_id, agent), result in zip(
             apply_interviewer_agent_infos.items(), results
         ):
-            logger.info(f"CV screening result: {result.get()}")
-            if "yes" == result.get():
+            result = result.get()["content"]
+            if "yes" == result:
                 cv_passed_interviewer_agent_infos[agent_id] = agent
         if len(cv_passed_interviewer_agent_infos) > 0:
             self.observe(
@@ -214,7 +215,7 @@ class SeekerAgent(BaseAgent):
             announcement = Template.interview_announcement_instruction()
             dialog_observation = self.chat(announcement, [self, agent])
             self.observe(get_assistant_msg(announcement + dialog_observation))
-            result = agent.interview(dialog_observation)
+            result = agent.interview(dialog_observation)["content"]
             if "yes" == result:
                 offer_interviewer_agent_infos[agent_id] = agent
                 self.observe(
@@ -272,22 +273,22 @@ class SeekerAgent(BaseAgent):
         logger.info(f"Search job number: {search_job_number}")
 
         interviewer_agent_infos = self._determine_search_jobs(search_job_number)
-        logger.info(f"Search jobs: {interviewer_agent_infos.keys()}")
+        logger.info(f"Search jobs: {list(interviewer_agent_infos.keys())}")
 
         apply_interviewer_agent_infos = self._determine_apply_job(
             interviewer_agent_infos
         )
-        logger.info(f"Apply jobs: {apply_interviewer_agent_infos.keys()}")
+        logger.info(f"Apply jobs: {list(apply_interviewer_agent_infos.keys())}")
 
         cv_passed_interviewer_agent_infos = self._apply_job(
             apply_interviewer_agent_infos
         )
-        logger.info(f"CV passed jobs: {cv_passed_interviewer_agent_infos.keys()}")
+        logger.info(f"CV passed jobs: {list(cv_passed_interviewer_agent_infos.keys())}")
 
         offer_interviewer_agent_infos = self._interview_fun(
             cv_passed_interviewer_agent_infos
         )
-        logger.info(f"Offer jobs: {offer_interviewer_agent_infos.keys()}")
+        logger.info(f"Offer jobs: {list(offer_interviewer_agent_infos.keys())}")
 
         final_job_id = self._make_final_decision(offer_interviewer_agent_infos)
         logger.info(f"Final job: {final_job_id}")
