@@ -130,22 +130,6 @@ class InterviewerAgent(BaseAgent):
             if resp.status_code != 200:
                 logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
 
-    def _send_message(self, prompt, response):
-        if hasattr(self, "backend_server_url"):
-            url = f"{self.backend_server_url}/api/message"
-            resp = requests.post(
-                url,
-                json={
-                    "name": self.name,
-                    "prompt": "\n".join([p["content"] for p in prompt]),
-                    "completion": response.text,
-                    "agent_type": type(self).__name__,
-                    "agent_id": self.agent_id,
-                },
-            )
-            if resp.status_code != 200:
-                logger.error(f"Failed to send message: {self.agent_id}")
-
     def get_attr(self, attr):
         if attr == "job":
             job = {
@@ -165,22 +149,22 @@ class InterviewerAgent(BaseAgent):
     def screening_cv(self, seeker_info: str):
         msg = get_assistant_msg()
         msg.instruction = Template.screening_cv_instruction()
-        selection = ["yes", "no"]
-        msg.observation = Template.screening_cv_observation(seeker_info, selection)
-        msg.selection_num = len(selection)
-        response = selection[int(self.reply(msg)["content"])]
+        guided_choice = ["yes", "no"]
+        msg.observation = Template.screening_cv_observation(seeker_info, guided_choice)
+        msg.guided_choice = guided_choice
+        response = self.reply(msg)["content"]
         return response
 
     @set_state("interviewing")
     def interview(self, dialog: str):
         instruction = Template.interview_closing_instruction()
-        selection = ["yes", "no"]
-        observation = Template.make_interview_decision_observation(dialog, selection)
+        guided_choice = ["yes", "no"]
+        observation = Template.make_interview_decision_observation(dialog, guided_choice)
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        msg.selection_num = len(selection)
-        response = selection[int(self.reply(msg)["content"])]
+        msg.guided_choice = guided_choice
+        response = self.reply(msg)["content"]
         return response
 
     @async_func

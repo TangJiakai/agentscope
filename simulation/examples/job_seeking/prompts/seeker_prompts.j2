@@ -23,7 +23,6 @@ If the expected utility of searching for a job is greater than the utility of no
 {% macro determine_search_job_number_instruction() %}
 You are a job seeker.
 Now you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. 
-However, the more effort you invest in this, the more your utility will decrease accordingly. 
 Based on your current personal situation, please choose an integer to maximize the total discounted utility to the present value across all periods. 
 {% endmacro %}
 
@@ -63,9 +62,9 @@ The jobs you have currently searched is as follows:
 
 {##################################### Observation #####################################}
 {% macro make_choice_observation(actions) %}
-Please make a choice from the actions below (return the index of the action):
+Please make a choice from the actions below:
 {% for action in actions %}
-    {{loop.index0}}. {{action}}
+    - {{action}}
 {% endfor %}
 Answer:
 {% endmacro %}
@@ -78,7 +77,7 @@ You have received interview opportunities for the following jobs:
 {% endmacro %}
 
 {% macro determine_apply_jobs_observation(job_info, actions) %}
-Would you like to submit your resume for the following positions?
+Would you like to submit your CV for the following position?
 {{job_info}}
 {{make_choice_observation(actions)}}
 {% endmacro %}

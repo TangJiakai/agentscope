@@ -1,0 +1,172 @@
+[
+    {
+        "msg_id": null,
+        "agent_id": "0276e43535fd46c49d29705b082bd39f",
+        "name": "Marcus Lee",
+        "agent_type": "SeekerAgent",
+        "prompt": "## Conversation History\nuser: [INSTRUCTION]\n\nYou are a job seeker.\nNow you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. \nBased on your current personal situation, please choose an integer to maximize the total discounted utility to the present value across all periods. \n[\\INSTRUCTION]\n\n[PROFILE]\n\n        Name: Marcus Lee\n        CV: {'Education': \"Bachelor's Degree in Information Technology from MIT\", 'Work Experience': [{'Company': 'Cybernetic Solutions', 'Position': 'AI Research Intern', 'Time': '2018-2019'}, {'Company': 'FutureTech Labs', 'Position': 'AI Product Manager', 'Time': '2019-Present'}], 'Skills': ['JavaScript', 'TensorFlow', 'User Experience Design', 'Agile Methodologies', 'Project Management']}\n        Trait: {'Age': 26, 'Gender': 'Male', 'Patience': 'Average', 'Risk Tolerance': 'High', 'Positive Reciprocity': 'Average', 'Negative Reciprocity': 'Moderate', 'Altruism': 'Low', 'Trust': 'Average'}\n        Working Condition: unemployed\n        [\\PROFILE]\n\n\nPlease make a choice from the actions below:\n\n    - 1\n\n    - 2\n\n    - 3\n\n    - 4\n\n    - 5\n\n    - 6\n\n    - 7\n\n    - 8\n\n    - 9\n\n    - 10\n\nAnswer:\n",
+        "completion": "1",
+        "rewritten_response": null,
+        "rating": null
+    },
+    {
+        "msg_id": null,
+        "agent_id": "c003bde3b762450d803f22f73ca12781",
+        "name": "Liam Johnson",
+        "agent_type": "SeekerAgent",
+        "prompt": "## Conversation History\nuser: [INSTRUCTION]\n\nYou are a job seeker.\nNow you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. \nBased on your current personal situation, please choose an integer to maximize the total discounted utility to the present value across all periods. \n[\\INSTRUCTION]\n\n[PROFILE]\n\n        Name: Liam Johnson\n        CV: {'Education': \"Master's in Cybersecurity from University of Illinois\", 'Work Experience': [{'Company': 'SecureNet', 'Position': 'Security Analyst', 'Time': '2017-2020'}, {'Company': 'AI Defense Corp.', 'Position': 'AI Security Engineer', 'Time': '2020-Present'}], 'Skills': ['Python', 'Ethical Hacking', 'Machine Learning', 'Risk Assessment', 'Network Security']}\n        Trait: {'Age': 29, 'Gender': 'Male', 'Patience': 'Low', 'Risk Tolerance': 'Very High', 'Positive Reciprocity': 'Low', 'Negative Reciprocity': 'High', 'Altruism': 'Moderate', 'Trust': 'Low'}\n        Working Condition: unemployed\n        [\\PROFILE]\n\n\nPlease make a choice from the actions below:\n\n    - 1\n\n    - 2\n\n    - 3\n\n    - 4\n\n    - 5\n\n    - 6\n\n    - 7\n\n    - 8\n\n    - 9\n\n    - 10\n\nAnswer:\n",
+        "completion": "1",
+        "rewritten_response": null,
+        "rating": null
+    },
+    {
+        "msg_id": null,
+        "agent_id": "fb455e2099634eb9bbe8345d59b3f879",
+        "name": "Sophia Chen",
+        "agent_type": "SeekerAgent",
+        "prompt": "## Conversation History\nuser: [INSTRUCTION]\n\nYou are a job seeker.\nNow you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. \nBased on your current personal situation, please choose an integer to maximize the total discounted utility to the present value across all periods. \n[\\INSTRUCTION]\n\n[PROFILE]\n\n        Name: Sophia Chen\n        CV: {'Education': \"Master's in Data Science from Stanford University\", 'Work Experience': [{'Company': 'Data Insights Co.', 'Position': 'Data Analyst', 'Time': '2017-2019'}, {'Company': 'AI Innovations', 'Position': 'Machine Learning Engineer', 'Time': '2019-Present'}], 'Skills': ['Python', 'R', 'Deep Learning', 'Data Visualization', 'Natural Language Processing']}\n        Trait: {'Age': 32, 'Gender': 'Female', 'Patience': 'High', 'Risk Tolerance': 'Low', 'Positive Reciprocity': 'Very High', 'Negative Reciprocity': 'Low', 'Altruism': 'High', 'Trust': 'Very High'}\n        Working Condition: unemployed\n        [\\PROFILE]\n\n\nPlease make a choice from the actions below:\n\n    - 1\n\n    - 2\n\n    - 3\n\n    - 4\n\n    - 5\n\n    - 6\n\n    - 7\n\n    - 8\n\n    - 9\n\n    - 10\n\nAnswer:\n",
+        "completion": "1",
+        "rewritten_response": null,
+        "rating": null
+    },
+    {
+        "msg_id": null,
+        "agent_id": "3476974d87864d728382f5f8192861ee",
+        "name": "Ethan Rodriguez",
+        "agent_type": "SeekerAgent",
+        "prompt": "## Conversation History\nuser: [INSTRUCTION]\n\nYou are a job seeker.\nNow you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. \nBased on your current personal situation, please choose an integer to maximize the total discounted utility to the present value across all periods. \n[\\INSTRUCTION]\n\n[PROFILE]\n\n        Name: Ethan Rodriguez\n        CV: {'Education': \"Bachelor's Degree in Software Engineering from University of Texas\", 'Work Experience': [{'Company': 'Digital Solutions', 'Position': 'Frontend Developer', 'Time': '2016-2019'}, {'Company': 'AI Startups', 'Position': 'Full Stack Developer', 'Time': '2019-Present'}], 'Skills': ['JavaScript', 'React', 'Node.js', 'Artificial Intelligence', 'Database Management']}\n        Trait: {'Age': 30, 'Gender': 'Male', 'Patience': 'Average', 'Risk Tolerance': 'High', 'Positive Reciprocity': 'Above Average', 'Negative Reciprocity': 'Moderate', 'Altruism': 'Average', 'Trust': 'Above Average'}\n        Working Condition: unemployed\n        [\\PROFILE]\n\n\nPlease make a choice from the actions below:\n\n    - 1\n\n    - 2\n\n    - 3\n\n    - 4\n\n    - 5\n\n    - 6\n\n    - 7\n\n    - 8\n\n    - 9\n\n    - 10\n\nAnswer:\n",
+        "completion": "1",
+        "rewritten_response": null,
+        "rating": null
+    },
+    {
+        "msg_id": null,
+        "agent_id": "b6f68a85ad8d4978942710d07a9ab40c",
+        "name": "Ava Patel",
+        "agent_type": "SeekerAgent",
+        "prompt": "## Conversation History\nuser: [INSTRUCTION]\n\nYou are a job seeker.\nNow you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. \nBased on your current personal situation, please choose an integer to maximize the total discounted utility to the present value across all periods. \n[\\INSTRUCTION]\n\n[PROFILE]\n\n        Name: Ava Patel\n        CV: {'Education': 'PhD in Artificial Intelligence from Oxford University', 'Work Experience': [{'Company': 'Smart Robotics Inc.', 'Position': 'Research Scientist', 'Time': '2015-2018'}, {'Company': 'NexGen AI', 'Position': 'Lead AI Researcher', 'Time': '2018-Present'}], 'Skills': ['Python', 'C++', 'Reinforcement Learning', 'Robotics', 'Algorithm Development']}\n        Trait: {'Age': 35, 'Gender': 'Female', 'Patience': 'Very High', 'Risk Tolerance': 'Moderate', 'Positive Reciprocity': 'High', 'Negative Reciprocity': 'Very Low', 'Altruism': 'Very High', 'Trust': 'High'}\n        Working Condition: unemployed\n        [\\PROFILE]\n\n\nPlease make a choice from the actions below:\n\n    - 1\n\n    - 2\n\n    - 3\n\n    - 4\n\n    - 5\n\n    - 6\n\n    - 7\n\n    - 8\n\n    - 9\n\n    - 10\n\nAnswer:\n",
+        "completion": "1",
+        "rewritten_response": null,
+        "rating": null
+    },
+    {
+        "msg_id": null,
+        "agent_id": "1772e8eb97994579ac818a7a7a94d74a",
+        "name": "Alice Smith",
+        "agent_type": "SeekerAgent",
+        "prompt": "## Conversation History\nuser: [INSTRUCTION]\n\nYou are a job seeker.\nNow you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. \nBased on your current personal situation, please choose an integer to maximize the total discounted utility to the present value across all periods. \n[\\INSTRUCTION]\n\n[PROFILE]\n\n        Name: Alice Smith\n        CV: {'Education': \"Master's Degree in Data Science from Massachusetts Institute of Technology\", 'Work Experience': [{'Company': 'Data Insights Corp.', 'Position': 'Data Analyst', 'Time': '2016-2019'}, {'Company': 'AI Innovations Ltd.', 'Position': 'Machine Learning Engineer', 'Time': '2019-2022'}], 'Skills': ['Python', 'SQL', 'TensorFlow', 'Data Visualization', 'Statistical Analysis']}\n        Trait: {'Age': 30, 'Gender': 'Female', 'Patience': 'High', 'Risk Tolerance': 'Low', 'Positive Reciprocity': 'High', 'Negative Reciprocity': 'Low', 'Altruism': 'High', 'Trust': 'High'}\n        Working Condition: unemployed\n        [\\PROFILE]\n\n\nPlease make a choice from the actions below:\n\n    - 1\n\n    - 2\n\n    - 3\n\n    - 4\n\n    - 5\n\n    - 6\n\n    - 7\n\n    - 8\n\n    - 9\n\n    - 10\n\nAnswer:\n",
+        "completion": "1",
+        "rewritten_response": null,
+        "rating": null
+    },
+    {
+        "msg_id": null,
+        "agent_id": "b6f68a85ad8d4978942710d07a9ab40c",
+        "name": "Ava Patel",
+        "agent_type": "SeekerAgent",
+        "prompt": "## Conversation History\nuser: [INSTRUCTION]\n\nYou are a job seeker.\nWhen deciding whether to submit a job application, your goal is to maximize the total discounted utility to the present value across all periods.\n[\\INSTRUCTION]\n\n[MEMORY]\n\n- \nYou are a job seeker.\nNow you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. \nBased on your current personal situation, please choose an integer to maximize the total discounted utility to the present value across all periods. \n\nPlease make a choice from the actions below:\n\n    - 1\n\n    - 2\n\n    - 3\n\n    - 4\n\n    - 5\n\n    - 6\n\n    - 7\n\n    - 8\n\n    - 9\n\n    - 10\n\nAnswer:\n1[\\MEMORY]\n\n[PROFILE]\n\n        Name: Ava Patel\n        CV: {'Education': 'PhD in Artificial Intelligence from Oxford University', 'Work Experience': [{'Company': 'Smart Robotics Inc.', 'Position': 'Research Scientist', 'Time': '2015-2018'}, {'Company': 'NexGen AI', 'Position': 'Lead AI Researcher', 'Time': '2018-Present'}], 'Skills': ['Python', 'C++', 'Reinforcement Learning', 'Robotics', 'Algorithm Development']}\n        Trait: {'Age': 35, 'Gender': 'Female', 'Patience': 'Very High', 'Risk Tolerance': 'Moderate', 'Positive Reciprocity': 'High', 'Negative Reciprocity': 'Very Low', 'Altruism': 'Very High', 'Trust': 'High'}\n        Working Condition: unemployed\n        [\\PROFILE]\n\n\nWould you like to submit your CV for the following position?\n{'Position Name': 'Robotics Engineer', 'Job Description': 'Develop and optimize robotic systems for various applications using AI technologies.', 'Job Requirements': [\"Bachelor's degree in Robotics, Mechanical Engineering, or related field\", '2+ years of experience in robotics or automation', 'Proficient in MATLAB and ROS', 'Strong problem-solving skills'], 'Company': 'Boston Dynamics, an engineering and robotics design company.', 'Salary': 'USD 100,000 - 125,000 annually', 'Benefits': ['Health benefits', 'Flexible hours', 'Paid time off', 'Annual bonus structure'], 'Location': 'Waltham, Massachusetts, USA'}\n\nPlease make a choice from the actions below:\n\n    - no\n\n    - yes\n\nAnswer:\n\n",
+        "completion": "no",
+        "rewritten_response": null,
+        "rating": null
+    },
+    {
+        "msg_id": null,
+        "agent_id": "c003bde3b762450d803f22f73ca12781",
+        "name": "Liam Johnson",
+        "agent_type": "SeekerAgent",
+        "prompt": "## Conversation History\nuser: [INSTRUCTION]\n\nYou are a job seeker.\nWhen deciding whether to submit a job application, your goal is to maximize the total discounted utility to the present value across all periods.\n[\\INSTRUCTION]\n\n[MEMORY]\n\n- \nYou are a job seeker.\nNow you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. \nBased on your current personal situation, please choose an integer to maximize the total discounted utility to the present value across all periods. \n\nPlease make a choice from the actions below:\n\n    - 1\n\n    - 2\n\n    - 3\n\n    - 4\n\n    - 5\n\n    - 6\n\n    - 7\n\n    - 8\n\n    - 9\n\n    - 10\n\nAnswer:\n1[\\MEMORY]\n\n[PROFILE]\n\n        Name: Liam Johnson\n        CV: {'Education': \"Master's in Cybersecurity from University of Illinois\", 'Work Experience': [{'Company': 'SecureNet', 'Position': 'Security Analyst', 'Time': '2017-2020'}, {'Company': 'AI Defense Corp.', 'Position': 'AI Security Engineer', 'Time': '2020-Present'}], 'Skills': ['Python', 'Ethical Hacking', 'Machine Learning', 'Risk Assessment', 'Network Security']}\n        Trait: {'Age': 29, 'Gender': 'Male', 'Patience': 'Low', 'Risk Tolerance': 'Very High', 'Positive Reciprocity': 'Low', 'Negative Reciprocity': 'High', 'Altruism': 'Moderate', 'Trust': 'Low'}\n        Working Condition: unemployed\n        [\\PROFILE]\n\n\nWould you like to submit your CV for the following position?\n{'Position Name': 'AI Curriculum Developer', 'Job Description': 'Design educational content and training programs focused on AI technologies.', 'Job Requirements': [\"Master's degree in Education, Computer Science, or a related field\", 'Experience in curriculum development or teaching', 'Strong understanding of AI concepts and applications', 'Excellent writing and communication skills'], 'Company': 'Coursera, an online learning platform offering massive open online courses.', 'Salary': 'USD 80,000 - 100,000 annually', 'Benefits': ['Health benefits', 'Flexible working hours', 'Remote work options', 'Professional development opportunities'], 'Location': 'Remote'}\n\nPlease make a choice from the actions below:\n\n    - no\n\n    - yes\n\nAnswer:\n\n",
+        "completion": "yes",
+        "rewritten_response": null,
+        "rating": null
+    },
+    {
+        "msg_id": null,
+        "agent_id": "fb455e2099634eb9bbe8345d59b3f879",
+        "name": "Sophia Chen",
+        "agent_type": "SeekerAgent",
+        "prompt": "## Conversation History\nuser: [INSTRUCTION]\n\nYou are a job seeker.\nWhen deciding whether to submit a job application, your goal is to maximize the total discounted utility to the present value across all periods.\n[\\INSTRUCTION]\n\n[MEMORY]\n\n- \nYou are a job seeker.\nNow you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. \nBased on your current personal situation, please choose an integer to maximize the total discounted utility to the present value across all periods. \n\nPlease make a choice from the actions below:\n\n    - 1\n\n    - 2\n\n    - 3\n\n    - 4\n\n    - 5\n\n    - 6\n\n    - 7\n\n    - 8\n\n    - 9\n\n    - 10\n\nAnswer:\n1[\\MEMORY]\n\n[PROFILE]\n\n        Name: Sophia Chen\n        CV: {'Education': \"Master's in Data Science from Stanford University\", 'Work Experience': [{'Company': 'Data Insights Co.', 'Position': 'Data Analyst', 'Time': '2017-2019'}, {'Company': 'AI Innovations', 'Position': 'Machine Learning Engineer', 'Time': '2019-Present'}], 'Skills': ['Python', 'R', 'Deep Learning', 'Data Visualization', 'Natural Language Processing']}\n        Trait: {'Age': 32, 'Gender': 'Female', 'Patience': 'High', 'Risk Tolerance': 'Low', 'Positive Reciprocity': 'Very High', 'Negative Reciprocity': 'Low', 'Altruism': 'High', 'Trust': 'Very High'}\n        Working Condition: unemployed\n        [\\PROFILE]\n\n\nWould you like to submit your CV for the following position?\n{'Position Name': 'Natural Language Processing Engineer', 'Job Description': 'Design and build NLP models to enhance user interactions and data understanding.', 'Job Requirements': [\"Master's degree in Linguistics, Computer Science, or a related field\", '3+ years of experience in NLP or data science', 'Proficiency in Python and NLP libraries like NLTK or SpaCy', 'Knowledge of machine learning frameworks'], 'Company': 'Microsoft Corporation, a technology company that develops, licenses, and supports a wide range of software products.', 'Salary': 'USD 110,000 - 135,000 annually', 'Benefits': ['Health insurance', 'Generous vacation policy', 'Retirement plans', 'Employee training programs'], 'Location': 'Redmond, Washington, USA'}\n\nPlease make a choice from the actions below:\n\n    - no\n\n    - yes\n\nAnswer:\n\n",
+        "completion": "yes",
+        "rewritten_response": null,
+        "rating": null
+    },
+    {
+        "msg_id": null,
+        "agent_id": "0276e43535fd46c49d29705b082bd39f",
+        "name": "Marcus Lee",
+        "agent_type": "SeekerAgent",
+        "prompt": "## Conversation History\nuser: [INSTRUCTION]\n\nYou are a job seeker.\nWhen deciding whether to submit a job application, your goal is to maximize the total discounted utility to the present value across all periods.\n[\\INSTRUCTION]\n\n[MEMORY]\n\n- \nYou are a job seeker.\nNow you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. \nBased on your current personal situation, please choose an integer to maximize the total discounted utility to the present value across all periods. \n\nPlease make a choice from the actions below:\n\n    - 1\n\n    - 2\n\n    - 3\n\n    - 4\n\n    - 5\n\n    - 6\n\n    - 7\n\n    - 8\n\n    - 9\n\n    - 10\n\nAnswer:\n1[\\MEMORY]\n\n[PROFILE]\n\n        Name: Marcus Lee\n        CV: {'Education': \"Bachelor's Degree in Information Technology from MIT\", 'Work Experience': [{'Company': 'Cybernetic Solutions', 'Position': 'AI Research Intern', 'Time': '2018-2019'}, {'Company': 'FutureTech Labs', 'Position': 'AI Product Manager', 'Time': '2019-Present'}], 'Skills': ['JavaScript', 'TensorFlow', 'User Experience Design', 'Agile Methodologies', 'Project Management']}\n        Trait: {'Age': 26, 'Gender': 'Male', 'Patience': 'Average', 'Risk Tolerance': 'High', 'Positive Reciprocity': 'Average', 'Negative Reciprocity': 'Moderate', 'Altruism': 'Low', 'Trust': 'Average'}\n        Working Condition: unemployed\n        [\\PROFILE]\n\n\nWould you like to submit your CV for the following position?\n{'Position Name': 'AI Consultant', 'Job Description': 'Advise organizations on AI strategy and implementation to drive business growth.', 'Job Requirements': [\"Bachelor's degree in Business, AI, or related field\", '5+ years of experience in consulting or AI strategy', 'Strong analytical and problem-solving skills', 'Excellent presentation and communication skills'], 'Company': 'Deloitte, a multinational professional services network.', 'Salary': 'USD 130,000 - 160,000 annually', 'Benefits': ['Health insurance', '401(k) retirement plan', 'Paid time off', 'Professional development programs'], 'Location': 'New York, New York, USA'}\n\nPlease make a choice from the actions below:\n\n    - no\n\n    - yes\n\nAnswer:\n\n",
+        "completion": "yes",
+        "rewritten_response": null,
+        "rating": null
+    },
+    {
+        "msg_id": null,
+        "agent_id": "3476974d87864d728382f5f8192861ee",
+        "name": "Ethan Rodriguez",
+        "agent_type": "SeekerAgent",
+        "prompt": "## Conversation History\nuser: [INSTRUCTION]\n\nYou are a job seeker.\nWhen deciding whether to submit a job application, your goal is to maximize the total discounted utility to the present value across all periods.\n[\\INSTRUCTION]\n\n[MEMORY]\n\n- \nYou are a job seeker.\nNow you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. \nBased on your current personal situation, please choose an integer to maximize the total discounted utility to the present value across all periods. \n\nPlease make a choice from the actions below:\n\n    - 1\n\n    - 2\n\n    - 3\n\n    - 4\n\n    - 5\n\n    - 6\n\n    - 7\n\n    - 8\n\n    - 9\n\n    - 10\n\nAnswer:\n1[\\MEMORY]\n\n[PROFILE]\n\n        Name: Ethan Rodriguez\n        CV: {'Education': \"Bachelor's Degree in Software Engineering from University of Texas\", 'Work Experience': [{'Company': 'Digital Solutions', 'Position': 'Frontend Developer', 'Time': '2016-2019'}, {'Company': 'AI Startups', 'Position': 'Full Stack Developer', 'Time': '2019-Present'}], 'Skills': ['JavaScript', 'React', 'Node.js', 'Artificial Intelligence', 'Database Management']}\n        Trait: {'Age': 30, 'Gender': 'Male', 'Patience': 'Average', 'Risk Tolerance': 'High', 'Positive Reciprocity': 'Above Average', 'Negative Reciprocity': 'Moderate', 'Altruism': 'Average', 'Trust': 'Above Average'}\n        Working Condition: unemployed\n        [\\PROFILE]\n\n\nWould you like to submit your CV for the following position?\n{'Position Name': 'Robotics Software Engineer', 'Job Description': 'Designs and develops software for robotic systems and automation solutions.', 'Job Requirements': [\"Bachelor's degree in Robotics, Computer Science, or related field\", '3+ years of experience in robotics software development', 'Proficient in ROS and C/C++', 'Experience with hardware integration'], 'Company': 'Boston Dynamics, a robotics company known for advanced robots', 'Salary': 'USD 125,000 - 150,000 annually', 'Benefits': ['Comprehensive health coverage', 'Flexible hours', 'Career advancement opportunities', 'Team-building activities'], 'Location': 'Waltham, Massachusetts, USA'}\n\nPlease make a choice from the actions below:\n\n    - no\n\n    - yes\n\nAnswer:\n\n",
+        "completion": "yes",
+        "rewritten_response": null,
+        "rating": null
+    },
+    {
+        "msg_id": null,
+        "agent_id": "1772e8eb97994579ac818a7a7a94d74a",
+        "name": "Alice Smith",
+        "agent_type": "SeekerAgent",
+        "prompt": "## Conversation History\nuser: [INSTRUCTION]\n\nYou are a job seeker.\nWhen deciding whether to submit a job application, your goal is to maximize the total discounted utility to the present value across all periods.\n[\\INSTRUCTION]\n\n[MEMORY]\n\n- \nYou are a job seeker.\nNow you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. \nBased on your current personal situation, please choose an integer to maximize the total discounted utility to the present value across all periods. \n\nPlease make a choice from the actions below:\n\n    - 1\n\n    - 2\n\n    - 3\n\n    - 4\n\n    - 5\n\n    - 6\n\n    - 7\n\n    - 8\n\n    - 9\n\n    - 10\n\nAnswer:\n1[\\MEMORY]\n\n[PROFILE]\n\n        Name: Alice Smith\n        CV: {'Education': \"Master's Degree in Data Science from Massachusetts Institute of Technology\", 'Work Experience': [{'Company': 'Data Insights Corp.', 'Position': 'Data Analyst', 'Time': '2016-2019'}, {'Company': 'AI Innovations Ltd.', 'Position': 'Machine Learning Engineer', 'Time': '2019-2022'}], 'Skills': ['Python', 'SQL', 'TensorFlow', 'Data Visualization', 'Statistical Analysis']}\n        Trait: {'Age': 30, 'Gender': 'Female', 'Patience': 'High', 'Risk Tolerance': 'Low', 'Positive Reciprocity': 'High', 'Negative Reciprocity': 'Low', 'Altruism': 'High', 'Trust': 'High'}\n        Working Condition: unemployed\n        [\\PROFILE]\n\n\nWould you like to submit your CV for the following position?\n{'Position Name': 'Data Analyst', 'Job Description': 'Analyze data sets to provide insights and support decision-making processes across departments.', 'Job Requirements': [\"Bachelor's degree in Statistics, Mathematics, or related field\", '1-2 years of experience in data analysis', 'Proficiency in SQL and Excel', 'Familiarity with data visualization tools like Tableau'], 'Company': 'Facebook, a social media conglomerate and technology company', 'Salary': 'USD 80,000 - 100,000 annually', 'Benefits': ['Health benefits', 'Flexible work hours', 'Generous vacation policy', 'Wellness reimbursement'], 'Location': 'Menlo Park, California, USA'}\n\nPlease make a choice from the actions below:\n\n    - no\n\n    - yes\n\nAnswer:\n\n",
+        "completion": "yes",
+        "rewritten_response": null,
+        "rating": null
+    },
+    {
+        "msg_id": null,
+        "agent_id": "87e8e3090586402bbcbb31a271266f0c",
+        "name": "Natural Language Processing Engineer",
+        "agent_type": "InterviewerAgent",
+        "prompt": "## Conversation History\nuser: [INSTRUCTION]\n\nPlease decide whether to allow the candidate to pass the resume screening based on their information.\n[\\INSTRUCTION]\n\n[PROFILE]\nPosition Name: Natural Language Processing Engineer\nJob Description: Design and build NLP models to enhance user interactions and data understanding.\nJob Requirements:\n- Master's degree in Linguistics, Computer Science, or a related field\n- 3+ years of experience in NLP or data science\n- Proficiency in Python and NLP libraries like NLTK or SpaCy\n- Knowledge of machine learning frameworksCompany: Microsoft Corporation, a technology company that develops, licenses, and supports a wide range of software products.\nSalary: USD 110,000 - 135,000 annually\nBenefits:\n- Health insurance\n- Generous vacation policy\n- Retirement plans\n- Employee training programsLocation: Redmond, Washington, USA\n[\\PROFILE]\n\n\nThe information of the job seeker is as follows:\nName: Sophia Chen\nCV: {'Education': \"Master's in Data Science from Stanford University\", 'Work Experience': [{'Company': 'Data Insights Co.', 'Position': 'Data Analyst', 'Time': '2017-2019'}, {'Company': 'AI Innovations', 'Position': 'Machine Learning Engineer', 'Time': '2019-Present'}], 'Skills': ['Python', 'R', 'Deep Learning', 'Data Visualization', 'Natural Language Processing']}\nCurrent Working Condition: unemployed\n\n\nPlease make a choice from the actions below:\n\n    0. yes\n\n    1. no\n\n\n",
+        "completion": "yes",
+        "rewritten_response": null,
+        "rating": null
+    },
+    {
+        "msg_id": null,
+        "agent_id": "1f0600a5b5a84ac299b951b2ac64d483",
+        "name": "AI Curriculum Developer",
+        "agent_type": "InterviewerAgent",
+        "prompt": "## Conversation History\nuser: [INSTRUCTION]\n\nPlease decide whether to allow the candidate to pass the resume screening based on their information.\n[\\INSTRUCTION]\n\n[PROFILE]\nPosition Name: AI Curriculum Developer\nJob Description: Design educational content and training programs focused on AI technologies.\nJob Requirements:\n- Master's degree in Education, Computer Science, or a related field\n- Experience in curriculum development or teaching\n- Strong understanding of AI concepts and applications\n- Excellent writing and communication skillsCompany: Coursera, an online learning platform offering massive open online courses.\nSalary: USD 80,000 - 100,000 annually\nBenefits:\n- Health benefits\n- Flexible working hours\n- Remote work options\n- Professional development opportunitiesLocation: Remote\n[\\PROFILE]\n\n\nThe information of the job seeker is as follows:\nName: Liam Johnson\nCV: {'Education': \"Master's in Cybersecurity from University of Illinois\", 'Work Experience': [{'Company': 'SecureNet', 'Position': 'Security Analyst', 'Time': '2017-2020'}, {'Company': 'AI Defense Corp.', 'Position': 'AI Security Engineer', 'Time': '2020-Present'}], 'Skills': ['Python', 'Ethical Hacking', 'Machine Learning', 'Risk Assessment', 'Network Security']}\nCurrent Working Condition: unemployed\n\n\nPlease make a choice from the actions below:\n\n    0. yes\n\n    1. no\n\n\n",
+        "completion": "yes",
+        "rewritten_response": null,
+        "rating": null
+    },
+    {
+        "msg_id": null,
+        "agent_id": "974f105c8a6940dd9054c2b7bd503127",
+        "name": "Data Analyst",
+        "agent_type": "InterviewerAgent",
+        "prompt": "## Conversation History\nuser: [INSTRUCTION]\n\nPlease decide whether to allow the candidate to pass the resume screening based on their information.\n[\\INSTRUCTION]\n\n[PROFILE]\nPosition Name: Data Analyst\nJob Description: Analyze data sets to provide insights and support decision-making processes across departments.\nJob Requirements:\n- Bachelor's degree in Statistics, Mathematics, or related field\n- 1-2 years of experience in data analysis\n- Proficiency in SQL and Excel\n- Familiarity with data visualization tools like TableauCompany: Facebook, a social media conglomerate and technology company\nSalary: USD 80,000 - 100,000 annually\nBenefits:\n- Health benefits\n- Flexible work hours\n- Generous vacation policy\n- Wellness reimbursementLocation: Menlo Park, California, USA\n[\\PROFILE]\n\n\nThe information of the job seeker is as follows:\nName: Alice Smith\nCV: {'Education': \"Master's Degree in Data Science from Massachusetts Institute of Technology\", 'Work Experience': [{'Company': 'Data Insights Corp.', 'Position': 'Data Analyst', 'Time': '2016-2019'}, {'Company': 'AI Innovations Ltd.', 'Position': 'Machine Learning Engineer', 'Time': '2019-2022'}], 'Skills': ['Python', 'SQL', 'TensorFlow', 'Data Visualization', 'Statistical Analysis']}\nCurrent Working Condition: unemployed\n\n\nPlease make a choice from the actions below:\n\n    0. yes\n\n    1. no\n\n\n",
+        "completion": "yes",
+        "rewritten_response": null,
+        "rating": null
+    },
+    {
+        "msg_id": null,
+        "agent_id": "328ccdf45a454b06b55e2642b89fd5ed",
+        "name": "Robotics Software Engineer",
+        "agent_type": "InterviewerAgent",
+        "prompt": "## Conversation History\nuser: [INSTRUCTION]\n\nPlease decide whether to allow the candidate to pass the resume screening based on their information.\n[\\INSTRUCTION]\n\n[PROFILE]\nPosition Name: Robotics Software Engineer\nJob Description: Designs and develops software for robotic systems and automation solutions.\nJob Requirements:\n- Bachelor's degree in Robotics, Computer Science, or related field\n- 3+ years of experience in robotics software development\n- Proficient in ROS and C/C++\n- Experience with hardware integrationCompany: Boston Dynamics, a robotics company known for advanced robots\nSalary: USD 125,000 - 150,000 annually\nBenefits:\n- Comprehensive health coverage\n- Flexible hours\n- Career advancement opportunities\n- Team-building activitiesLocation: Waltham, Massachusetts, USA\n[\\PROFILE]\n\n\nThe information of the job seeker is as follows:\nName: Ethan Rodriguez\nCV: {'Education': \"Bachelor's Degree in Software Engineering from University of Texas\", 'Work Experience': [{'Company': 'Digital Solutions', 'Position': 'Frontend Developer', 'Time': '2016-2019'}, {'Company': 'AI Startups', 'Position': 'Full Stack Developer', 'Time': '2019-Present'}], 'Skills': ['JavaScript', 'React', 'Node.js', 'Artificial Intelligence', 'Database Management']}\nCurrent Working Condition: unemployed\n\n\nPlease make a choice from the actions below:\n\n    0. yes\n\n    1. no\n\n\n",
+        "completion": "no",
+        "rewritten_response": null,
+        "rating": null
+    },
+    {
+        "msg_id": null,
+        "agent_id": "d4f18c22188242c6b5d48da33e478ba6",
+        "name": "AI Consultant",
+        "agent_type": "InterviewerAgent",
+        "prompt": "## Conversation History\nuser: [INSTRUCTION]\n\nPlease decide whether to allow the candidate to pass the resume screening based on their information.\n[\\INSTRUCTION]\n\n[PROFILE]\nPosition Name: AI Consultant\nJob Description: Advise organizations on AI strategy and implementation to drive business growth.\nJob Requirements:\n- Bachelor's degree in Business, AI, or related field\n- 5+ years of experience in consulting or AI strategy\n- Strong analytical and problem-solving skills\n- Excellent presentation and communication skillsCompany: Deloitte, a multinational professional services network.\nSalary: USD 130,000 - 160,000 annually\nBenefits:\n- Health insurance\n- 401(k) retirement plan\n- Paid time off\n- Professional development programsLocation: New York, New York, USA\n[\\PROFILE]\n\n\nThe information of the job seeker is as follows:\nName: Marcus Lee\nCV: {'Education': \"Bachelor's Degree in Information Technology from MIT\", 'Work Experience': [{'Company': 'Cybernetic Solutions', 'Position': 'AI Research Intern', 'Time': '2018-2019'}, {'Company': 'FutureTech Labs', 'Position': 'AI Product Manager', 'Time': '2019-Present'}], 'Skills': ['JavaScript', 'TensorFlow', 'User Experience Design', 'Agile Methodologies', 'Project Management']}\nCurrent Working Condition: unemployed\n\n\nPlease make a choice from the actions below:\n\n    0. yes\n\n    1. no\n\n\n",
+        "completion": "no",
+        "rewritten_response": null,
+        "rating": null
+    }
+]

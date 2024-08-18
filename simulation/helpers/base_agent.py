@@ -1,4 +1,6 @@
 from typing import Any, Optional, Union, Sequence
+from loguru import logger
+import requests
 
 from agentscope.agents import AgentBase
 from agentscope.message import Msg
@@ -20,6 +22,23 @@ class BaseAgent(AgentBase):
             model_config_name=model_config_name,
         )
         self._profile = ""
+        self.backend_server_url = "http://localhost:9000"
+
+    def _send_message(self, prompt, response):
+        if hasattr(self, "backend_server_url"):
+            url = f"{self.backend_server_url}/api/message"
+            resp = requests.post(
+                url,
+                json={
+                    "name": self.name,
+                    "prompt": "\n".join([p["content"] for p in prompt]),
+                    "completion": response.text,
+                    "agent_type": type(self).__name__,
+                    "agent_id": self.agent_id,
+                },
+            )
+            if resp.status_code != 200:
+                logger.error(f"Failed to send message: {self.agent_id}")
 
     @property
     def profile(self):
@@ -53,24 +72,21 @@ class BaseAgent(AgentBase):
         return getattr(self, attr)
 
     def external_interview(self, observation, **kwargs):
-        format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
-        format_instruction = INSTRUCTION_BEGIN + \
-            "You are participating in a simple interview where you need to answer some questions." + \
-            INSTRUCTION_END
-        memory = self.memory.get_memory(get_assistant_msg(observation))
-        format_observation = "Question:" + observation + "Answer:"
-        format_memory = MEMORY_BEGIN + \
-            get_memory_until_limit(memory, format_instruction + format_profile + format_observation) + \
-            MEMORY_END
-        response = self.model(self.model.format(get_assistant_msg(
-            format_instruction + format_profile + format_memory + format_observation)))
-        return response.text
+        instruction = "You are participating in a simple interview where you need to answer some questions."
+        observation = "Question:" + observation + "Answer:"
+        msg = get_assistant_msg()
+        msg.instruction = instruction
+        msg.observation = observation
+        msg.no_memory = True
+        response = self(msg)["content"]
+        return response
 
     def session_chat(self, announcement, participants, **kwargs):
         MAX_CONVERSATION_NUM = 2
         msg = get_assistant_msg()
         msg.instruction = announcement
         msg.observation = "\nThe dialogue proceeds as follows:\n"
+        msg.no_memory = True
         for _ in range(MAX_CONVERSATION_NUM):
             for p in participants:
                 msg.observation += f"{p.name}:"
@@ -143,8 +159,8 @@ class BaseAgent(AgentBase):
             role="user"
         ))
         
-        if hasattr(x, "selection_num"):
-            response = self.model(prompt_msg, extra_body={"selection_num": x.selection_num})
+        if hasattr(x, "guided_choice"):
+            response = self.model(prompt_msg, extra_body={"guided_choice": x.guided_choice})
         else:
             response = self.model(prompt_msg)
 

@@ -126,22 +126,6 @@ class RecUserAgent(BaseAgent):
             if resp.status_code != 200:
                 logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
 
-    def _send_message(self, prompt, response):
-        if hasattr(self, "backend_server_url"):
-            url = f"{self.backend_server_url}/api/message"
-            resp = requests.post(
-                url,
-                json={
-                    "name": self.name,
-                    "prompt": "\n".join([p["content"] for p in prompt]),
-                    "completion": response.text,
-                    "agent_type": type(self).__name__,
-                    "agent_id": self.agent_id,
-                },
-            )
-            if resp.status_code != 200:
-                logger.error(f"Failed to send message: {self.agent_id}")
-
     def generate_feeling(self, movie):
         instruction = Template.generate_feeling_instruction()
         observation = Template.generate_feeling_observation(movie)
@@ -155,19 +139,19 @@ class RecUserAgent(BaseAgent):
 
     def rating_item(self, movie):
         instruction = Template.rating_item_instruction()
-        action = [
+        guided_choice = [
             "Rating 1: Very poor quality, unenjoyable, with major flaws.",
             "Rating 2: Noticeable issues, disappointing, with a few redeeming moments.",
             "Rating 3: Decent but unremarkable, watchable with some strengths and weaknesses.",
             "Rating 4: Well-made and enjoyable, with minor flaws.",
             "Rating 5: Outstanding in all aspects, highly enjoyable, and memorable."
         ]
-        observation = Template.rating_item_observation(movie, action)
+        observation = Template.rating_item_observation(movie, guided_choice)
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        msg.selection_num = len(action)
-        action = action[int(self(msg)["content"])]
+        msg.guided_choice = guided_choice
+        action = self(msg)["content"]
 
         logger.info(f"[{self.name}] rated {action}")
 
@@ -177,14 +161,14 @@ class RecUserAgent(BaseAgent):
     def recommend(self):
         user_info = self._profile + \
             "\nMemory:" + "\n- ".join([m["content"] for m in self.memory.get_memory()])
-        selection = self.env.recommend4user(user_info)
+        guided_choice = self.env.recommend4user(user_info)
         instruction = Template.recommend_instruction()
-        observation = Template.make_choice_observation(selection)
+        observation = Template.make_choice_observation(guided_choice)
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        msg.selection_num = len(selection)
-        action = selection[int(self(msg)["content"])].split(":")
+        msg.guided_choice = guided_choice
+        action = self(msg)["content"].split(":")[0]
 
         logger.info(f"[{self.name}] selected {action}")
 
@@ -211,7 +195,8 @@ class RecUserAgent(BaseAgent):
         format_instruction = INSTRUCTION_BEGIN + instruction + INSTRUCTION_END
         format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
         memory = self.memory.get_memory(get_assistant_msg(instruction))
-        format_memory = MEMORY_BEGIN + "\n- ".join([m["content"] for m in memory]) + MEMORY_END
+        memory_content = get_memory_until_limit(memory, "\n".join(memory))
+        format_memory = MEMORY_BEGIN + memory_content + MEMORY_END
         response = self.model(self.model.format(Msg(
             "user",
             format_instruction + format_profile + format_memory + observation + f"\n{self.name}:",
@@ -237,18 +222,18 @@ class RecUserAgent(BaseAgent):
     @async_func
     def run(self, **kwargs):
         instruction = Template.start_action_instruction()
-        selection = [
+        guided_choice = [
             "Recommend: Request the website to recommend a batch of movies to watch.",
             "Conversation: Start a conversation with a good friend about a movie you've recently heard about or watched.",
             "Post: Post in your social circle expressing your recent thoughts on movie-related topics."
         ]
-        observation = Template.make_choice_observation(selection)
+        observation = Template.make_choice_observation(guided_choice)
         msg = get_assistant_msg(instruction + observation)
         msg.instruction = instruction
         msg.observation = observation
-        msg.selection_num = len(selection)
+        msg.guided_choice = guided_choice
         
-        action = selection[int(self(msg)["content"])].split(":")[0].strip().lower()
+        action = self(msg)["content"].split(":")[0].strip().lower()
         getattr(self, action)()
         
         return "success"

@@ -142,8 +142,7 @@ agentscope.db
 tmp*.json
 nohup.output
 
-model_configs.json
-chatgpt_model_configs.json
+
 tmp*.py
 Downloads
 .vscode/
