@@ -15,7 +15,7 @@ import aiofiles
 from ruamel.yaml import YAML
 from agentscope.message import Msg
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import Body, FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
@@ -739,3 +739,12 @@ async def reset():
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
     return templates.TemplateResponse("index.html", {"request": {}})
+
+
+@app.post("/store_message")
+async def store_message(save_data_path: str = Body(..., embed=True)):
+    data = [x.model_dump() for x in message_manager.messages]
+    with open(save_data_path, "w") as f:
+        await json.dump(data, f, indent=4)
+    message_manager.clear()
+    return {"status": "success"}

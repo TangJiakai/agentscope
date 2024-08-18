@@ -2,7 +2,9 @@ import json
 import os
 import numpy as np
 from copy import deepcopy
-
+from lmformatenforcer.integrations.vllm import (
+    build_vllm_logits_processor, build_vllm_token_enforcer_tokenizer_data)
+import vllm
 
 directory = "simulation/examples/recommendation/configs"
 meta_data_path = "all_recuser_agent_configs.json"

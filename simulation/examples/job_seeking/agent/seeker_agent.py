@@ -124,47 +124,32 @@ class SeekerAgent(BaseAgent):
             if resp.status_code != 200:
                 logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
 
-    def _send_message(self, prompt, response):
-        if hasattr(self, "backend_server_url"):
-            url = f"{self.backend_server_url}/api/message"
-            resp = requests.post(
-                url,
-                json={
-                    "name": self.name,
-                    "prompt": "\n".join([p["content"] for p in prompt]),
-                    "completion": response.text,
-                    "agent_type": type(self).__name__,
-                    "agent_id": self.agent_id,
-                },
-            )
-            if resp.status_code != 200:
-                logger.error(f"Failed to send message: {self.agent_id}")
-
     @set_state("determining if seeking")
     def _determine_if_seeking(self, **kwargs):
         instruction = Template.determine_if_seeking_instruction()
-        selection = ["yes", "no"]
-        observation = Template.make_choice_observation(selection)
+        guided_choice = ["yes", "no"]
+        observation = Template.make_choice_observation(guided_choice)
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        msg.selection_num = len(selection)
-        response = selection[int(self.reply(msg)["content"])]
+        msg.guided_choice = guided_choice
+        response = self.reply(msg)["content"]
         return response
 
     @set_state("determining search job number")
     def _determine_search_job_number(self, **kwargs):
         """Set search job number."""
+        SearchJobNumber = 10
+
         instruction = Template.determine_search_job_number_instruction()
-        Search_Job_Number = 5
-        selection = list(range(1, Search_Job_Number + 1))
-        observation = Template.make_choice_observation(selection)
+        guided_choice = list(map(str, range(1, SearchJobNumber + 1)))
+        observation = Template.make_choice_observation(guided_choice)
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        msg.selection_num = len(selection)
-        response = selection[int(self.reply(msg)["content"])]
-        return response
+        msg.guided_choice = guided_choice
+        response = self.reply(msg)["content"]
+        return int(response)
 
     @set_state("determining search jobs")
     def _determine_search_jobs(self, search_job_number: int, **kwargs):
@@ -183,15 +168,16 @@ class SeekerAgent(BaseAgent):
         """Determine which jobs to apply."""
         instruction = Template.determine_apply_jobs_instruction()
         apply_interviewer_agent_infos = {}
-        selection = ["yes", "no"]
+        guided_choice = ["no", "yes"]
         for job_id, agent in interviewer_agent_infos.items():
             job_info = agent.job
-            observation = Template.determine_apply_jobs_observation(job_info, selection)
+            observation = Template.determine_apply_jobs_observation(job_info, guided_choice)
             msg = Msg("user", None, role="user")
             msg.instruction = instruction
             msg.observation = observation
-            msg.selection_num = len(selection)
-            response = selection[int(self.reply(msg)["content"])]
+            msg.guided_choice = guided_choice
+            response = self.reply(msg)["content"]
+
             if response == "yes":
                 apply_interviewer_agent_infos[job_id] = agent
 
@@ -208,6 +194,7 @@ class SeekerAgent(BaseAgent):
         for (agent_id, agent), result in zip(
             apply_interviewer_agent_infos.items(), results
         ):
+            logger.info(f"CV screening result: {result.get()}")
             if "yes" == result.get():
                 cv_passed_interviewer_agent_infos[agent_id] = agent
         if len(cv_passed_interviewer_agent_infos) > 0:
@@ -251,13 +238,13 @@ class SeekerAgent(BaseAgent):
             return -1
 
         instruction = Template.make_final_decision_instruction()
-        selection = ["-1"] + list(offer_interviewer_agent_infos.keys())
-        observation = Template.make_choice_observation(selection)
+        guided_choice = ["-1"] + list(offer_interviewer_agent_infos.keys())
+        observation = Template.make_choice_observation(guided_choice)
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        msg.selection_num = len(selection)
-        response = selection[int(self.reply(msg)["content"])]
+        msg.guided_choice = guided_choice
+        response = self.reply(msg)["content"]
 
         if response != "-1":
             final_job = offer_interviewer_agent_infos[response].job

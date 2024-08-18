@@ -6,7 +6,7 @@ save_dir:
 embedding_api: http://localhost:8000/
 load_simulator_path: 
 host: localhost
-base_port: 12100
+base_port: 13000
 server_num_per_host: 3
 
 # custom settings
