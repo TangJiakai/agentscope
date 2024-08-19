@@ -3,8 +3,10 @@
 export CUDA_VISIBLE_DEVICES=2
 # export VLLM_WORKER_MULTIPROC_METHOD=spawn
 
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [ -f "saves/adapter_config.json" ]; then
+
+if [ -f "llmtuning/saves/adapter_config.json" ]; then
     python -m vllm.entrypoints.openai.api_server \
         --model /data/pretrain_dir/Meta-Llama-3-8B-Instruct \
         --trust-remote-code \
@@ -15,7 +17,7 @@ if [ -f "saves/adapter_config.json" ]; then
         --enforce-eager \
         --enable-prefix-caching \
         --enable-lora \
-        --lora-modules lora=saves 
+        --lora-modules lora=llmtuning/saves 2>> "${script_dir}/error.log"
 else
     python -m vllm.entrypoints.openai.api_server \
         --model /data/pretrain_dir/Meta-Llama-3-8B-Instruct \
@@ -25,7 +27,8 @@ else
         --dtype auto \
         --pipeline-parallel-size 1 \
         --enforce-eager \
-        --enable-prefix-caching
+        --enable-prefix-caching \
+        --enable-lora 2>> "${script_dir}/error.log"
 fi
 
 echo $! > "$(dirname "$0")/.pid"
