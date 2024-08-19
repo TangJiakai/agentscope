@@ -173,6 +173,7 @@ class Simulator:
         env.set_attr(attr="all_agents", value={agent.agent_id: agent for agent in seeker_agents + interviewer_agents})
 
         self.agents = seeker_agents + interviewer_agents
+        self.env = env
 
     def _one_round(self):
         results = []
