@@ -1,4 +1,4 @@
-from llmtuning.code.utils.constants import *
+from utils.constants import *
 import os
 
 

@@ -158,7 +158,7 @@ class BaseAgent(AgentBase):
             prompt_content, 
             role="user"
         ))
-        
+
         if hasattr(x, "guided_choice"):
             response = self.model(prompt_msg, extra_body={"guided_choice": x.guided_choice})
         else:

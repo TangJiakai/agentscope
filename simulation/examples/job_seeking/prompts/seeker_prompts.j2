@@ -90,3 +90,12 @@ Success
 Failure
 {% endif %}
 {% endmacro %}
+
+
+{% macro make_final_decision_observation(jobs, actions) %}
+Your received offer is as follows (IDs are in <>).
+{% for id, job in jobs.items() %}
+- <{{id}}> {{job}}
+{% endfor %}
+{{make_choice_observation(actions)}}
+{% endmacro %}

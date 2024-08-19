@@ -142,7 +142,7 @@ class SeekerAgent(BaseAgent):
         SearchJobNumber = 5
 
         instruction = Template.determine_search_job_number_instruction()
-        guided_choice = list(map(str, range(3, SearchJobNumber + 1)))
+        guided_choice = list(map(str, range(1, SearchJobNumber + 1)))
         observation = Template.make_choice_observation(guided_choice)
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
@@ -239,20 +239,20 @@ class SeekerAgent(BaseAgent):
             return -1
 
         instruction = Template.make_final_decision_instruction()
-        guided_choice = ["-1"] + list(offer_interviewer_agent_infos.keys())
-        observation = Template.make_choice_observation(guided_choice)
+        jobs = {agent.agent_id: agent.job for agent in offer_interviewer_agent_infos.values()}
+        guided_choice = list(offer_interviewer_agent_infos.keys())
+        observation = Template.make_final_decision_observation(jobs, guided_choice)
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
         msg.guided_choice = guided_choice
         response = self.reply(msg)["content"]
 
-        if response != "-1":
-            final_job = offer_interviewer_agent_infos[response].job
-            self.seeker.working_condition = (
-                "Position Name: " + final_job["Position Name"]
-            )
-            self._update_profile()
+        final_job = offer_interviewer_agent_infos[response].job
+        self.seeker.working_condition = (
+            "Position Name: " + final_job["Position Name"]
+        )
+        self._update_profile()
 
         results = []
         for agent_id, agent in offer_interviewer_agent_infos.items():

@@ -14,7 +14,7 @@
             ],
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 13000
+            "port": 12100
         }
     },
     {
@@ -33,7 +33,7 @@
             ],
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 13001
+            "port": 12100
         }
     },
     {
@@ -52,7 +52,7 @@
             ],
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 13002
+            "port": 12101
         }
     },
     {
@@ -71,7 +71,7 @@
             ],
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 13003
+            "port": 12101
         }
     },
     {
@@ -90,7 +90,7 @@
             ],
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 13004
+            "port": 12102
         }
     }
 ]

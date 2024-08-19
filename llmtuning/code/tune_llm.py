@@ -1,4 +1,6 @@
 import os
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from tqdm import tqdm
 from datasets import load_dataset
 from trl import (
@@ -19,8 +21,8 @@ import torch
 import wandb
 import argparse
 
-from llmtuning.code.utils.constants import *
-from llmtuning.code.utils.utils import check_load_adapter, check_dirs
+from utils.constants import *
+from utils.utils import check_load_adapter, check_dirs
 
 wandb.init(mode="disabled")
 tqdm.pandas()
@@ -184,7 +186,7 @@ def main(args):
     if args.tuning_mode == "sft":
         if os.path.isdir(SFT_FILE_PATH) and os.listdir(SFT_FILE_PATH):
             sft_train(tokenizer)
-            print("SFT-Training completed!")
+            print(f"SFT-Training completed! Saving the model to {SAVE_DIR}")
     elif args.tuning_mode == "ppo":
         if os.path.isdir(PPO_FILE_PATH) and os.listdir(PPO_FILE_PATH):
             ppo_train(tokenizer)

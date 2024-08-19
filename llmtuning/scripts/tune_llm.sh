@@ -1,9 +1,8 @@
 #!/bin/bash
 
-export CUDA_VISIBLE_DEVICES=0,7 
+export CUDA_VISIBLE_DEVICES=2
 
 PARENT_PARENT_DIR="$(realpath "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")"
-echo $PARENT_PARENT_DIR
 
 if [ $# -ne 1 ]; then
     echo "Usage: $0 <tuning-mode>"
