@@ -110,21 +110,37 @@ class Simulator:
 
         # Init env
         logger.info("Init environment")
-        env = BaseEnv(
-            name="environment",
-            to_dist=DistConf(host=self.config["host"], port=self.config["base_port"]),
-        )
+        seeker_num_per_env = 200
+        env_num = (len(seeker_configs) + seeker_num_per_env - 1) // seeker_num_per_env
+        env_names = [f"environment-{str(i)}" for i in range(env_num)]
+        env_ports = [i % self.config["server_num_per_host"] + self.config["base_port"] for i in range(env_num)]
+
+        envs = []
+        tasks = []
+        with futures.ThreadPoolExecutor() as executor:
+            for name, port in zip(env_names, env_ports):
+                tasks.append(
+                    executor.submit(
+                        BaseEnv,
+                        name=name,
+                        to_dist=DistConf(
+                            host=config["args"]["host"], port=port
+                        ),
+                    ),
+                )
+            for task in tasks:
+                envs.append(task.result())
 
         # Init agents
         logger.info(f"Init {len(seeker_configs)} seeker agents")
         seeker_agents = []
         tasks = []
         with futures.ThreadPoolExecutor() as executor:
-            for config in seeker_configs:
+            for i, config in enumerate(seeker_configs):
                 tasks.append(
                     executor.submit(
                         SeekerAgent,
-                        env=env,
+                        env=envs[i // seeker_num_per_env],
                         **config["args"],
                         to_dist=DistConf(
                             host=config["args"]["host"], port=config["args"]["port"]
@@ -142,7 +158,7 @@ class Simulator:
                 tasks.append(
                     executor.submit(
                         InterviewerAgent,
-                        env=env,
+                        env=None,
                         **config["args"],
                         to_dist=DistConf(
                             host=config["args"]["host"], port=config["args"]["port"]
@@ -156,21 +172,39 @@ class Simulator:
         index.add(
             np.array([config["args"]["embedding"] for config in interviewer_configs])
         )
-        for config in seeker_configs:
-            _, job_index = index.search(
-                np.array([config["args"]["embedding"]]), self.config["pool_size"]
-            )
-            config["args"]["job_ids_pool"] = [
-                interviewer_agents[index].agent_id for index in list(job_index[0])
-            ]
 
+        tasks = []
+        with futures.ThreadPoolExecutor() as executor:
+            for config in seeker_configs:
+                tasks.append(
+                    executor.submit(
+                        index.search,
+                        np.array([config["args"]["embedding"]]),
+                        self.config["pool_size"],
+                    ),
+                )
+            for config, task in zip(seeker_configs, tasks):
+                _, job_index = task.result()
+                config["args"]["job_ids_pool"] = [
+                    interviewer_agents[index].agent_id for index in list(job_index[0])
+                ]
+
+        results = []
         for agent, config in zip(seeker_agents, seeker_configs):
-            agent.set_attr(attr="job_ids_pool", value=config["args"]["job_ids_pool"])
+            results.append(agent.set_attr(attr="job_ids_pool", value=config["args"]["job_ids_pool"]))
+        for res in results:
+            res.get()
 
-        env.set_attr(attr="all_agents", value={agent.agent_id: agent for agent in seeker_agents + interviewer_agents})
+        agent_dict = {agent.agent_id: agent for agent in seeker_agents + interviewer_agents}
+        results = []
+        for env in envs:
+            results.append(env.set_attr(attr="all_agents", value=agent_dict))
+        for res in results:
+            res.get()
 
         self.agents = seeker_agents + interviewer_agents
-        self.env = env
+        self.envs = envs
+        self.env = envs[0]
 
     def _one_round(self):
         results = []
@@ -201,7 +235,7 @@ class Simulator:
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 
-        message_save_path = "/data/tangjiakai/general_simulation/message.json"
+        message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
         resp = requests.post(
             "http://localhost:9000/store_message",
             json={

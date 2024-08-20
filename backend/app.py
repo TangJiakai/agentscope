@@ -615,8 +615,11 @@ def tune(mode: Literal["rewrite", "rate"]):
 
     # Reset agents' model.model_name
     agents = simulator.agents
+    results = []
     for agent in agents:
-        agent.set_attr("model.model_name", "lora")
+        results.append(agent.set_attr("model.model_name", "lora"))
+    for res in results:
+        res.get()
     
     return {"status": "success"}
 
@@ -684,8 +687,11 @@ async def start():
     global simulator, simulation_thread
     simulator = Simulator()
     agents = simulator.agents
+    results = []
     for agent in agents:
-        agent.set_attr("backend_server_url", backend_server_url)
+        results.append(agent.set_attr("backend_server_url", backend_server_url))
+    for res in results:
+        res.get()
     simulation_thread = Thread(target=simulator.run)
     simulation_thread.start()
     return {"status": "success"}

@@ -126,13 +126,16 @@ class Simulator:
         iet = time.time()
         logger.info(f"Init agents time: {iet - ist:.2f}s")
 
+        results = []
         for i, agent in enumerate(agents):
-            agent.set_attr(
+            results.append(agent.set_attr(
                 "relationship",
                 {agents[j].agent_id: agents[j] for j in agent_relationships[i]},
-            )
+            ))
+        for res in results:
+            res.get()
 
-        env.set_attr(attr="all_agents", value={agent.agent_id: agent for agent in agents})
+        env.set_attr(attr="all_agents", value={agent.agent_id: agent for agent in agents}).get()
 
         self.agents = agents
         self.env = env

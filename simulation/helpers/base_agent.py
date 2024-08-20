@@ -5,6 +5,7 @@ import requests
 from agentscope.agents import AgentBase
 from agentscope.message import Msg
 from agentscope.manager import ModelManager
+from agentscope.rpc import async_func
 
 from simulation.helpers.constants import *
 from simulation.helpers.utils import *
@@ -64,6 +65,7 @@ class BaseAgent(AgentBase):
             )
             self.memory.model = self.model
 
+    @async_func
     def set_attr(self, attr: str, value: Any, **kwargs):
         attrs = attr.split(".")
         obj = self
