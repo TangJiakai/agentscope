@@ -65,7 +65,11 @@ class BaseAgent(AgentBase):
             self.memory.model = self.model
 
     def set_attr(self, attr: str, value: Any, **kwargs):
-        setattr(self, attr, value)
+        attrs = attr.split(".")
+        obj = self
+        for attr in attrs[:-1]:
+            obj = getattr(obj, attr)
+        setattr(obj, attrs[-1], value)
         return "success"
 
     def get_attr(self, attr: str):
