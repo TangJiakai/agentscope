@@ -65,7 +65,7 @@ class FilterCondition(BaseModel):
     types: Optional[List[str]] = None
 
 
-class InterventionMsg(BaseModel):
+class BroadcastMsg(BaseModel):
     msg: str
 
 

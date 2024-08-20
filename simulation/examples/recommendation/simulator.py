@@ -135,6 +135,7 @@ class Simulator:
         env.set_attr(attr="all_agents", value={agent.agent_id: agent for agent in agents})
 
         self.agents = agents
+        self.env = env
 
     def get_agent_by_id(self, agent_id: str):
         for agent in self.agents:

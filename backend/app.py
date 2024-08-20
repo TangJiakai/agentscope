@@ -38,7 +38,7 @@ from backend.utils.body_models import (
     FilterCondition,
     DistributedArgs,
     DistributedConfig,
-    InterventionMsg,
+    BroadcastMsg,
     AgentInfo,
     AgentStateInfo,
     GPTReq,
@@ -50,7 +50,7 @@ from simulation.memory import (
     ShortLongMemory,
     ShortLongReflectionMemory,
 )
-from backend.utils.utils import run_sh, try_serialize_dict
+from backend.utils.utils import run_sh_async, run_sh_blocking
 from backend.chatgpt_api import rewritten_responses, rate_responses
 
 
@@ -82,20 +82,20 @@ async def lifespan(app: FastAPI):
     launch_llm_sh_path = os.path.join(
         proj_path, "llmtuning", "scripts", "launch_llm.sh"
     )
-    # run_sh(launch_llm_sh_path)
+    # run_sh_async(launch_llm_sh_path)
 
     yield
 
     # Kill LLM
     kill_llm_sh_path = os.path.join(proj_path, "llmtuning", "scripts", "kill_llm.sh")
-    # run_sh(kill_llm_sh_path)
+    # run_sh_blocking(kill_llm_sh_path)
 
     # Clean distributed servers
     if distributed:
         kill_server_sh_path = os.path.join(
             proj_path, "simulation", "examples", _scene, "kill_all_server.sh"
         )
-        # run_sh(kill_server_sh_path)
+        # run_sh_blocking(kill_server_sh_path)
 
 
 app = FastAPI(lifespan=lifespan)
@@ -178,13 +178,13 @@ async def websocket_endpoint(websocket: WebSocket):
 async def websocket_chat_endpoint(websocket: WebSocket, id: str):
     await manager.connect(websocket, id)
     try:
-        agent = simulator.get_agent_by_id(id)
+        env = simulator.env
         while True:
             data = await websocket.receive_text()
             logger.info(f"Receive chat message: {data}")
             if data == "exit":
                 break
-            resp = agent.external_interview(data).content
+            resp = env.interview(id, data)
             await manager.send_to_agent(id, resp)
     except WebSocketDisconnect:
         await manager.disconnect(websocket, id)
@@ -330,19 +330,10 @@ def get_agent(id: str):
 #         return HTMLResponse(content="Agent not found.", status_code=404)
 
 
-@app.post("/intervention")
-def post_intervention(intervention: InterventionMsg):
-    agents = simulator.agents
-    for agent in agents:
-        agent(
-            Msg(
-                "user",
-                None,
-                role="user",
-                fun="post_intervention",
-                params={"intervention": intervention.msg},
-            )
-        )["content"]
+@app.post("/broadcast")
+def post_broadcast(broadcast_msg: BroadcastMsg):
+    env = simulator.env
+    env.broadcast(broadcast_msg.msg)
     return {"status": "success"}
 
 
@@ -610,7 +601,23 @@ def tune(mode: Literal["rewrite", "rate"]):
         tuning_mode = "sft"
     elif mode == "rate":
         tuning_mode = "ppo"
-    run_sh(tune_llm_sh_path, tuning_mode)
+    run_sh_blocking(tune_llm_sh_path, tuning_mode)
+
+    # Kill LLM
+    kill_llm_sh_path = os.path.join(proj_path, "llmtuning", "scripts", "kill_llm.sh")
+    run_sh_blocking(kill_llm_sh_path)
+
+    # Launch LLM
+    launch_llm_sh_path = os.path.join(
+        proj_path, "llmtuning", "scripts", "launch_llm.sh"
+    )
+    run_sh_async(launch_llm_sh_path)
+
+    # Reset agents' model.model_name
+    agents = simulator.agents
+    for agent in agents:
+        agent.set_attr("model.model_name", "lora")
+    
     return {"status": "success"}
 
 
@@ -666,12 +673,11 @@ async def start():
     launch_server_sh_path = os.path.join(
         proj_path, "simulation", "examples", _scene, "launch_server.sh"
     )
-    run_sh(
+    run_sh_blocking(
         launch_server_sh_path,
         str(simulation_config["server_num_per_host"]),
         str(simulation_config["base_port"]),
     )
-    time.sleep(5)
 
     module_path = f"simulation.examples.{_scene}.simulator"
     Simulator = importlib.import_module(module_path).Simulator
@@ -719,7 +725,7 @@ async def reset():
         kill_server_sh_path = os.path.join(
             proj_path, "simulation", "examples", _scene, "kill_all_server.sh"
         )
-        run_sh(kill_server_sh_path)
+        run_sh_blocking(kill_server_sh_path)
     global simulator, simulation_thread, cur_msgs
     simulator = None
     kill_event.set()
