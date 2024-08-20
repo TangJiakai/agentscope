@@ -612,6 +612,11 @@ def tune(mode: Literal["rewrite", "rate"]):
         proj_path, "llmtuning", "scripts", "launch_llm.sh"
     )
     run_sh_async(launch_llm_sh_path)
+
+    # Reset agents' model.model_name
+    agents = simulator.agents
+    for agent in agents:
+        agent.set_attr("model.model_name", "lora")
     
     return {"status": "success"}
 

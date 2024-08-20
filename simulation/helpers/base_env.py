@@ -12,7 +12,11 @@ class BaseEnv(BasicEnv):
         self.all_agents: Dict[str, RpcAgent] = dict()
 
     def set_attr(self, attr: str, value, **kwargs) -> str:
-        setattr(self, attr, value)
+        attrs = attr.split(".")
+        obj = self
+        for attr in attrs[:-1]:
+            obj = getattr(obj, attr)
+        setattr(obj, attrs[-1], value)
         return "success"
     
     def get_agents_by_ids(self, agent_ids: List[str]) -> List[RpcAgent]:
@@ -20,6 +24,7 @@ class BaseEnv(BasicEnv):
         return agents
 
     def broadcast(self, content: str) -> None:
+        # TODO: currently wait for each agent to finish processing the message (slow & unreasonable)
         for agent in self.all_agents.values():
             agent.observe(get_assistant_msg(content))
 
