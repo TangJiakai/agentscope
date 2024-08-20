@@ -116,7 +116,6 @@ class Simulator:
         )
 
         # Init agents
-        ist = time.time()
         logger.info(f"Init {len(seeker_configs)} seeker agents")
         seeker_agents = []
         tasks = []
@@ -152,8 +151,6 @@ class Simulator:
                 )
             for task in tasks:
                 interviewer_agents.append(task.result())
-        iet = time.time()
-        logger.info(f"Init agents time: {iet - ist:.2f}s")
 
         index = faiss.IndexFlatL2(get_embedding_dimension(self.config["embedding_api"]))
         index.add(
@@ -227,9 +224,14 @@ class Simulator:
 
 
 if __name__ == "__main__":
+    start_time = time.time()
     simulator = Simulator()
+    end_time = time.time()
+    formatted_time = str(timedelta(seconds=end_time - start_time))
+    logger.info(f"Init Agent Total time: {formatted_time}")
+
     start_time = time.time()
     simulator.run()
     end_time = time.time()
     formatted_time = str(timedelta(seconds=end_time - start_time))
-    logger.info(f"Total time: {formatted_time}")
+    logger.info(f"Simulation Total time: {formatted_time}")
