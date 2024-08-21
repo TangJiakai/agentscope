@@ -17,6 +17,7 @@ if [ -f "llmtuning/saves/adapter_config.json" ]; then
         --enforce-eager \
         --enable-prefix-caching \
         --enable-lora \
+        --disable-frontend-multiprocessing \
         --lora-modules lora=llmtuning/saves 2>> "${script_dir}/error.log"
 else
     python -m vllm.entrypoints.openai.api_server \
@@ -28,6 +29,7 @@ else
         --pipeline-parallel-size 1 \
         --enforce-eager \
         --enable-prefix-caching \
+        --disable-frontend-multiprocessing \
         --enable-lora 2>> "${script_dir}/error.log"
 fi
 
