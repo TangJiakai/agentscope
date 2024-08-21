@@ -151,7 +151,7 @@ class RecUserAgent(BaseAgent):
         msg.instruction = instruction
         msg.observation = observation
         msg.guided_choice = guided_choice
-        action = self(msg)["content"]
+        action = self(msg)["content"].split(":")[0].strip()
 
         logger.info(f"[{self.name}] rated {action}")
 
