@@ -33,7 +33,7 @@ Finally, please consider the interview situation and decide whether to hire the 
 {% macro make_choice_observation(actions) %}
 Please make a choice from the actions below:
 {% for action in actions %}
-    {{loop.index0}}. {{action}}
+    - {{action}}
 {% endfor %}
 {% endmacro %}
 
