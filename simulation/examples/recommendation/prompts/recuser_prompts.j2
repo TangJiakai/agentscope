@@ -44,9 +44,9 @@ Answer:
 {% endmacro %}
 
 {% macro make_choice_observation(actions) %}
-Please make a choice from the actions below:
+Please make a choice from the actions below (output the index, e.g., 0):
 {% for action in actions %}
-    - {{action}}
+    {{loop.index0}} {{action}}
 {% endfor %}
 Answer:
 {% endmacro %}

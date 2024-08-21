@@ -150,8 +150,9 @@ class RecUserAgent(BaseAgent):
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        msg.guided_choice = guided_choice
-        action = self(msg)["content"]
+        msg.selection_num = len(guided_choice)
+        response = guided_choice[int(self.reply(msg)["content"])]
+        action = response.split(":")[0]
 
         logger.info(f"[{self.name}] rated {action}")
 
@@ -167,8 +168,9 @@ class RecUserAgent(BaseAgent):
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        msg.guided_choice = guided_choice
-        action = self(msg)["content"].split(":")[0]
+        msg.selection_num = len(guided_choice)
+        response = guided_choice[int(self.reply(msg)["content"])]
+        action = response.split(":")[0]
 
         logger.info(f"[{self.name}] selected {action}")
 
@@ -231,9 +233,10 @@ class RecUserAgent(BaseAgent):
         msg = get_assistant_msg(instruction + observation)
         msg.instruction = instruction
         msg.observation = observation
-        msg.guided_choice = guided_choice
+        msg.selection_num = len(guided_choice)
         
-        action = self(msg)["content"].split(":")[0].strip().lower()
+        response = guided_choice[int(self.reply(msg)["content"])]
+        action = response.split(":")[0].strip().lower()
         getattr(self, action)()
         
         return "success"

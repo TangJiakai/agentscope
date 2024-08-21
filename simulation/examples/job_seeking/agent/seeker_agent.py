@@ -132,8 +132,8 @@ class SeekerAgent(BaseAgent):
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        msg.guided_choice = guided_choice
-        response = self.reply(msg)["content"]
+        msg.selection_num = len(guided_choice)
+        response = guided_choice[int(self.reply(msg)["content"])]
         return response
 
     @set_state("determining search job number")
@@ -147,8 +147,8 @@ class SeekerAgent(BaseAgent):
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        msg.guided_choice = guided_choice
-        response = self.reply(msg)["content"]
+        msg.selection_num = len(guided_choice)
+        response = guided_choice[int(self.reply(msg)["content"])]
         return int(response)
 
     @set_state("determining search jobs")
@@ -176,8 +176,8 @@ class SeekerAgent(BaseAgent):
             msg = Msg("user", None, role="user")
             msg.instruction = instruction
             msg.observation = observation
-            msg.guided_choice = guided_choice
-            response = self.reply(msg)["content"]
+            msg.selection_num = len(guided_choice)
+            response = guided_choice[int(self.reply(msg)["content"])]
 
             if response == "yes":
                 apply_interviewer_agent_infos[job_id] = agent
@@ -245,8 +245,8 @@ class SeekerAgent(BaseAgent):
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        msg.guided_choice = guided_choice
-        response = self.reply(msg)["content"]
+        msg.selection_num = len(guided_choice)
+        response = guided_choice[int(self.reply(msg)["content"])]
 
         final_job = offer_interviewer_agent_infos[response].job
         self.seeker.working_condition = (

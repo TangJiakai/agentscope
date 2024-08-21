@@ -152,8 +152,8 @@ class InterviewerAgent(BaseAgent):
         msg.instruction = Template.screening_cv_instruction()
         guided_choice = ["yes", "no"]
         msg.observation = Template.screening_cv_observation(seeker_info, guided_choice)
-        msg.guided_choice = guided_choice
-        response = self.reply(msg)
+        msg.selection_num = len(guided_choice)
+        response = guided_choice[int(self.reply(msg)["content"])]
         return response
 
     @set_state("interviewing")
@@ -164,8 +164,8 @@ class InterviewerAgent(BaseAgent):
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        msg.guided_choice = guided_choice
-        response = self.reply(msg)
+        msg.selection_num = len(guided_choice)
+        response = guided_choice[int(self.reply(msg)["content"])]
         return response
 
     @async_func

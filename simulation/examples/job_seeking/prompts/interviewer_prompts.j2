@@ -31,7 +31,7 @@ Finally, please consider the interview situation and decide whether to hire the 
 
 {##################################### Observation #####################################}
 {% macro make_choice_observation(actions) %}
-Please make a choice from the actions below:
+Please make a choice from the actions below (output the index, e.g., 0):
 {% for action in actions %}
     {{loop.index0}}. {{action}}
 {% endfor %}

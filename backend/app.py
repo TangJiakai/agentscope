@@ -95,7 +95,7 @@ async def lifespan(app: FastAPI):
         kill_server_sh_path = os.path.join(
             proj_path, "simulation", "examples", _scene, "kill_all_server.sh"
         )
-        # run_sh_blocking(kill_server_sh_path)
+        run_sh_blocking(kill_server_sh_path)
 
 
 app = FastAPI(lifespan=lifespan)
