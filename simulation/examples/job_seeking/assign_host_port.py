@@ -43,13 +43,9 @@ def main(args):
     agent_num_per_server = math.ceil(total_agent_num / available_port_num)
     print("agent_num_per_server:", agent_num_per_server)
 
-    interleaved_configs = [config for sublist in zip_longest(
-        seeker_configs, interview_configs
-        ) for config in sublist if config is not None]
-
-    for i, agent_config in enumerate(interleaved_configs):
+    for i, agent_config in enumerate(seeker_configs + interview_configs):
         agent_config["args"]["host"] = host
-        agent_config["args"]["port"] = base_port + i // agent_num_per_server
+        agent_config["args"]["port"] = base_port + i % available_port_num
 
     save_agent_configs(seeker_configs, os.path.join(scene_path, CONFIG_DIR, SEEKER_AGENT_CONFIG))
     save_agent_configs(interview_configs, os.path.join(scene_path, CONFIG_DIR, INTERVIEWER_AGENT_CONFIG))
