@@ -41,7 +41,7 @@ def main(args):
 
     for i, agent_config in enumerate(agent_configs):
         agent_config["args"]["host"] = host
-        agent_config["args"]["port"] = base_port + i // agent_num_per_server
+        agent_config["args"]["port"] = base_port + i % available_port_num
 
     save_agent_configs(agent_configs, os.path.join(scene_path, CONFIG_DIR, AGENT_CONFIG))
 
