@@ -132,9 +132,15 @@ class SeekerAgent(BaseAgent):
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        msg.guided_choice = guided_choice
-        response = self.reply(msg)["content"]
-        return response
+        content = self.reply(msg)["content"]
+        prompt = Template.parse_value_observation(content, guided_choice)
+        reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
+        answer = random.choice(guided_choice)
+        for c in guided_choice:
+            if c in reponse:
+                answer = c
+                break
+        return answer
 
     @set_state("determining search job number")
     def _determine_search_job_number(self, **kwargs):
@@ -147,9 +153,15 @@ class SeekerAgent(BaseAgent):
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        msg.guided_choice = guided_choice
-        response = self.reply(msg)["content"]
-        return int(response)
+        content = self.reply(msg)["content"]
+        prompt = Template.parse_value_observation(content, guided_choice)
+        reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
+        answer = random.choice(guided_choice)
+        for c in guided_choice:
+            if c in reponse:
+                answer = c
+                break
+        return int(answer)
 
     @set_state("determining search jobs")
     def _determine_search_jobs(self, search_job_number: int, **kwargs):
@@ -176,10 +188,16 @@ class SeekerAgent(BaseAgent):
             msg = Msg("user", None, role="user")
             msg.instruction = instruction
             msg.observation = observation
-            msg.guided_choice = guided_choice
-            response = self.reply(msg)["content"]
+            content = self.reply(msg)["content"]
+            prompt = Template.parse_value_observation(content, guided_choice)
+            reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
+            answer = random.choice(guided_choice)
+            for c in guided_choice:
+                if c in reponse:
+                    answer = c
+                    break
 
-            if response == "yes":
+            if answer == "yes":
                 apply_interviewer_agent_infos[job_id] = agent
 
         return apply_interviewer_agent_infos
@@ -195,7 +213,7 @@ class SeekerAgent(BaseAgent):
         for (agent_id, agent), result in zip(
             apply_interviewer_agent_infos.items(), results
         ):
-            result = result.get()["content"]
+            result = result["content"]
             if "yes" == result:
                 cv_passed_interviewer_agent_infos[agent_id] = agent
         if len(cv_passed_interviewer_agent_infos) > 0:
@@ -245,10 +263,16 @@ class SeekerAgent(BaseAgent):
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        msg.guided_choice = guided_choice
-        response = self.reply(msg)["content"]
+        content = self.reply(msg)["content"]
+        prompt = Template.parse_value_observation(content, guided_choice)
+        reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
+        answer = random.choice(guided_choice)
+        for c in guided_choice:
+            if c in reponse:
+                answer = c
+                break
 
-        final_job = offer_interviewer_agent_infos[response].job
+        final_job = offer_interviewer_agent_infos[answer].job
         self.seeker.working_condition = (
             "Position Name: " + final_job["Position Name"]
         )
@@ -256,12 +280,12 @@ class SeekerAgent(BaseAgent):
 
         results = []
         for agent_id, agent in offer_interviewer_agent_infos.items():
-            results.append(agent.receive_notification(self.seeker.name, agent_id == response))
+            results.append(agent.receive_notification(self.seeker.name, agent_id == answer))
 
         for result in results:
             result.get()
 
-        return response
+        return answer
 
     @async_func
     def run(self, **kwargs):

@@ -69,6 +69,17 @@ Please make a choice from the actions below:
 Answer:
 {% endmacro %}
 
+{% macro parse_value_observation(content, actions) %}
+{{make_choice_observation(actions)}}
+{{content}}
+
+You need to extract the answer from the following text.
+{{content}}
+Now please directly give the extracted answer in the following format:
+The answer is [{{content[0]}}].
+If you can't extract the answer, please reply directly:\nI CAN'T.
+{% endmacro %}
+
 {% macro apply_job_observation(cv_passed_interviewer_agent_infos) %}
 You have received interview opportunities for the following jobs:
 {% for info in cv_passed_interviewer_agent_infos.values() %}

@@ -1,11 +1,11 @@
 import os
-import threading
 import requests
 from typing import List
 from jinja2 import Environment, FileSystemLoader
+import random
+from loguru import logger
 
 from agentscope.rpc import async_func
-from loguru import logger
 
 from simulation.helpers.utils import *
 from simulation.helpers.constants import *
@@ -152,9 +152,15 @@ class InterviewerAgent(BaseAgent):
         msg.instruction = Template.screening_cv_instruction()
         guided_choice = ["yes", "no"]
         msg.observation = Template.screening_cv_observation(seeker_info, guided_choice)
-        msg.guided_choice = guided_choice
-        response = self.reply(msg)
-        return response
+        content = self.reply(msg)["content"]
+        prompt = Template.parse_value_observation(content, guided_choice)
+        reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
+        answer = random.choice(guided_choice)
+        for c in guided_choice:
+            if c in reponse:
+                answer = c
+                break
+        return answer
 
     @set_state("interviewing")
     def interview(self, dialog: str):
@@ -164,9 +170,15 @@ class InterviewerAgent(BaseAgent):
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        msg.guided_choice = guided_choice
-        response = self.reply(msg)
-        return response
+        content = self.reply(msg)["content"]
+        prompt = Template.parse_value_observation(content, guided_choice)
+        reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
+        answer = random.choice(guided_choice)
+        for c in guided_choice:
+            if c in reponse:
+                answer = c
+                break
+        return answer
 
     @async_func
     @set_state("receiving notification")

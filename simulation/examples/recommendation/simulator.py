@@ -175,7 +175,7 @@ class Simulator:
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 
-        message_save_path = "/data/tangjiakai/general_simulation/message.json"
+        message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
         resp = requests.post(
             "http://localhost:9000/store_message",
             json={

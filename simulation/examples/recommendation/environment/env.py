@@ -49,7 +49,7 @@ class RecommendationEnv(BaseEnv):
     def recommend4user(self, user_info, k=5):
         user_emb = get_embedding(user_info, self.embedding_api)
         _, indices = self.index.search(np.array([user_emb]), k)
-        return get_assistant_msg([
+        return [
             "\n".join([f"{k}: {v}" for k, v in self.item_infos[i].items()])
             for i in indices[0]
-        ])
+        ]
