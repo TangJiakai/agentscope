@@ -35,6 +35,18 @@ Please make a choice from the actions below:
 {% for action in actions %}
     - {{action}}
 {% endfor %}
+Answer:
+{% endmacro %}
+
+{% macro parse_value_observation(content, actions) %}
+{{make_choice_observation(actions)}}
+{{content}}
+
+You need to extract the answer from the following text.
+{{content}}
+Now please directly give the extracted answer in the following format:
+The answer is [{{content[0]}}].
+If you can't extract the answer, please reply directly:\nI CAN'T.
 {% endmacro %}
 
 {% macro screening_cv_observation(seeker_info, actions) %}

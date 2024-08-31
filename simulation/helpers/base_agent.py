@@ -165,10 +165,7 @@ class BaseAgent(AgentBase):
             role="user"
         ))
 
-        if hasattr(x, "guided_choice"):
-            response = self.model(prompt_msg, extra_body={"guided_choice": x.guided_choice})
-        else:
-            response = self.model(prompt_msg)
+        response = self.model(prompt_msg)
 
         self._send_message(prompt_msg, response)
         add_memory_msg = Msg("user", instruction + observation + response.text, role="user")

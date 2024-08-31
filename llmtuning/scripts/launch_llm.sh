@@ -18,7 +18,8 @@ if [ -f "llmtuning/saves/adapter_config.json" ]; then
         --enable-prefix-caching \
         --enable-lora \
         --disable-frontend-multiprocessing \
-        --lora-modules lora=llmtuning/saves 2>> "${script_dir}/error.log"
+        --lora-modules lora=llmtuning/saves \
+        2>> "${script_dir}/error.log"
 else
     python -m vllm.entrypoints.openai.api_server \
         --model /data/pretrain_dir/Meta-Llama-3-8B-Instruct \
@@ -29,8 +30,9 @@ else
         --pipeline-parallel-size 1 \
         --enforce-eager \
         --enable-prefix-caching \
+        --enable-lora \
         --disable-frontend-multiprocessing \
-        --enable-lora 2>> "${script_dir}/error.log"
+        2>> "${script_dir}/error.log"
 fi
 
 echo $! > "$(dirname "$0")/.pid"
