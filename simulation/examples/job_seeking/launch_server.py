@@ -8,7 +8,6 @@ from agentscope.server import RpcAgentServerLauncher
 
 from simulation.helpers.constants import *
 from simulation.helpers.utils import load_yaml
-from simulation.helpers.constants import *
 
 from agent import *
 
@@ -38,8 +37,9 @@ def setup_participant_agent_server(host: str, port: int) -> None:
     assistant_server_launcher = RpcAgentServerLauncher(
         host=host,
         port=port,
-        max_pool_size=16384,
-        # studio_url="http://127.0.0.1:5000",
+        pool_type="redis",
+        max_pool_size=1638400000000,
+        max_timeout_seconds=1000000000000,
     )
     assistant_server_launcher.launch(in_subprocess=False)
     assistant_server_launcher.wait_until_terminate()

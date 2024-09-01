@@ -5,7 +5,7 @@
         "model_name": "/data/pretrain_dir/Meta-Llama-3-8B-Instruct",
         "api_key": "tangjiakai",
         "client_args": {
-            "max_retries": 3,
+            "max_retries": 10,
             "base_url": "http://localhost:8083/v1"
         },
         "generate_args": {

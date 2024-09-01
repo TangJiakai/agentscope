@@ -8,7 +8,7 @@ from agentscope.manager import ModelManager
 from agentscope.rpc import async_func
 
 from simulation.helpers.constants import *
-from simulation.helpers.utils import *
+from simulation.helpers.utils import get_memory_until_limit, get_assistant_msg, setup_memory
 
 
 class BaseAgent(AgentBase):
@@ -84,11 +84,11 @@ class BaseAgent(AgentBase):
         msg.instruction = instruction
         msg.observation = observation
         msg.no_memory = True
-        response = self(msg)["content"]
+        response = self(msg).content
         return response
 
     def session_chat(self, announcement, participants, **kwargs):
-        MAX_CONVERSATION_NUM = 2
+        MAX_CONVERSATION_NUM = 1
         msg = get_assistant_msg()
         msg.instruction = announcement
         msg.observation = "\nThe dialogue proceeds as follows:\n"
@@ -96,7 +96,7 @@ class BaseAgent(AgentBase):
         for _ in range(MAX_CONVERSATION_NUM):
             for p in participants:
                 msg.observation += f"{p.name}:"
-                response = self(msg)["content"]
+                response = self(msg).content
                 msg.observation += response + "\n"
         return msg.observation
 
@@ -108,8 +108,9 @@ class BaseAgent(AgentBase):
         format_profile = PROFILE_BEGIN + profile + PROFILE_END
         memory = ""
         for p in participants:
-            memory += "\n" + p.name + ": " + get_memory_until_limit(p.memory.get_memory(),
-                    format_instruction + format_profile + memory)
+            memory_msgs = get_memory_until_limit(memory, format_instruction + format_profile + memory)
+            memory_content = "-\n".join([m.content for m in memory_msgs])
+            memory += "\n" + p.name + ": " + memory_content
         format_memory = MEMORY_BEGIN + memory + MEMORY_END
         observation = "The dialogue proceeds as follows:\n"
         response = self.model(self.model.format(get_assistant_msg(
@@ -147,14 +148,15 @@ class BaseAgent(AgentBase):
             memory_query += observation
             prompt_content.append(observation)
 
-        if x and x["content"]:
-            memory_query += x["content"]
-            prompt_content.append(x["content"])
+        if x and x.content:
+            memory_query += x.content
+            prompt_content.append(x.content)
 
         memory = self.memory.get_memory(get_assistant_msg(memory_query))
         if len(memory) > 0:
             insert_index = -2 if len(prompt_content) > 1 else -1
-            memory_content = get_memory_until_limit(memory, "\n".join(prompt_content))
+            memory_msgs = get_memory_until_limit(memory, "\n".join(prompt_content))
+            memory_content = "-\n".join([m.content for m in memory_msgs])
             prompt_content.insert(insert_index, MEMORY_BEGIN + memory_content + MEMORY_END)
 
         prompt_content = "\n".join(prompt_content)
@@ -171,6 +173,10 @@ class BaseAgent(AgentBase):
             response = self.model(prompt_msg)
 
         self._send_message(prompt_msg, response)
+
+        logger.info(f"prompt: {prompt_content}")
+        logger.info(f"response: {response.text}\n\n")
+
         add_memory_msg = Msg("user", instruction + observation + response.text, role="user")
         if not hasattr(x, "no_memory"):
             self.observe(add_memory_msg)

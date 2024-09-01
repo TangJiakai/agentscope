@@ -605,7 +605,7 @@ def tune(mode: Literal["rewrite", "rate"]):
 
     # Kill LLM
     kill_llm_sh_path = os.path.join(proj_path, "llmtuning", "scripts", "kill_llm.sh")
-    run_sh_blocking(kill_llm_sh_path)
+    # run_sh_blocking(kill_llm_sh_path)
 
     # Launch LLM
     launch_llm_sh_path = os.path.join(
@@ -731,7 +731,7 @@ async def reset():
         kill_server_sh_path = os.path.join(
             proj_path, "simulation", "examples", _scene, "kill_all_server.sh"
         )
-        run_sh_blocking(kill_server_sh_path)
+        # run_sh_blocking(kill_server_sh_path)
     global simulator, simulation_thread, cur_msgs
     simulator = None
     kill_event.set()

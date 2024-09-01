@@ -195,7 +195,7 @@ class SeekerAgent(BaseAgent):
         for (agent_id, agent), result in zip(
             apply_interviewer_agent_infos.items(), results
         ):
-            result = result.get()["content"]
+            result = result.result()
             if "yes" == result:
                 cv_passed_interviewer_agent_infos[agent_id] = agent
         if len(cv_passed_interviewer_agent_infos) > 0:
@@ -215,7 +215,7 @@ class SeekerAgent(BaseAgent):
             announcement = Template.interview_announcement_instruction()
             dialog_observation = self.chat(announcement, [self, agent])
             self.observe(get_assistant_msg(announcement + dialog_observation))
-            result = agent.interview(dialog_observation)["content"]
+            result = agent.interview(dialog_observation)
             if "yes" == result:
                 offer_interviewer_agent_infos[agent_id] = agent
                 self.observe(
@@ -248,7 +248,7 @@ class SeekerAgent(BaseAgent):
         msg.selection_num = len(guided_choice)
         response = guided_choice[int(self.reply(msg)["content"])]
 
-        final_job = offer_interviewer_agent_infos[response].job
+        final_job = offer_interviewer_agent_infos[answer].job
         self.seeker.working_condition = (
             "Position Name: " + final_job["Position Name"]
         )
@@ -256,12 +256,12 @@ class SeekerAgent(BaseAgent):
 
         results = []
         for agent_id, agent in offer_interviewer_agent_infos.items():
-            results.append(agent.receive_notification(self.seeker.name, agent_id == response))
+            results.append(agent.receive_notification(self.seeker.name, agent_id == answer))
 
         for result in results:
-            result.get()
+            result.result()
 
-        return response
+        return answer
 
     @async_func
     def run(self, **kwargs):

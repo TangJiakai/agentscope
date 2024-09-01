@@ -9,9 +9,9 @@ Rating:
 {% macro format_memories_detail_prompt(memories, with_index=False) %}
 {% for mem in memories %}
     {% if with_index %}
-{{ loop.index }}. [{{ mem["timestamp"] }}] {{ mem["content"] }}
+{{ loop.index }}. [{{ mem.timestamp }}] {{ mem.content }}
     {% else %}
-- [{{ mem["timestamp"] }}] {{ mem["content"] }}
+- [{{ mem.timestamp }}] {{ mem.content }}
     {% endif %}
 {% endfor %}
 {% endmacro %}

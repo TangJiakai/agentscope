@@ -38,7 +38,8 @@ def setup_participant_agent_server(host: str, port: int) -> None:
     assistant_server_launcher = RpcAgentServerLauncher(
         host=host,
         port=port,
-        max_pool_size=16384,
+        max_pool_size=1638400000000,
+        max_timeout_seconds=10000000000000,
         # custom_agent_classes=[BaseAgent, RecUserAgent, EnvironmentAgent],
         # studio_url="http://127.0.0.1:5000",
     )

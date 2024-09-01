@@ -4,13 +4,12 @@ import requests
 import jinja2
 from loguru import logger
 
-from agentscope.agents import RpcAgent
 from agentscope.message import Msg
 from agentscope.rpc import async_func
 
 from simulation.examples.recommendation.environment.env import RecommendationEnv
 from simulation.helpers.base_agent import BaseAgent
-from simulation.helpers.utils import *
+from simulation.helpers.utils import setup_memory, get_memory_until_limit, get_assistant_msg
 from simulation.helpers.constants import *
 
 
@@ -87,7 +86,7 @@ class RecUserAgent(BaseAgent):
         interest: str,
         feature: str,
         env: RecommendationEnv,
-        relationship: dict[str, RpcAgent] = {},
+        relationship = {},
         **kwargs,
     ) -> None:
         super().__init__(
@@ -132,7 +131,7 @@ class RecUserAgent(BaseAgent):
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        feeling = self(msg)["content"]
+        feeling = self(msg).content
         
         logger.info(f"[{self.name}] feels {feeling}")
         return feeling
@@ -154,14 +153,14 @@ class RecUserAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg)["content"])]
         action = response.split(":")[0]
 
-        logger.info(f"[{self.name}] rated {action}")
+        logger.info(f"[{self.name}] rated {answer} for movie {movie}")
 
-        return action
+        return answer
 
     @set_state("watching")
     def recommend(self):
         user_info = self._profile + \
-            "\nMemory:" + "\n- ".join([m["content"] for m in self.memory.get_memory()])
+            "\nMemory:" + "\n- ".join([m.content for m in self.memory.get_memory()])
         guided_choice = self.env.recommend4user(user_info)
         instruction = Template.recommend_instruction()
         observation = Template.make_choice_observation(guided_choice)
@@ -172,10 +171,10 @@ class RecUserAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg)["content"])]
         action = response.split(":")[0]
 
-        logger.info(f"[{self.name}] selected {action}")
+        logger.info(f"[{self.name}] selected movie {answer}")
 
-        feeling = self.generate_feeling(action)
-        rating = self.rating_item(action)
+        feeling = self.generate_feeling(answer)
+        rating = self.rating_item(answer)
 
     @set_state("chatting")
     def conversation(self):
@@ -197,7 +196,9 @@ class RecUserAgent(BaseAgent):
         format_instruction = INSTRUCTION_BEGIN + instruction + INSTRUCTION_END
         format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
         memory = self.memory.get_memory(get_assistant_msg(instruction))
-        memory_content = get_memory_until_limit(memory, "\n".join(memory))
+        memory_msgs = get_memory_until_limit(memory, 
+            format_instruction + format_profile + observation + f"\n{self.name}:")
+        memory_content = "-\n".join([m.content for m in memory_msgs])
         format_memory = MEMORY_BEGIN + memory_content + MEMORY_END
         response = self.model(self.model.format(Msg(
             "user",
@@ -212,7 +213,7 @@ class RecUserAgent(BaseAgent):
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = "Please give your post content."
-        response = self(msg)["content"]
+        response = self(msg).content
         
         for agent in self.relationship.values():
             agent.observe(get_assistant_msg(f"{self.name} posted: {response}"))
@@ -230,7 +231,7 @@ class RecUserAgent(BaseAgent):
             "Post: Post in your social circle expressing your recent thoughts on movie-related topics."
         ]
         observation = Template.make_choice_observation(guided_choice)
-        msg = get_assistant_msg(instruction + observation)
+        msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
         msg.selection_num = len(guided_choice)

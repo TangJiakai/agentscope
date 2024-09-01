@@ -10,8 +10,6 @@ from agentscope.constants import _DEFAULT_CFG_NAME
 from agentscope.manager import FileManager
 from agentscope.message import Msg
 
-from simulation.memory import *
-
 
 def setup_agents(agent_configs, recent_n):
     """
@@ -68,6 +66,7 @@ def save_configs(configs):
     
 
 def setup_memory(memory_config):
+    from simulation.memory import NoneMemory, ShortMemory, ShortLongMemory, ShortLongReflectionMemory
     memory = eval(memory_config["class"])(**memory_config["args"])
     return memory
 
@@ -83,16 +82,17 @@ def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> i
     return num_tokens
 
 
-def get_memory_until_limit(memory, existing_prompt, limit=6000):
+def get_memory_until_limit(memory, existing_prompt=None, limit=6000):
     """
     Get memory until the total length of memory is less than limit
     """
-    memory_content = ""
-    limit -= num_tokens_from_string(existing_prompt)
+    limited_memory = []
+    if existing_prompt:
+        limit -= num_tokens_from_string(existing_prompt)
     for m in memory:
-        if num_token:=num_tokens_from_string(m["content"]) < limit:
-            memory_content += "\n- " + m["content"]
+        if num_token:=num_tokens_from_string(m.content) < limit:
+            limited_memory.append(m)
             limit -= num_token
         else:
             break
-    return memory_content
+    return limited_memory

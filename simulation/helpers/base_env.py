@@ -1,6 +1,5 @@
 from typing import Dict, List
 
-from agentscope.agents import RpcAgent
 from agentscope.environment import BasicEnv
 from agentscope.rpc import async_func
 
@@ -10,7 +9,7 @@ from simulation.helpers.utils import *
 class BaseEnv(BasicEnv):
     def __init__(self, name: str, **kwargs) -> None:
         super().__init__(name=name)
-        self.all_agents: Dict[str, RpcAgent] = dict()
+        self.all_agents: Dict = dict()
 
     @async_func
     def set_attr(self, attr: str, value, **kwargs) -> str:
@@ -21,7 +20,7 @@ class BaseEnv(BasicEnv):
         setattr(obj, attrs[-1], value)
         return "success"
     
-    def get_agents_by_ids(self, agent_ids: List[str]) -> List[RpcAgent]:
+    def get_agents_by_ids(self, agent_ids: List[str]):
         agents = {agent_id: self.all_agents[agent_id] for agent_id in agent_ids}
         return agents
 
@@ -33,7 +32,7 @@ class BaseEnv(BasicEnv):
     def intervention(self, agent_id: str, key, value) -> None:
         if agent_id in self.all_agents:
             agent = self.all_agents[agent_id]
-            agent.set_attr(key, value).get()
+            agent.set_attr(key, value).result()
 
     def interview(self, agent_id: str, query: str) -> str:
         if agent_id in self.all_agents:

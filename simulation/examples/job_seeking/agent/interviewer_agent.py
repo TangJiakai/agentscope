@@ -1,11 +1,11 @@
 import os
-import threading
 import requests
 from typing import List
 from jinja2 import Environment, FileSystemLoader
+import random
+from loguru import logger
 
 from agentscope.rpc import async_func
-from loguru import logger
 
 from simulation.helpers.utils import *
 from simulation.helpers.constants import *

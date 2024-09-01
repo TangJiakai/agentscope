@@ -133,9 +133,9 @@ class Simulator:
                 {agents[j].agent_id: agents[j] for j in agent_relationships[i]},
             ))
         for res in results:
-            res.get()
+            res.result()
 
-        env.set_attr(attr="all_agents", value={agent.agent_id: agent for agent in agents}).get()
+        env.set_attr(attr="all_agents", value={agent.agent_id: agent for agent in agents}).result()
 
         self.agents = agents
         self.env = env
@@ -151,7 +151,7 @@ class Simulator:
         for agent in self.agents:
             results.append(agent.run())
         for res in results:
-            print(res.get())
+            print(res.result())
 
     def run(self):
         play_event.set()
@@ -175,7 +175,7 @@ class Simulator:
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 
-        message_save_path = "/data/tangjiakai/general_simulation/message.json"
+        message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
         resp = requests.post(
             "http://localhost:9000/store_message",
             json={

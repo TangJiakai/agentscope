@@ -1,7 +1,6 @@
 import faiss
 import numpy as np
 from loguru import logger
-from agentscope.agents import RpcAgent
 
 from simulation.helpers.utils import *
 from simulation.helpers.emb_service import *
@@ -20,7 +19,7 @@ class RecommendationEnv(BaseEnv):
         self.item_infos = item_infos
         self.embedding_api = embedding_api
         self.index = self._build_index(item_infos)
-        self.all_agents: list[RpcAgent] = None
+        self.all_agents = None
 
     def __getstate__(self) -> object:
         state = super().__getstate__()
@@ -49,7 +48,4 @@ class RecommendationEnv(BaseEnv):
     def recommend4user(self, user_info, k=5):
         user_emb = get_embedding(user_info, self.embedding_api)
         _, indices = self.index.search(np.array([user_emb]), k)
-        return get_assistant_msg([
-            "\n".join([f"{k}: {v}" for k, v in self.item_infos[i].items()])
-            for i in indices[0]
-        ])
+        return [self.item_infos[i] for i in indices[0]]

@@ -3,7 +3,7 @@ model_configs_path: model_configs.json
 project_name: recommendation
 round_n: 2
 save_dir: 
-embedding_api: http://localhost:8000/
+embedding_api: http://localhost:8002/
 load_simulator_path: 
 host: localhost
 base_port: 13000
