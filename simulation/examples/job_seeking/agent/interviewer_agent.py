@@ -152,7 +152,7 @@ class InterviewerAgent(BaseAgent):
         msg.instruction = Template.screening_cv_instruction()
         guided_choice = ["yes", "no"]
         msg.observation = Template.screening_cv_observation(seeker_info, guided_choice)
-        content = self.reply(msg)["content"]
+        content = self.reply(msg).content
         prompt = Template.parse_value_observation(content, guided_choice)
         reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
         answer = random.choice(guided_choice)
@@ -170,7 +170,7 @@ class InterviewerAgent(BaseAgent):
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        content = self.reply(msg)["content"]
+        content = self.reply(msg).content
         prompt = Template.parse_value_observation(content, guided_choice)
         reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
         answer = random.choice(guided_choice)

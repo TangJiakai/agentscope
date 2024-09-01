@@ -64,8 +64,8 @@ class ShortLongMemory(ShortMemory):
         return response
 
     def add_ltm_memory(self, ltm_memory_unit: Msg):
-        memory_content = ltm_memory_unit["content"]
-        ltm_memory_unit["importance_score"] = self._score_memory_importance(memory_content)
+        memory_content = ltm_memory_unit.content
+        ltm_memory_unit.importance_score = self._score_memory_importance(memory_content)
         self.ltm_memory.append(ltm_memory_unit)
         self.retriever.add(
             np.atleast_2d(get_embedding(memory_content, self.embedding_api))
@@ -82,7 +82,7 @@ class ShortLongMemory(ShortMemory):
             # to a similarity function (0 to 1)
             return 1.0 - score / math.sqrt(2)
 
-        scores, indices = self.retriever.search(np.atleast_2d(query["embedding"]), k)
+        scores, indices = self.retriever.search(np.atleast_2d(query.embedding), k)
         docs_and_scores = {}
         for j, i in enumerate(indices[0]):
             if i == -1:
@@ -93,15 +93,15 @@ class ShortLongMemory(ShortMemory):
     def _get_combined_score(self, query, doc, relevance_score):
         def score_func(m1: Msg, m2: Msg) -> float:
             time_gap = (
-                datetime.strptime(m1["timestamp"], "%Y-%m-%d %H:%M:%S")
-                - datetime.strptime(m2["timestamp"], "%Y-%m-%d %H:%M:%S")
+                datetime.strptime(m1.timestamp, "%Y-%m-%d %H:%M:%S")
+                - datetime.strptime(m2.timestamp, "%Y-%m-%d %H:%M:%S")
             ).total_seconds() / 3600
             recency = 0.99**time_gap
             return recency
 
         score = score_func(query, doc)
         score += relevance_score
-        score += doc["importance_score"]
+        score += doc.importance_score
 
         return score
 
@@ -121,7 +121,7 @@ class ShortLongMemory(ShortMemory):
             self.add_ltm_memory(ltm_memory_unit)
 
     def get_ltm_memory(self, query: Msg):
-        query["embedding"] = get_embedding(query["content"], self.embedding_api)
+        query.embedding = get_embedding(query.content, self.embedding_api)
         docs_and_scores = {
             len(self.ltm_memory) - self.ltm_K + i: (doc, 0.0)
             for i, doc in enumerate(self.ltm_memory[-self.ltm_K:])

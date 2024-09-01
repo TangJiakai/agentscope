@@ -8,7 +8,7 @@ from agentscope.manager import ModelManager
 from agentscope.rpc import async_func
 
 from simulation.helpers.constants import *
-from simulation.helpers.utils import *
+from simulation.helpers.utils import get_memory_until_limit, get_assistant_msg, setup_memory
 
 
 class BaseAgent(AgentBase):
@@ -84,7 +84,7 @@ class BaseAgent(AgentBase):
         msg.instruction = instruction
         msg.observation = observation
         msg.no_memory = True
-        response = self(msg)["content"]
+        response = self(msg).content
         return response
 
     def session_chat(self, announcement, participants, **kwargs):
@@ -96,7 +96,7 @@ class BaseAgent(AgentBase):
         for _ in range(MAX_CONVERSATION_NUM):
             for p in participants:
                 msg.observation += f"{p.name}:"
-                response = self(msg)["content"]
+                response = self(msg).content
                 msg.observation += response + "\n"
         return msg.observation
 
@@ -147,9 +147,9 @@ class BaseAgent(AgentBase):
             memory_query += observation
             prompt_content.append(observation)
 
-        if x and x["content"]:
-            memory_query += x["content"]
-            prompt_content.append(x["content"])
+        if x and x.content:
+            memory_query += x.content
+            prompt_content.append(x.content)
 
         memory = self.memory.get_memory(get_assistant_msg(memory_query))
         if len(memory) > 0:
@@ -164,7 +164,6 @@ class BaseAgent(AgentBase):
             prompt_content, 
             role="user"
         ))
-
         response = self.model(prompt_msg)
 
         self._send_message(prompt_msg, response)

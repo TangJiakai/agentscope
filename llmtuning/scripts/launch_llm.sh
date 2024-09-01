@@ -17,7 +17,6 @@ if [ -f "llmtuning/saves/adapter_config.json" ]; then
         --enforce-eager \
         --enable-prefix-caching \
         --enable-lora \
-        --disable-frontend-multiprocessing \
         --lora-modules lora=llmtuning/saves \
         2>> "${script_dir}/error.log"
 else
@@ -31,7 +30,6 @@ else
         --enforce-eager \
         --enable-prefix-caching \
         --enable-lora \
-        --disable-frontend-multiprocessing \
         2>> "${script_dir}/error.log"
 fi
 
