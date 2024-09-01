@@ -248,7 +248,7 @@ class SeekerAgent(BaseAgent):
         msg.selection_num = len(guided_choice)
         response = guided_choice[int(self.reply(msg)["content"])]
 
-        final_job = offer_interviewer_agent_infos[answer].job
+        final_job = offer_interviewer_agent_infos[response].job
         self.seeker.working_condition = (
             "Position Name: " + final_job["Position Name"]
         )
@@ -256,12 +256,12 @@ class SeekerAgent(BaseAgent):
 
         results = []
         for agent_id, agent in offer_interviewer_agent_infos.items():
-            results.append(agent.receive_notification(self.seeker.name, agent_id == answer))
+            results.append(agent.receive_notification(self.seeker.name, agent_id == response))
 
         for result in results:
             result.result()
 
-        return answer
+        return response
 
     @async_func
     def run(self, **kwargs):

@@ -7,7 +7,7 @@ python simulation/tools/launch_emb_model.py
 ```
 to launch the embedding model server.
 
-2. Get the `embedding_api` (for example, [http://localhost:8000/](http://localhost:8000/)), and fill that URL into `simulation/examples/job_seeking/configs/simulation_config.yml`.
+2. Get the `embedding_api` (for example, [http://localhost:8003/](http://localhost:8003/)), and fill that URL into `simulation/examples/job_seeking/configs/simulation_config.yml`.
 
 ### 2. Launch LLM Model
 1. [optional] Run 
