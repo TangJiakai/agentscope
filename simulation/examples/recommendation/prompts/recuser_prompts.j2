@@ -35,20 +35,17 @@ Your good friends will see your post.
 
 
 {##################################### Observation #####################################}
-{% macro rating_item_observation(movie, actions) %}
-You have finished watching the movie: {{movie}}. Please make a choice from the actions below (return the index of the action):
-{% for action in actions %}
-    - {{action}}
-{% endfor %}
-Answer:
-{% endmacro %}
-
 {% macro make_choice_observation(actions) %}
 Please make a choice from the actions below (output the index, e.g., 0):
 {% for action in actions %}
     {{loop.index0}} {{action}}
 {% endfor %}
 Answer:
+{% endmacro %}
+
+{% macro rating_item_observation(movie, actions) %}
+You have finished watching the movie: {{movie}}. You will now rate this movie.
+{{ make_choice_observation(actions) }}
 {% endmacro %}
 
 {% macro generate_feeling_observation(movie) %}

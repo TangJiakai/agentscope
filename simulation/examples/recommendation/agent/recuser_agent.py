@@ -153,9 +153,9 @@ class RecUserAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg)["content"])]
         action = response.split(":")[0]
 
-        logger.info(f"[{self.name}] rated {answer} for movie {movie}")
+        logger.info(f"[{self.name}] rated {action} for movie {movie}")
 
-        return answer
+        return action
 
     @set_state("watching")
     def recommend(self):
@@ -168,13 +168,12 @@ class RecUserAgent(BaseAgent):
         msg.instruction = instruction
         msg.observation = observation
         msg.selection_num = len(guided_choice)
-        response = guided_choice[int(self.reply(msg)["content"])]
-        action = response.split(":")[0]
+        response = guided_choice[int(self.reply(msg)["content"])]['title']
 
-        logger.info(f"[{self.name}] selected movie {answer}")
+        logger.info(f"[{self.name}] selected movie {response}")
 
-        feeling = self.generate_feeling(answer)
-        rating = self.rating_item(answer)
+        feeling = self.generate_feeling(response)
+        rating = self.rating_item(response)
 
     @set_state("chatting")
     def conversation(self):
