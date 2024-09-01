@@ -4,6 +4,6 @@
         "importance_weight": 0.15,
         "stm_K": 3,
         "ltm_K": 3,
-        "reflection_threshold": 0.0000000001
+        "reflection_threshold": 1.0
     }
 }
