@@ -33,64 +33,7 @@
             ],
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 13001
-        }
-    },
-    {
-        "class": "RecUserAgent",
-        "args": {
-            "id": 2,
-            "name": "James Brown",
-            "gender": "male",
-            "age": 70,
-            "traits": "independent, creative, patient, empathetic",
-            "status": "engineer",
-            "interest": " comedy movies,  family-friendly movies,  documentaries,  thriller movies",
-            "feature": "Choose movies, enjoy watching, and provide feedback and ratings to the recommendation system.Demanding high standards for movies and the recommendation system, may criticize both the recommendation system and the movies.Enjoy publicly posting on social media and sharing content and insights with more people.",
-            "relationship": [
-                4
-            ],
-            "model_config_name": "Llama3",
-            "host": "localhost",
-            "port": 13002
-        }
-    },
-    {
-        "class": "RecUserAgent",
-        "args": {
-            "id": 3,
-            "name": "Sarah Miller",
-            "gender": "female",
-            "age": 33,
-            "traits": "independent, compassionate",
-            "status": "farmer",
-            "interest": " romantic movies,  comedy movies,  classic movies,  family-friendly movies",
-            "feature": "Choose movies, enjoy watching, and provide feedback and ratings to the recommendation system.Demanding high standards for movies and the recommendation system, may criticize both the recommendation system and the movies.Enjoy publicly posting on social media and sharing content and insights with more people.",
-            "relationship": [
-                2
-            ],
-            "model_config_name": "Llama3",
-            "host": "localhost",
             "port": 13000
-        }
-    },
-    {
-        "class": "RecUserAgent",
-        "args": {
-            "id": 4,
-            "name": "John Taylor",
-            "gender": "male",
-            "age": 68,
-            "traits": "optimistic",
-            "status": "doctor",
-            "interest": " action movies,  thriller movies",
-            "feature": "Choose movies, enjoy watching, and provide feedback and ratings to the recommendation system.Enjoy publicly posting on social media and sharing content and insights with more people.",
-            "relationship": [
-                3
-            ],
-            "model_config_name": "Llama3",
-            "host": "localhost",
-            "port": 13001
         }
     }
 ]

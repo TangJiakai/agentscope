@@ -152,6 +152,10 @@ class RecUserAgent(BaseAgent):
         content = self.reply(msg).content
         prompt = Template.parse_value_observation(content, guided_choice)
         reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
+
+        logger.info(f"prompt: {prompt}")
+        logger.info(f"response: {reponse}")
+
         answer = -1
         for c in list(map(str, range(1, 6))):
             if c in reponse:
@@ -176,6 +180,10 @@ class RecUserAgent(BaseAgent):
         guided_choice = [m['title'] for m in guided_choice]
         prompt = Template.parse_value_observation(content, guided_choice)
         reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
+
+        logger.info(f"prompt: {prompt}")
+        logger.info(f"response: {reponse}")
+
         answer = random.choice(guided_choice)
         for c in guided_choice:
             if c in reponse:
@@ -249,6 +257,10 @@ class RecUserAgent(BaseAgent):
         guided_choice = ['recommend', 'conversation', 'post']
         prompt = Template.parse_value_observation(content, guided_choice)
         reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
+
+        logger.info(f"prompt: {prompt}")
+        logger.info(f"response: {reponse}")
+
         answer = random.choice(guided_choice)
         for c in guided_choice:
             if c in reponse.lower():
