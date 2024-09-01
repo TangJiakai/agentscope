@@ -86,13 +86,13 @@ def get_memory_until_limit(memory, existing_prompt=None, limit=6000):
     """
     Get memory until the total length of memory is less than limit
     """
-    memory_content = ""
+    limited_memory = []
     if existing_prompt:
         limit -= num_tokens_from_string(existing_prompt)
     for m in memory:
         if num_token:=num_tokens_from_string(m.content) < limit:
-            memory_content += "\n- " + m.content
+            limited_memory.append(m)
             limit -= num_token
         else:
             break
-    return memory_content
+    return limited_memory

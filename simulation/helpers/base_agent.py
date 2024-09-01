@@ -108,8 +108,9 @@ class BaseAgent(AgentBase):
         format_profile = PROFILE_BEGIN + profile + PROFILE_END
         memory = ""
         for p in participants:
-            memory += "\n" + p.name + ": " + get_memory_until_limit(p.memory.get_memory(),
-                    format_instruction + format_profile + memory)
+            memory_msgs = get_memory_until_limit(memory, format_instruction + format_profile + memory)
+            memory_content = "-\n".join([m.content for m in memory_msgs])
+            memory += "\n" + p.name + ": " + memory_content
         format_memory = MEMORY_BEGIN + memory + MEMORY_END
         observation = "The dialogue proceeds as follows:\n"
         response = self.model(self.model.format(get_assistant_msg(
@@ -154,7 +155,8 @@ class BaseAgent(AgentBase):
         memory = self.memory.get_memory(get_assistant_msg(memory_query))
         if len(memory) > 0:
             insert_index = -2 if len(prompt_content) > 1 else -1
-            memory_content = get_memory_until_limit(memory, "\n".join(prompt_content))
+            memory_msgs = get_memory_until_limit(memory, "\n".join(prompt_content))
+            memory_content = "-\n".join([m.content for m in memory_msgs])
             prompt_content.insert(insert_index, MEMORY_BEGIN + memory_content + MEMORY_END)
 
         prompt_content = "\n".join(prompt_content)
