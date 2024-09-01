@@ -88,7 +88,7 @@ class BaseAgent(AgentBase):
         return response
 
     def session_chat(self, announcement, participants, **kwargs):
-        MAX_CONVERSATION_NUM = 2
+        MAX_CONVERSATION_NUM = 1
         msg = get_assistant_msg()
         msg.instruction = announcement
         msg.observation = "\nThe dialogue proceeds as follows:\n"
@@ -169,6 +169,10 @@ class BaseAgent(AgentBase):
         response = self.model(prompt_msg)
 
         self._send_message(prompt_msg, response)
+
+        logger.info(f"prompt: {prompt_content}")
+        logger.info(f"response: {response.text}\n\n")
+
         add_memory_msg = Msg("user", instruction + observation + response.text, role="user")
         if not hasattr(x, "no_memory"):
             self.observe(add_memory_msg)

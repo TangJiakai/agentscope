@@ -32,7 +32,7 @@ class BaseEnv(BasicEnv):
     def intervention(self, agent_id: str, key, value) -> None:
         if agent_id in self.all_agents:
             agent = self.all_agents[agent_id]
-            agent.set_attr(key, value).get()
+            agent.set_attr(key, value).result()
 
     def interview(self, agent_id: str, query: str) -> str:
         if agent_id in self.all_agents:
