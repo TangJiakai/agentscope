@@ -132,7 +132,7 @@ class SeekerAgent(BaseAgent):
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        content = self.reply(msg)["content"]
+        content = self.reply(msg).content
         prompt = Template.parse_value_observation(content, guided_choice)
         reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
         answer = random.choice(guided_choice)
@@ -153,7 +153,7 @@ class SeekerAgent(BaseAgent):
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        content = self.reply(msg)["content"]
+        content = self.reply(msg).content
         prompt = Template.parse_value_observation(content, guided_choice)
         reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
         answer = random.choice(guided_choice)
@@ -188,7 +188,7 @@ class SeekerAgent(BaseAgent):
             msg = Msg("user", None, role="user")
             msg.instruction = instruction
             msg.observation = observation
-            content = self.reply(msg)["content"]
+            content = self.reply(msg).content
             prompt = Template.parse_value_observation(content, guided_choice)
             reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
             answer = random.choice(guided_choice)
@@ -213,7 +213,7 @@ class SeekerAgent(BaseAgent):
         for (agent_id, agent), result in zip(
             apply_interviewer_agent_infos.items(), results
         ):
-            result = result["content"]
+            result = result.result()
             if "yes" == result:
                 cv_passed_interviewer_agent_infos[agent_id] = agent
         if len(cv_passed_interviewer_agent_infos) > 0:
@@ -233,7 +233,7 @@ class SeekerAgent(BaseAgent):
             announcement = Template.interview_announcement_instruction()
             dialog_observation = self.chat(announcement, [self, agent])
             self.observe(get_assistant_msg(announcement + dialog_observation))
-            result = agent.interview(dialog_observation)["content"]
+            result = agent.interview(dialog_observation)
             if "yes" == result:
                 offer_interviewer_agent_infos[agent_id] = agent
                 self.observe(
@@ -263,7 +263,7 @@ class SeekerAgent(BaseAgent):
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        content = self.reply(msg)["content"]
+        content = self.reply(msg).content
         prompt = Template.parse_value_observation(content, guided_choice)
         reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
         answer = random.choice(guided_choice)
@@ -283,7 +283,7 @@ class SeekerAgent(BaseAgent):
             results.append(agent.receive_notification(self.seeker.name, agent_id == answer))
 
         for result in results:
-            result.get()
+            result.result()
 
         return answer
 

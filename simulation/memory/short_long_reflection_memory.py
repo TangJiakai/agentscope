@@ -9,7 +9,7 @@ from agentscope.message import Msg
 from agentscope.message import Msg
 
 from simulation.memory.short_long_memory import ShortLongMemory
-from simulation.helpers.utils import *
+from simulation.helpers.utils import get_memory_until_limit
 
 file_loader = FileSystemLoader(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "prompts")
@@ -68,11 +68,11 @@ class ShortLongReflectionMemory(ShortLongMemory):
 
     def _get_insights_on_topic(self, topic: Msg) -> List[str]:
         retrieved_memories = self.get_ltm_memory(topic)
-        limited_retrieved_memories = get_memory_until_limit([x for x in retrieved_memories], topic["content"], 5000)
-        memory_contents = [x["content"] for x in limited_retrieved_memories]
+        limited_retrieved_memories = get_memory_until_limit([x for x in retrieved_memories], topic.content, 5000)
+        memory_contents = [x.content for x in limited_retrieved_memories]
         msg = Msg(
             "user",
-            Template.get_insights_on_topic_prompt(memory_contents, topic["content"], True),
+            Template.get_insights_on_topic_prompt(memory_contents, topic.content, True),
             role="user",
         )
         prompt = self.model.format(msg)
@@ -107,7 +107,7 @@ class ShortLongReflectionMemory(ShortLongMemory):
         if len(self.ltm_memory) == 0:
             return
 
-        self.aggregate_importance += self.ltm_memory[-1]["importance_score"]
+        self.aggregate_importance += self.ltm_memory[-1].importance_score
         if (
             self.aggregate_importance >= self.reflection_threshold
             and not self.reflecting

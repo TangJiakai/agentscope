@@ -193,14 +193,14 @@ class Simulator:
         for agent, config in zip(seeker_agents, seeker_configs):
             results.append(agent.set_attr(attr="job_ids_pool", value=config["args"]["job_ids_pool"]))
         for res in results:
-            res.get()
+            res.result()
 
         agent_dict = {agent.agent_id: agent for agent in seeker_agents + interviewer_agents}
         results = []
         for env in envs:
             results.append(env.set_attr(attr="all_agents", value=agent_dict))
         for res in results:
-            res.get()
+            res.result()
 
         self.agents = seeker_agents + interviewer_agents
         self.envs = envs
@@ -211,7 +211,7 @@ class Simulator:
         for agent in self.agents:
             results.append(agent.run())
         for res in results:
-            print(res.get())
+            print(res.result())
 
     def run(self):
         play_event.set()

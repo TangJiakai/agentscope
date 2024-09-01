@@ -8,7 +8,6 @@ from agentscope.server import RpcAgentServerLauncher
 
 from simulation.helpers.constants import *
 from simulation.helpers.utils import load_yaml
-from simulation.helpers.constants import *
 
 from agent import *
 

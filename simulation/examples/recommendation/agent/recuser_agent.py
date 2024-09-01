@@ -4,13 +4,12 @@ import requests
 import jinja2
 from loguru import logger
 
-from agentscope.agents import RpcAgent
 from agentscope.message import Msg
 from agentscope.rpc import async_func
 
 from simulation.examples.recommendation.environment.env import RecommendationEnv
 from simulation.helpers.base_agent import BaseAgent
-from simulation.helpers.utils import *
+from simulation.helpers.utils import setup_memory, get_memory_until_limit, get_assistant_msg
 from simulation.helpers.constants import *
 
 
@@ -87,7 +86,7 @@ class RecUserAgent(BaseAgent):
         interest: str,
         feature: str,
         env: RecommendationEnv,
-        relationship: dict[str, RpcAgent] = {},
+        relationship = {},
         **kwargs,
     ) -> None:
         super().__init__(
@@ -132,7 +131,7 @@ class RecUserAgent(BaseAgent):
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        feeling = self(msg)["content"]
+        feeling = self(msg).content
         
         logger.info(f"[{self.name}] feels {feeling}")
         return feeling
@@ -150,30 +149,43 @@ class RecUserAgent(BaseAgent):
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        msg.guided_choice = guided_choice
-        action = self(msg)["content"].split(":")[0].strip()
+        content = self.reply(msg).content
+        prompt = Template.parse_value_observation(content, guided_choice)
+        reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
+        answer = -1
+        for c in list(map(str, range(1, 6))):
+            if c in reponse:
+                answer = c
+                break
 
-        logger.info(f"[{self.name}] rated {action}")
+        logger.info(f"[{self.name}] rated {answer} for movie {movie}")
 
-        return action
+        return answer
 
     @set_state("watching")
     def recommend(self):
         user_info = self._profile + \
-            "\nMemory:" + "\n- ".join([m["content"] for m in self.memory.get_memory()])
+            "\nMemory:" + "\n- ".join([m.content for m in self.memory.get_memory()])
         guided_choice = self.env.recommend4user(user_info)
         instruction = Template.recommend_instruction()
         observation = Template.make_choice_observation(guided_choice)
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        msg.guided_choice = guided_choice
-        action = self(msg)["content"]
+        content = self.reply(msg).content
+        guided_choice = [m['title'] for m in guided_choice]
+        prompt = Template.parse_value_observation(content, guided_choice)
+        reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
+        answer = random.choice(guided_choice)
+        for c in guided_choice:
+            if c in reponse:
+                answer = c
+                break
 
-        logger.info(f"[{self.name}] selected {action}")
+        logger.info(f"[{self.name}] selected movie {answer}")
 
-        feeling = self.generate_feeling(action)
-        rating = self.rating_item(action)
+        feeling = self.generate_feeling(answer)
+        rating = self.rating_item(answer)
 
     @set_state("chatting")
     def conversation(self):
@@ -210,7 +222,7 @@ class RecUserAgent(BaseAgent):
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = "Please give your post content."
-        response = self(msg)["content"]
+        response = self(msg).content
         
         for agent in self.relationship.values():
             agent.observe(get_assistant_msg(f"{self.name} posted: {response}"))
@@ -228,12 +240,19 @@ class RecUserAgent(BaseAgent):
             "Post: Post in your social circle expressing your recent thoughts on movie-related topics."
         ]
         observation = Template.make_choice_observation(guided_choice)
-        msg = get_assistant_msg(instruction + observation)
+        msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        msg.guided_choice = guided_choice
+        content = self.reply(msg).content
+        guided_choice = ['recommend', 'conversation', 'post']
+        prompt = Template.parse_value_observation(content, guided_choice)
+        reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
+        answer = random.choice(guided_choice)
+        for c in guided_choice:
+            if c in reponse.lower():
+                answer = c
+                break
         
-        action = self(msg)["content"].split(":")[0].strip().lower()
-        getattr(self, action)()
+        getattr(self, answer)()
         
         return "success"
