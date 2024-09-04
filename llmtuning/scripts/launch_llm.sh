@@ -1,6 +1,7 @@
 #!/bin/bash
 
 export CUDA_VISIBLE_DEVICES=2
+# export VLLM_ATTENTION_BACKEND=XFORMERS
 # export VLLM_WORKER_MULTIPROC_METHOD=spawn
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -18,6 +19,7 @@ if [ -f "llmtuning/saves/adapter_config.json" ]; then
         --enable-prefix-caching \
         --enable-lora \
         --lora-modules lora=llmtuning/saves \
+        --gpu-memory-utilization 0.6 \
         2>> "${script_dir}/error.log" &
 else
     python -m vllm.entrypoints.openai.api_server \
@@ -30,6 +32,7 @@ else
         --enforce-eager \
         --enable-prefix-caching \
         --enable-lora \
+        --gpu-memory-utilization 0.6 \
         2>> "${script_dir}/error.log" &
 fi
 

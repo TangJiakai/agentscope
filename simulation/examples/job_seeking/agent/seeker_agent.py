@@ -113,16 +113,17 @@ class SeekerAgent(BaseAgent):
 
     @state.setter
     def state(self, new_value):
-        if hasattr(self, "backend_server_url"):
-            if new_value not in SeekerAgentStates:
-                raise ValueError(f"Invalid state: {new_value}")
-            self._state = new_value
-            url = f"{self.backend_server_url}/api/state"
-            resp = requests.post(
-                url, json={"agent_id": self.agent_id, "state": new_value}
-            )
-            if resp.status_code != 200:
-                logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
+        pass
+        # if hasattr(self, "backend_server_url"):
+        #     if new_value not in SeekerAgentStates:
+        #         raise ValueError(f"Invalid state: {new_value}")
+        #     self._state = new_value
+        #     url = f"{self.backend_server_url}/api/state"
+        #     resp = requests.post(
+        #         url, json={"agent_id": self.agent_id, "state": new_value}
+        #     )
+        #     if resp.status_code != 200:
+        #         logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
 
     @set_state("determining if seeking")
     def _determine_if_seeking(self, **kwargs):
@@ -205,17 +206,12 @@ class SeekerAgent(BaseAgent):
     @set_state("applying jobs")
     def _apply_job(self, apply_interviewer_agent_infos: dict, **kwargs):
         """Apply jobs."""
-        results = []
-        for agent in apply_interviewer_agent_infos.values():
-            results.append(agent.screening_cv(str(self.seeker)))
-
         cv_passed_interviewer_agent_infos = {}
-        for (agent_id, agent), result in zip(
-            apply_interviewer_agent_infos.items(), results
-        ):
-            result = result.result()
+        for agent_id, agent in apply_interviewer_agent_infos.items():
+            result = agent.screening_cv(str(self.seeker))
             if "yes" == result:
                 cv_passed_interviewer_agent_infos[agent_id] = agent
+
         if len(cv_passed_interviewer_agent_infos) > 0:
             self.observe(
                 get_assistant_msg(
@@ -278,12 +274,8 @@ class SeekerAgent(BaseAgent):
         )
         self._update_profile()
 
-        results = []
         for agent_id, agent in offer_interviewer_agent_infos.items():
-            results.append(agent.receive_notification(self.seeker.name, agent_id == answer))
-
-        for result in results:
-            result.result()
+            agent.receive_notification(self.seeker.name, agent_id == answer)
 
         return answer
 

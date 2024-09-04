@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from typing import Sequence, Union
+
 from agentscope.message import Msg
 
 

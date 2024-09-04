@@ -120,16 +120,17 @@ class InterviewerAgent(BaseAgent):
 
     @state.setter
     def state(self, new_value):
-        if hasattr(self, "backend_server_url"):
-            if new_value not in InterviewerAgentStates:
-                raise ValueError(f"Invalid state: {new_value}")
-            self._state = new_value
-            url = f"{self.backend_server_url}/api/state"
-            resp = requests.post(
-                url, json={"agent_id": self.agent_id, "state": new_value}
-            )
-            if resp.status_code != 200:
-                logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
+        pass
+        # if hasattr(self, "backend_server_url"):
+        #     if new_value not in InterviewerAgentStates:
+        #         raise ValueError(f"Invalid state: {new_value}")
+        #     self._state = new_value
+        #     url = f"{self.backend_server_url}/api/state"
+        #     resp = requests.post(
+        #         url, json={"agent_id": self.agent_id, "state": new_value}
+        #     )
+        #     if resp.status_code != 200:
+        #         logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
 
     def get_attr(self, attr):
         if attr == "job":
@@ -145,7 +146,6 @@ class InterviewerAgent(BaseAgent):
             return job
         return super().get_attr(attr)
 
-    @async_func
     @set_state("screening cv")
     def screening_cv(self, seeker_info: str):
         msg = get_assistant_msg()
@@ -180,7 +180,6 @@ class InterviewerAgent(BaseAgent):
                 break
         return answer
 
-    @async_func
     @set_state("receiving notification")
     def receive_notification(self, seeker_name: str, is_accept: bool, **kwargs):
         self.observe(
