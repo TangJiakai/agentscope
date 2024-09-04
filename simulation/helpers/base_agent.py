@@ -23,7 +23,7 @@ class BaseAgent(AgentBase):
             model_config_name=model_config_name,
         )
         self._profile = ""
-        # self.backend_server_url = "http://localhost:9111"
+        self.backend_server_url = "http://localhost:9111"
 
     def _send_message(self, prompt, response):
         if hasattr(self, "backend_server_url"):
