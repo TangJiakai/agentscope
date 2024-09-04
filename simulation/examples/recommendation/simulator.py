@@ -175,13 +175,13 @@ class Simulator:
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 
-        message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
-        resp = requests.post(
-            "http://localhost:9000/store_message",
-            json={
-                "save_data_path": message_save_path,
-            }
-        )
+        # message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
+        # resp = requests.post(
+        #     "http://localhost:9000/store_message",
+        #     json={
+        #         "save_data_path": message_save_path,
+        #     }
+        # )
 
     def load(file_path):
         with open(file_path, "rb") as f:

@@ -1,4 +1,5 @@
 from datetime import timedelta
+import math
 import os
 import sys
 
@@ -76,6 +77,9 @@ class Simulator:
 
     def _init_agents(self):
         # Load configs
+        model_configs = load_json(
+            os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
+        )
         seeker_configs = load_json(
             os.path.join(scene_path, CONFIG_DIR, SEEKER_AGENT_CONFIG)
         )
@@ -83,12 +87,15 @@ class Simulator:
             os.path.join(scene_path, CONFIG_DIR, INTERVIEWER_AGENT_CONFIG)
         )
         memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
+        memory_config["args"]["embedding_size"] = get_embedding_dimension(self.config["embedding_api"])
+        
+        llm_num = len(model_configs)
+        agent_num = len(seeker_configs) + len(interviewer_configs)
+        agent_num_per_llm = math.ceil(agent_num / llm_num)
 
         # Prepare agent args
-        for config in seeker_configs + interviewer_configs:
-            memory_config["args"]["embedding_size"] = get_embedding_dimension(
-                self.config["embedding_api"]
-            )
+        for i, config in enumerate(seeker_configs + interviewer_configs):
+            config["args"]["model_config_name"] = model_configs[i//agent_num_per_llm]["config_name"]
             config["args"]["memory_config"] = memory_config
             config["args"]["embedding_api"] = self.config["embedding_api"]
 
@@ -235,13 +242,13 @@ class Simulator:
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 
-        message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
-        resp = requests.post(
-            "http://localhost:9000/store_message",
-            json={
-                "save_data_path": message_save_path,
-            }
-        )
+        # message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
+        # resp = requests.post(
+        #     "http://localhost:9000/store_message",
+        #     json={
+        #         "save_data_path": message_save_path,
+        #     }
+        # )
 
     def load(file_path):
         with open(file_path, "rb") as f:

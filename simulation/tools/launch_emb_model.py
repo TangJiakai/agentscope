@@ -1,7 +1,6 @@
 import argparse
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import List
 from sentence_transformers import SentenceTransformer
 import torch
 import uvicorn

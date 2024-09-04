@@ -23,7 +23,7 @@ class BaseAgent(AgentBase):
             model_config_name=model_config_name,
         )
         self._profile = ""
-        self.backend_server_url = "http://localhost:9000"
+        self.backend_server_url = "http://localhost:9111"
 
     def _send_message(self, prompt, response):
         if hasattr(self, "backend_server_url"):
@@ -101,6 +101,7 @@ class BaseAgent(AgentBase):
         return msg.observation
 
     def script_chat(self, announcement, participants, **kwargs):
+        # TODO: limit the token number of the response
         format_instruction = INSTRUCTION_BEGIN + announcement + INSTRUCTION_END
         profile = ""
         for p in participants:
@@ -173,9 +174,6 @@ class BaseAgent(AgentBase):
             response = self.model(prompt_msg)
 
         self._send_message(prompt_msg, response)
-
-        logger.info(f"prompt: {prompt_content}")
-        logger.info(f"response: {response.text}\n\n")
 
         add_memory_msg = Msg("user", instruction + observation + response.text, role="user")
         if not hasattr(x, "no_memory"):

@@ -6,7 +6,6 @@ from jinja2 import Environment, FileSystemLoader
 
 from agentscope.models import ModelResponse
 from agentscope.message import Msg
-from agentscope.message import Msg
 
 from simulation.memory.short_long_memory import ShortLongMemory
 from simulation.helpers.utils import get_memory_until_limit
@@ -44,7 +43,7 @@ class ShortLongReflectionMemory(ShortLongMemory):
         msg = Msg(
             "user",
             Template.get_topics_of_reflection_prompt(
-                get_memory_until_limit([x for x in self.ltm_memory[-last_k:]])
+                get_memory_until_limit([x for x in self.ltm_memory[-last_k:]], limit=3000)
             ),
             role="user",
         )
@@ -68,7 +67,7 @@ class ShortLongReflectionMemory(ShortLongMemory):
 
     def _get_insights_on_topic(self, topic: Msg) -> List[str]:
         retrieved_memories = self.get_ltm_memory(topic)
-        limited_retrieved_memories = get_memory_until_limit([x for x in retrieved_memories], topic.content, 5000)
+        limited_retrieved_memories = get_memory_until_limit([x for x in retrieved_memories], topic.content, 3000)
         memory_contents = [x.content for x in limited_retrieved_memories]
         msg = Msg(
             "user",
