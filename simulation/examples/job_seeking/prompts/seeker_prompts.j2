@@ -64,7 +64,7 @@ The jobs you have currently searched is as follows:
 {% macro make_choice_observation(actions) %}
 Please make a choice from the actions below (output the index, e.g., 0):
 {% for action in actions %}
-    {{loop.index0}} {{action}}
+    ({{loop.index0}}) {{action}}
 {% endfor %}
 Answer:
 {% endmacro %}

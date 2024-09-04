@@ -19,7 +19,6 @@ if [ -f "llmtuning/saves/adapter_config.json" ]; then
         --model /data/pretrain_dir/Meta-Llama-3-8B-Instruct \
         --trust-remote-code \
         --port $port \
-        --api-key tangjiakai \
         --dtype auto \
         --pipeline-parallel-size 1 \
         --enforce-eager \
@@ -32,7 +31,6 @@ else
         --model /data/pretrain_dir/Meta-Llama-3-8B-Instruct \
         --trust-remote-code \
         --port $port \
-        --api-key tangjiakai \
         --dtype auto \
         --pipeline-parallel-size 1 \
         --enforce-eager \

@@ -251,10 +251,7 @@ class SeekerAgent(BaseAgent):
         self._update_profile()
 
         for agent_id, agent in offer_interviewer_agent_infos.items():
-            results.append(agent.receive_notification(self.seeker.name, agent_id == response))
-
-        for result in results:
-            result.result()
+            agent.receive_notification(self.seeker.name, agent_id == response)
 
         return response
 

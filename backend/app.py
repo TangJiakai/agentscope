@@ -754,9 +754,10 @@ async def read_root():
 
 
 @app.post("/store_message")
-async def store_message(save_data_path: str = Body(..., embed=True)):
+def store_message(save_data_path: str = Body(..., embed=True)):
     data = [x.model_dump() for x in message_manager.messages]
     with open(save_data_path, "w") as f:
-        await json.dump(data, f, indent=4)
+        json.dump(data, f, indent=4)
     message_manager.clear()
+    logger.info(f"Store message to {save_data_path}")
     return {"status": "success"}
