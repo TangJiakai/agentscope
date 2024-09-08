@@ -1,5 +1,6 @@
 from datetime import timedelta
 import math
+import math
 import os
 import random
 import sys
@@ -81,6 +82,9 @@ class Simulator:
         model_configs = load_json(
             os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
         )
+        model_configs = load_json(
+            os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
+        )
         seeker_configs = load_json(
             os.path.join(scene_path, CONFIG_DIR, SEEKER_AGENT_CONFIG)
         )
@@ -89,7 +93,6 @@ class Simulator:
         )
         memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
         memory_config["args"]["embedding_size"] = get_embedding_dimension(self.config["embedding_api"])
-        memory_config["args"]
         
         llm_num = len(model_configs)
         agent_num = len(seeker_configs) + len(interviewer_configs)
@@ -247,6 +250,13 @@ class Simulator:
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 
+        # message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
+        # resp = requests.post(
+        #     "http://localhost:9000/store_message",
+        #     json={
+        #         "save_data_path": message_save_path,
+        #     }
+        # )
         # message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
         # resp = requests.post(
         #     "http://localhost:9000/store_message",

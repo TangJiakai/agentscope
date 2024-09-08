@@ -1,5 +1,6 @@
 import requests
 import time
+import time
 
 def get_embedding(sentence, api, delay=5):
     url = f"{api}/encode"
@@ -18,6 +19,7 @@ def get_embedding(sentence, api, delay=5):
             raise RuntimeError(f"Request failed with error: {e}, Sentence: {sentence}, URL: {url}")
 
 
+def get_embedding_dimension(api, delay=5):
 def get_embedding_dimension(api, delay=5):
     url = f"{api}/embedding-dimension"
     attempt = 0
