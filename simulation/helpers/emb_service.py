@@ -1,6 +1,5 @@
 import requests
 import time
-import time
 
 def get_embedding(sentence, api, delay=5):
     url = f"{api}/encode"

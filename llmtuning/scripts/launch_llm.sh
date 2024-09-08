@@ -30,7 +30,6 @@ if [ -f "llmtuning/saves/adapter_config.json" ]; then
         --model /mnt/jiakai/Download/Meta-Llama-3-8B-Instruct \
         --trust-remote-code \
         --port $port \
-        --port $port \
         --api-key tangjiakai \
         --dtype auto \
         --pipeline-parallel-size 1 \
@@ -45,7 +44,6 @@ else
         --model /mnt/jiakai/Download/Meta-Llama-3-8B-Instruct \
         --trust-remote-code \
         --port $port \
-        --port $port \
         --api-key tangjiakai \
         --dtype auto \
         --pipeline-parallel-size 1 \
@@ -56,7 +54,6 @@ else
         2>> "${script_dir}/error.log" &
 fi
 
-echo $! >> "$(dirname "$0")/.pid"
 echo $! >> "$(dirname "$0")/.pid"
 
 sleep 10
