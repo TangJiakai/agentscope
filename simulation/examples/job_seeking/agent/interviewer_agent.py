@@ -101,6 +101,9 @@ class InterviewerAgent(BaseAgent):
         self.memory = setup_memory(memory_config)
         self.memory.model = self.model
         self.memory.embedding_api = embedding_api
+
+        self.memory.get_tokennum_func = self.get_tokennum_func
+
         self.job = Job(name=name, jd=jd, jr=jr, company=company, salary=salary, benefits=benefits, location=location)
         self.embedding = embedding
         self.env = env
@@ -130,6 +133,7 @@ class InterviewerAgent(BaseAgent):
         #         logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
 
     def get_attr(self, attr):
+        logger.info(f"Getting attribute: {attr}")
         if attr == "job":
             job = {
                 "Position Name": self.job.name,
@@ -143,6 +147,7 @@ class InterviewerAgent(BaseAgent):
             return job
         return super().get_attr(attr)
 
+    @async_func
     @set_state("screening cv")
     def screening_cv(self, seeker_info: str):
         msg = get_assistant_msg()
@@ -153,6 +158,7 @@ class InterviewerAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg).content)]
         return response
 
+    @async_func
     @set_state("interviewing")
     def interview(self, dialog: str):
         instruction = Template.interview_closing_instruction()
@@ -165,6 +171,7 @@ class InterviewerAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg).content)]
         return response
 
+    @async_func
     @set_state("receiving notification")
     def receive_notification(self, seeker_name: str, is_accept: bool, **kwargs):
         self.observe(

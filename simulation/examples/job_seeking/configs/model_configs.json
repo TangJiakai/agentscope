@@ -2,7 +2,7 @@
     {
         "config_name": "Llama3",
         "model_type": "openai_chat",
-        "model_name": "/data/pretrain_dir/Meta-Llama-3-8B-Instruct",
+        "model_name": "/mnt/jiakai/Download/Meta-Llama-3-8B-Instruct",
         "api_key": "tangjiakai",
         "client_args": {
             "max_retries": 100,

@@ -99167,6 +99167,7 @@
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 13020
+            "port": 13020
         }
     }
 ]

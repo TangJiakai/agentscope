@@ -1,3 +1,4 @@
+from functools import partial
 from typing import Any, Optional, Union, Sequence
 from loguru import logger
 import requests
@@ -8,7 +9,7 @@ from agentscope.manager import ModelManager
 from agentscope.rpc import async_func
 
 from simulation.helpers.constants import *
-from simulation.helpers.utils import get_memory_until_limit, get_assistant_msg, setup_memory
+from simulation.helpers.utils import get_memory_until_limit, get_assistant_msg, setup_memory, get_token_num
 
 
 class BaseAgent(AgentBase):
@@ -23,7 +24,13 @@ class BaseAgent(AgentBase):
             model_config_name=model_config_name,
         )
         self._profile = ""
-        self.backend_server_url = "http://localhost:9111"
+        self.get_tokennum_func = partial(
+            get_token_num, 
+            url=self.model.client_args["base_url"].rsplit("/", 1)[0] + "/tokenize",
+            model=self.model.model_name,
+            api_key=self.model.api_key,
+        )
+        # self.backend_server_url = "http://localhost:9111"
 
     def _send_message(self, prompt, response):
         if hasattr(self, "backend_server_url"):
@@ -74,8 +81,13 @@ class BaseAgent(AgentBase):
         setattr(obj, attrs[-1], value)
         return "success"
 
+    @async_func
     def get_attr(self, attr: str):
-        return getattr(self, attr)
+        attrs = attr.split(".")
+        obj = self
+        for attr in attrs:
+            obj = getattr(obj, attr)
+        return obj
 
     def external_interview(self, observation, **kwargs):
         instruction = "You are participating in a simple interview where you need to answer some questions."
@@ -107,13 +119,18 @@ class BaseAgent(AgentBase):
         for p in participants:
             profile += "\n" + p.name + ": " + p.profile
         format_profile = PROFILE_BEGIN + profile + PROFILE_END
+        observation = "The dialogue proceeds as follows:\n"
+
         memory = ""
         for p in participants:
-            memory_msgs = get_memory_until_limit(memory, format_instruction + format_profile + memory)
+            memory_msgs = get_memory_until_limit(
+                memory, 
+                self.get_tokennum_func,
+                format_instruction + format_profile + memory + observation)
             memory_content = "-\n".join([m.content for m in memory_msgs])
             memory += "\n" + p.name + ": " + memory_content
         format_memory = MEMORY_BEGIN + memory + MEMORY_END
-        observation = "The dialogue proceeds as follows:\n"
+
         response = self.model(self.model.format(get_assistant_msg(
             format_instruction + format_profile + format_memory + observation)))
         return response.text
@@ -156,7 +173,11 @@ class BaseAgent(AgentBase):
         memory = self.memory.get_memory(get_assistant_msg(memory_query))
         if memory is not None and len(memory) > 0:
             insert_index = -2 if len(prompt_content) > 1 else -1
-            memory_msgs = get_memory_until_limit(memory, "\n".join(prompt_content))
+            memory_msgs = get_memory_until_limit(
+                memory, 
+                self.get_tokennum_func, 
+                "\n".join(prompt_content)
+            )
             memory_content = "-\n".join([m.content for m in memory_msgs])
             prompt_content.insert(insert_index, MEMORY_BEGIN + memory_content + MEMORY_END)
 

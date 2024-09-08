@@ -1,3 +1,5 @@
+import time
+import requests
 import tiktoken
 import yaml
 import os
@@ -5,6 +7,7 @@ import json
 import importlib
 import os
 import glob
+from loguru import logger
 
 from agentscope.constants import _DEFAULT_CFG_NAME
 from agentscope.manager import FileManager
@@ -75,24 +78,50 @@ def get_assistant_msg(content=None, **kwargs):
     return Msg("assistant", content, role="assistant", **kwargs)
 
 
-def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
-    """Returns the number of tokens in a text string."""
-    encoding = tiktoken.get_encoding(encoding_name)
-    num_tokens = len(encoding.encode(string))
-    return num_tokens
-
-
-def get_memory_until_limit(memory, existing_prompt=None, limit=4000):
+def get_memory_until_limit(memory, get_tokennum_func, existing_prompt=None, limit=6000):
     """
     Get memory until the total length of memory is less than limit
     """
     limited_memory = []
     if existing_prompt:
-        limit -= num_tokens_from_string(existing_prompt)
+        limit -= get_tokennum_func(existing_prompt)
     for m in memory:
-        if num_token:=num_tokens_from_string(m.content) < limit:
+        if num_token:=get_tokennum_func(m.content) < limit:
             limited_memory.append(m)
             limit -= num_token
         else:
             break
     return limited_memory
+
+
+def get_token_num(prompt, url, model, api_key, backoff_factor=1):
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+    data = {
+        "model": model,
+        "prompt": prompt
+    }
+
+    attempt = 0  # 追踪重试次数
+    while True:
+        try:
+            response = requests.post(url, headers=headers, data=json.dumps(data), timeout=60000)
+            
+            # 如果请求成功，返回token长度
+            if response.status_code == 200:
+                response_data = response.json()
+                token_count = response_data.get("count", 0)
+                return token_count
+            else:
+                logger.error(f"Error: {response.status_code}, {response.text}")
+        
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Request failed: {e}")
+        
+        # 增加重试次数并计算退避时间
+        attempt += 1
+        sleep_time = backoff_factor * (2 ** attempt)
+        logger.info(f"Retrying in {sleep_time} seconds...")
+        time.sleep(sleep_time)

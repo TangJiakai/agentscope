@@ -42,6 +42,7 @@ class ShortLongMemory(ShortMemory):
         self.retriever = faiss.IndexFlatL2(embedding_size)
 
         self.model, self.embedding_api = None, None
+        self.get_tokennum_func = None
 
     def _score_memory_importance(self, memory_content: str) -> float:
         msg = Msg("assistant", Template.score_importance_prompt(memory_content), role="assistant")

@@ -1,6 +1,7 @@
 from datetime import timedelta
 import math
 import os
+import random
 import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
@@ -80,6 +81,9 @@ class Simulator:
         model_configs = load_json(
             os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
         )
+        model_configs = load_json(
+            os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
+        )
         seeker_configs = load_json(
             os.path.join(scene_path, CONFIG_DIR, SEEKER_AGENT_CONFIG)
         )
@@ -94,11 +98,14 @@ class Simulator:
         agent_num_per_llm = math.ceil(agent_num / llm_num)
 
         # Prepare agent args
-        for i, config in enumerate(seeker_configs + interviewer_configs):
-            config["args"]["model_config_name"] = model_configs[i//agent_num_per_llm]["config_name"]
+        index_ls = list(range(len(seeker_configs + interviewer_configs)))
+        random.shuffle(index_ls)
+        for config, shuffled_idx in zip(seeker_configs+interviewer_configs, index_ls):
+            model_config = model_configs[shuffled_idx//agent_num_per_llm]
+            config["args"]["model_config_name"] = model_config["config_name"]
             config["args"]["memory_config"] = memory_config
             config["args"]["embedding_api"] = self.config["embedding_api"]
-
+        
         for config in seeker_configs:
             cv = str(config["args"]["cv"])
             config["args"]["embedding"] = get_embedding(
