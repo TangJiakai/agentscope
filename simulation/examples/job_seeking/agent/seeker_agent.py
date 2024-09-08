@@ -1,6 +1,5 @@
 import random
 import os
-import requests
 import jinja2
 from loguru import logger
 
@@ -90,6 +89,8 @@ class SeekerAgent(BaseAgent):
         self.embedding = embedding
         self.env = env
 
+        self.memory.get_tokennum_func = self.get_tokennum_func
+
         self.seeker = Seeker(name, cv, trait)
         self._update_profile()
         self._state = "idle"
@@ -133,7 +134,7 @@ class SeekerAgent(BaseAgent):
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        content = self.reply(msg).content
+        content = self(msg).content
         prompt = Template.parse_value_observation(content, guided_choice)
         reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
         answer = random.choice(guided_choice)
@@ -154,7 +155,7 @@ class SeekerAgent(BaseAgent):
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        content = self.reply(msg).content
+        content = self(msg).content
         prompt = Template.parse_value_observation(content, guided_choice)
         reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
         answer = random.choice(guided_choice)
@@ -171,9 +172,16 @@ class SeekerAgent(BaseAgent):
         )
         search_job_ids = [self.job_ids_pool[i] for i in search_job_indices]
         interviewer_agent_infos = self.env.get_agents_by_ids(search_job_ids)
+
+        # for agent in interviewer_agent_infos.values():
+        #     agent.job = agent.get_attr("job")
+
+        results = []
         for agent in interviewer_agent_infos.values():
-            agent.job = agent.get_attr("job")
-            logger
+            results.append(agent.get_attr("job"))
+
+        for agent, result in zip(interviewer_agent_infos.values(), results):
+            agent.job = result.result()
 
         return interviewer_agent_infos
 
@@ -189,7 +197,7 @@ class SeekerAgent(BaseAgent):
             msg = Msg("user", None, role="user")
             msg.instruction = instruction
             msg.observation = observation
-            content = self.reply(msg).content
+            content = self(msg).content
             prompt = Template.parse_value_observation(content, guided_choice)
             reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
             answer = random.choice(guided_choice)
@@ -206,9 +214,16 @@ class SeekerAgent(BaseAgent):
     @set_state("applying jobs")
     def _apply_job(self, apply_interviewer_agent_infos: dict, **kwargs):
         """Apply jobs."""
+        results = []
         cv_passed_interviewer_agent_infos = {}
         for agent_id, agent in apply_interviewer_agent_infos.items():
-            result = agent.screening_cv(str(self.seeker))
+            results.append(agent.screening_cv(str(self.seeker)))
+
+        for (agent_id, agent), result in zip(
+            apply_interviewer_agent_infos.items(), 
+            results,
+        ):
+            result = result.result()
             if "yes" == result:
                 cv_passed_interviewer_agent_infos[agent_id] = agent
 
@@ -224,12 +239,18 @@ class SeekerAgent(BaseAgent):
     @set_state("interviewing")
     def _interview_fun(self, cv_passed_interviewer_agent_infos: dict, **kwargs):
         """Interview."""
+        results = []
         offer_interviewer_agent_infos = {}
         for agent_id, agent in cv_passed_interviewer_agent_infos.items():
             announcement = Template.interview_announcement_instruction()
             dialog_observation = self.chat(announcement, [self, agent])
             self.observe(get_assistant_msg(announcement + dialog_observation))
-            result = agent.interview(dialog_observation)
+            results.append(agent.interview(dialog_observation))
+
+        for (agent_id, agent), result in zip(
+            cv_passed_interviewer_agent_infos.items(), results
+        ):
+            result = result.result()
             if "yes" == result:
                 offer_interviewer_agent_infos[agent_id] = agent
                 self.observe(
@@ -259,7 +280,7 @@ class SeekerAgent(BaseAgent):
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        content = self.reply(msg).content
+        content = self(msg).content
         prompt = Template.parse_value_observation(content, guided_choice)
         reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
         answer = random.choice(guided_choice)
@@ -274,8 +295,12 @@ class SeekerAgent(BaseAgent):
         )
         self._update_profile()
 
+        results = []
         for agent_id, agent in offer_interviewer_agent_infos.items():
-            agent.receive_notification(self.seeker.name, agent_id == answer)
+            results.append(agent.receive_notification(self.seeker.name, agent_id == answer))
+
+        for result in results:
+            result.result()
 
         return answer
 

@@ -19,7 +19,7 @@ def parse_args() -> argparse.Namespace:
     """Parse arguments"""
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="localhost")
-    parser.add_argument("--base_port", type=int, default=12010)
+    parser.add_argument("--base_port", type=int, default=13000)
     return parser.parse_args()
 
 

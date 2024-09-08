@@ -38,12 +38,17 @@ class ShortLongReflectionMemory(ShortLongMemory):
         self.reflection_threshold = reflection_threshold
         self.reflecting = False
         self.aggregate_importance = 0.0
+        self.get_tokennum_func = None
 
-    def _get_topics_of_reflection(self, last_k: int = 50):
+    def _get_topics_of_reflection(self, last_k: int = 10):
         msg = Msg(
             "user",
             Template.get_topics_of_reflection_prompt(
-                get_memory_until_limit([x for x in self.ltm_memory[-last_k:]], limit=3000)
+                get_memory_until_limit(
+                    [x for x in self.ltm_memory[-last_k:]],
+                    self.get_tokennum_func,
+                    limit=3000
+                )
             ),
             role="user",
         )
@@ -67,7 +72,12 @@ class ShortLongReflectionMemory(ShortLongMemory):
 
     def _get_insights_on_topic(self, topic: Msg) -> List[str]:
         retrieved_memories = self.get_ltm_memory(topic)
-        limited_retrieved_memories = get_memory_until_limit([x for x in retrieved_memories], topic.content, 3000)
+        limited_retrieved_memories = get_memory_until_limit(
+            [x for x in retrieved_memories], 
+            self.get_tokennum_func,
+            topic.content, 
+            3000
+        )
         memory_contents = [x.content for x in limited_retrieved_memories]
         msg = Msg(
             "user",

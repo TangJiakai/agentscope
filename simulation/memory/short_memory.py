@@ -13,6 +13,7 @@ class ShortMemory:
     ) -> None:
         self.stm_K = stm_K
         self.stm_memory = []
+        self.get_tokennum_func = None
 
     def add(self, memory: Union[Sequence[Msg], Msg, None] = None):
         if memory is None: return None

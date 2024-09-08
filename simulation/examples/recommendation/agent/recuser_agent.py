@@ -214,8 +214,11 @@ class RecUserAgent(BaseAgent):
         format_instruction = INSTRUCTION_BEGIN + instruction + INSTRUCTION_END
         format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
         memory = self.memory.get_memory(get_assistant_msg(instruction))
-        memory_msgs = get_memory_until_limit(memory, 
-            format_instruction + format_profile + observation + f"\n{self.name}:")
+        memory_msgs = get_memory_until_limit(
+            memory, 
+            self.get_tokennum_func,
+            format_instruction + format_profile + observation + f"\n{self.name}:"
+        )
         memory_content = "-\n".join([m.content for m in memory_msgs])
         format_memory = MEMORY_BEGIN + memory_content + MEMORY_END
         response = self.model(self.model.format(Msg(

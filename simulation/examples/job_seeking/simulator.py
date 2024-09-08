@@ -1,5 +1,7 @@
 from datetime import timedelta
+import math
 import os
+import random
 import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
@@ -76,6 +78,9 @@ class Simulator:
 
     def _init_agents(self):
         # Load configs
+        model_configs = load_json(
+            os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
+        )
         seeker_configs = load_json(
             os.path.join(scene_path, CONFIG_DIR, SEEKER_AGENT_CONFIG)
         )
@@ -83,15 +88,22 @@ class Simulator:
             os.path.join(scene_path, CONFIG_DIR, INTERVIEWER_AGENT_CONFIG)
         )
         memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
+        memory_config["args"]["embedding_size"] = get_embedding_dimension(self.config["embedding_api"])
+        memory_config["args"]
+        
+        llm_num = len(model_configs)
+        agent_num = len(seeker_configs) + len(interviewer_configs)
+        agent_num_per_llm = math.ceil(agent_num / llm_num)
 
         # Prepare agent args
-        for config in seeker_configs + interviewer_configs:
-            memory_config["args"]["embedding_size"] = get_embedding_dimension(
-                self.config["embedding_api"]
-            )
+        index_ls = list(range(len(seeker_configs + interviewer_configs)))
+        random.shuffle(index_ls)
+        for config, shuffled_idx in zip(seeker_configs+interviewer_configs, index_ls):
+            model_config = model_configs[shuffled_idx//agent_num_per_llm]
+            config["args"]["model_config_name"] = model_config["config_name"]
             config["args"]["memory_config"] = memory_config
             config["args"]["embedding_api"] = self.config["embedding_api"]
-
+        
         for config in seeker_configs:
             cv = str(config["args"]["cv"])
             config["args"]["embedding"] = get_embedding(
@@ -235,13 +247,13 @@ class Simulator:
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 
-        message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
-        resp = requests.post(
-            "http://localhost:9000/store_message",
-            json={
-                "save_data_path": message_save_path,
-            }
-        )
+        # message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
+        # resp = requests.post(
+        #     "http://localhost:9000/store_message",
+        #     json={
+        #         "save_data_path": message_save_path,
+        #     }
+        # )
 
     def load(file_path):
         with open(file_path, "rb") as f:
