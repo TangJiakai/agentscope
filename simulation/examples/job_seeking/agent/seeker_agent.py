@@ -134,7 +134,7 @@ class SeekerAgent(BaseAgent):
         msg.instruction = instruction
         msg.observation = observation
         msg.selection_num = len(guided_choice)
-        response = guided_choice[int(self.reply(msg)["content"])]
+        response = guided_choice[int(self.reply(msg).content)]
         return response
 
     @set_state("determining search job number")
@@ -149,7 +149,7 @@ class SeekerAgent(BaseAgent):
         msg.instruction = instruction
         msg.observation = observation
         msg.selection_num = len(guided_choice)
-        response = guided_choice[int(self.reply(msg)["content"])]
+        response = guided_choice[int(self.reply(msg).content)]
         return int(response)
 
     @set_state("determining search jobs")
@@ -178,7 +178,7 @@ class SeekerAgent(BaseAgent):
             msg.instruction = instruction
             msg.observation = observation
             msg.selection_num = len(guided_choice)
-            response = guided_choice[int(self.reply(msg)["content"])]
+            response = guided_choice[int(self.reply(msg).content)]
 
             if response == "yes":
                 apply_interviewer_agent_infos[job_id] = agent
@@ -242,7 +242,7 @@ class SeekerAgent(BaseAgent):
         msg.instruction = instruction
         msg.observation = observation
         msg.selection_num = len(guided_choice)
-        response = guided_choice[int(self.reply(msg)["content"])]
+        response = guided_choice[int(self.reply(msg).content)]
 
         final_job = offer_interviewer_agent_infos[response].job
         self.seeker.working_condition = (
@@ -259,7 +259,7 @@ class SeekerAgent(BaseAgent):
     def run(self, **kwargs):
         if self.seeker.working_condition != "unemployed":
             if "no" in self._determine_if_seeking():
-                return
+                return "Done"
 
         search_job_number = self._determine_search_job_number()
         logger.info(f"Search job number: {search_job_number}")

@@ -95,9 +95,9 @@ class ShortLongReflectionMemory(ShortLongMemory):
     def pause_to_reflect(self):
         topics = self._get_topics_of_reflection()
         for topic in topics:
-            insights = self._get_insights_on_topic(Msg("user", topic, role="user"))
+            insights = self._get_insights_on_topic(Msg("assistant", topic, role="assistant"))
             for insight in insights:
-                self.add_ltm_memory(Msg("user", insight, role="user"))
+                self.add_ltm_memory(Msg("assistant", insight, role="assistant"))
 
     def add(self, memory: Union[Sequence[Msg], Msg, None] = None):
         if memory is None: return

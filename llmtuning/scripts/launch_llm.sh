@@ -25,6 +25,7 @@ if [ -f "llmtuning/saves/adapter_config.json" ]; then
         --enable-prefix-caching \
         --enable-lora \
         --lora-modules lora=llmtuning/saves \
+        --disable-frontend-multiprocessing \
         2>> "${script_dir}/error.log" &
 else
     python -m vllm.entrypoints.openai.api_server \
@@ -36,6 +37,7 @@ else
         --enforce-eager \
         --enable-prefix-caching \
         --enable-lora \
+        --disable-frontend-multiprocessing \
         2>> "${script_dir}/error.log" &
 fi
 

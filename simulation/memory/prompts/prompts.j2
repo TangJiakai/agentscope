@@ -1,7 +1,6 @@
 {% macro score_importance_prompt(memory_content) %}
-On the scale of 1 to 10, where 1 is purely mundane  (e.g., brushing teeth, making bed) and 10 is extremely poignant (e.g., a break up, college acceptance), rate the likely poignancy of the following piece of memory. Always answer with only a list of numbers.
-If just given one memory still respond in a list. Memories are separated by semi colans (;)
-Memories: {{ memory_content }}
+On the scale of 1 to 10, where 1 is purely mundane  (e.g., brushing teeth, making bed) and 10 is extremely poignant (e.g., a break up, college acceptance), rate the likely poignancy of the following piece of memory. Always answer with only a number.
+Memory: {{ memory_content }}
 Rating: 
 {% endmacro %}
 

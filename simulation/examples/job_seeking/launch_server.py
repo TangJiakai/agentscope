@@ -37,7 +37,7 @@ def setup_participant_agent_server(host: str, port: int) -> None:
     assistant_server_launcher = RpcAgentServerLauncher(
         host=host,
         port=port,
-        pool_type="redis",
+        # pool_type="redis",
         max_pool_size=1638400000000,
         max_timeout_seconds=1000000000000,
     )

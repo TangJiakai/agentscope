@@ -154,7 +154,7 @@ class BaseAgent(AgentBase):
             prompt_content.append(x.content)
 
         memory = self.memory.get_memory(get_assistant_msg(memory_query))
-        if len(memory) > 0:
+        if memory is not None and len(memory) > 0:
             insert_index = -2 if len(prompt_content) > 1 else -1
             memory_msgs = get_memory_until_limit(memory, "\n".join(prompt_content))
             memory_content = "-\n".join([m.content for m in memory_msgs])

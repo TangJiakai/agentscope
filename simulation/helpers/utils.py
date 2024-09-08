@@ -82,7 +82,7 @@ def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> i
     return num_tokens
 
 
-def get_memory_until_limit(memory, existing_prompt=None, limit=6000):
+def get_memory_until_limit(memory, existing_prompt=None, limit=4000):
     """
     Get memory until the total length of memory is less than limit
     """

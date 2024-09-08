@@ -1,9 +1,6 @@
 import os
-import requests
 from typing import List
 from jinja2 import Environment, FileSystemLoader
-import random
-from loguru import logger
 
 from agentscope.rpc import async_func
 
@@ -153,7 +150,7 @@ class InterviewerAgent(BaseAgent):
         guided_choice = ["yes", "no"]
         msg.observation = Template.screening_cv_observation(seeker_info, guided_choice)
         msg.selection_num = len(guided_choice)
-        response = guided_choice[int(self.reply(msg)["content"])]
+        response = guided_choice[int(self.reply(msg).content)]
         return response
 
     @set_state("interviewing")
@@ -165,7 +162,7 @@ class InterviewerAgent(BaseAgent):
         msg.instruction = instruction
         msg.observation = observation
         msg.selection_num = len(guided_choice)
-        response = guided_choice[int(self.reply(msg)["content"])]
+        response = guided_choice[int(self.reply(msg).content)]
         return response
 
     @set_state("receiving notification")
@@ -175,7 +172,7 @@ class InterviewerAgent(BaseAgent):
                 Template.receive_notification_observation(seeker_name, is_accept)
             )
         )
-        return get_assistant_msg("sucesss")
+        return "success"
 
     @async_func
     def run(self, **kwargs):

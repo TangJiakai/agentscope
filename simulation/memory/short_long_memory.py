@@ -8,6 +8,7 @@ from typing import Optional
 import math
 import faiss
 import numpy as np
+from loguru import logger
 
 from agentscope.models import ModelResponse
 from agentscope.message import Msg
@@ -43,7 +44,7 @@ class ShortLongMemory(ShortMemory):
         self.model, self.embedding_api = None, None
 
     def _score_memory_importance(self, memory_content: str) -> float:
-        msg = Msg("user", Template.score_importance_prompt(memory_content), role="user")
+        msg = Msg("assistant", Template.score_importance_prompt(memory_content), role="assistant")
         prompt = self.model.format(msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
@@ -59,7 +60,6 @@ class ShortLongMemory(ShortMemory):
                     f"Invalid response format in parse_func "
                     f"with response: {response.text}",
                 )
-
         response = self.model(prompt, parse_func=parse_func).raw
         return response
 

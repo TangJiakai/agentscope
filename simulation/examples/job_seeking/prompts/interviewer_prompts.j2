@@ -46,18 +46,18 @@ The information of the job seeker is as follows:
 {% macro make_interview_decision_observation(dialog, actions) %}
 The interview is over.
 The conversation is as follows:
-{{dialog}}
+{{ dialog }}
 
 You need to make a final decision based on the interview.
 {{ make_choice_observation(actions) }}
 {% endmacro %}
 
 
-2{% macro receive_notification_observation(seeker_name, is_accept) %}
+{% macro receive_notification_observation(seeker_name, is_accept) %}
 Job seeker {{seeker_name}} chose to
 {% if is_accept %}
-{{seeker_name}} accept the offer.
+{{ seeker_name }} accept the offer.
 {% else %}
-{{seeker_name}} reject the offer.
+{{ seeker_name }} reject the offer.
 {% endif %}
 {% endmacro %}

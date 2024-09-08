@@ -155,7 +155,7 @@ class RecUserAgent(BaseAgent):
         msg.instruction = instruction
         msg.observation = observation
         msg.selection_num = len(guided_choice)
-        response = guided_choice[int(self.reply(msg)["content"])]
+        response = guided_choice[int(self.reply(msg).content)]
         action = response.split(":")[0]
 
         logger.info(f"[{self.name}] rated {action} for movie {movie}")
@@ -173,7 +173,7 @@ class RecUserAgent(BaseAgent):
         msg.instruction = instruction
         msg.observation = observation
         msg.selection_num = len(guided_choice)
-        response = guided_choice[int(self.reply(msg)["content"])]['title']
+        response = guided_choice[int(self.reply(msg).content)]['title']
 
         logger.info(f"[{self.name}] selected movie {response}")
 
@@ -240,7 +240,7 @@ class RecUserAgent(BaseAgent):
         msg.observation = observation
         msg.selection_num = len(guided_choice)
         
-        response = guided_choice[int(self.reply(msg)["content"])]
+        response = guided_choice[int(self.reply(msg).content)]
         action = response.split(":")[0].strip().lower()
         getattr(self, action)()
         
