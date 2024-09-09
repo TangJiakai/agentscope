@@ -22,6 +22,8 @@ for ((i=0; i<server_num_per_host; i++)); do
     echo "Started agent server on localhost:${port} with PID $!"
 done
 
+sleep 10
+
 echo "All servers started."
 
 python "${script_dir}/assign_host_port.py" --base_port ${base_port} --server_num_per_host ${server_num_per_host}

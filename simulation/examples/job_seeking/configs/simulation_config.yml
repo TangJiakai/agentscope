@@ -3,12 +3,11 @@ model_configs_path: model_configs.json
 project_name: job_seeking
 round_n: 1
 save_dir: 
-embedding_api: http://localhost:8001
-tokenize_api: http://localhost:8084/tokenize
+embedding_api: http://localhost:8666
 load_simulator_path: 
 host: localhost
 base_port: 13000
-server_num_per_host: 60
+server_num_per_host: 200
 
 # custom settings
 seeker_agent_configs_path: seeker_agent_configs.json
