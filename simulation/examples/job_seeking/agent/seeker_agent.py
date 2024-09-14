@@ -85,6 +85,7 @@ class SeekerAgent(BaseAgent):
         self.memory = setup_memory(memory_config)
         self.memory.embedding_api = embedding_api
         self.memory.model = self.model
+        self.memory._send_message = self._send_message
         self.job_ids_pool = job_ids_pool
         self.embedding = embedding
         self.env = env
@@ -129,7 +130,7 @@ class SeekerAgent(BaseAgent):
     @set_state("determining if seeking")
     def _determine_if_seeking(self, **kwargs):
         instruction = Template.determine_if_seeking_instruction()
-        guided_choice = ["yes", "no"]
+        guided_choice = ["no", "yes"]
         observation = Template.make_choice_observation(guided_choice)
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
@@ -178,7 +179,7 @@ class SeekerAgent(BaseAgent):
         """Determine which jobs to apply."""
         instruction = Template.determine_apply_jobs_instruction()
         apply_interviewer_agent_infos = {}
-        guided_choice = ["yes", "no"]
+        guided_choice = ["no", "yes"]
         for job_id, agent in interviewer_agent_infos.items():
             job_info = agent.job
             observation = Template.determine_apply_jobs_observation(job_info, guided_choice)

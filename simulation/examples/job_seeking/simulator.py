@@ -182,26 +182,33 @@ class Simulator:
             for task in tasks:
                 interviewer_agents.append(task.result())
 
+        logger.info("searching for job_ids_pool")
         index = faiss.IndexFlatL2(get_embedding_dimension(self.config["embedding_api"]))
         index.add(
             np.array([config["args"]["embedding"] for config in interviewer_configs])
         )
+        embeddings = np.array([config["args"]["embedding"] for config in seeker_configs])
+        _, job_index = index.search(embeddings, self.config["pool_size"])
+        for config, index in zip(seeker_configs, job_index):
+            config["args"]["job_ids_pool"] = [
+                interviewer_agents[i].agent_id for i in list(index)
+            ]
 
-        tasks = []
-        with futures.ThreadPoolExecutor() as executor:
-            for config in seeker_configs:
-                tasks.append(
-                    executor.submit(
-                        index.search,
-                        np.array([config["args"]["embedding"]]),
-                        self.config["pool_size"],
-                    ),
-                )
-            for config, task in zip(seeker_configs, tasks):
-                _, job_index = task.result()
-                config["args"]["job_ids_pool"] = [
-                    interviewer_agents[index].agent_id for index in list(job_index[0])
-                ]
+        # tasks = []
+        # with futures.ThreadPoolExecutor() as executor:
+        #     for config in seeker_configs:
+        #         tasks.append(
+        #             executor.submit(
+        #                 index.search,
+        #                 np.array([config["args"]["embedding"]]),
+        #                 self.config["pool_size"],
+        #             ),
+        #         )
+        #     for config, task in zip(seeker_configs, tasks):
+        #         _, job_index = task.result()
+        #         config["args"]["job_ids_pool"] = [
+        #             interviewer_agents[index].agent_id for index in list(job_index[0])
+        #         ]
 
         results = []
         for agent, config in zip(seeker_agents, seeker_configs):
@@ -249,13 +256,13 @@ class Simulator:
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 
-        # message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
-        # resp = requests.post(
-        #     "http://localhost:9111/store_message",
-        #     json={
-        #         "save_data_path": message_save_path,
-        #     }
-        # )
+        message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
+        resp = requests.post(
+            "http://localhost:9111/store_message",
+            json={
+                "save_data_path": message_save_path,
+            }
+        )
 
     def load(file_path):
         with open(file_path, "rb") as f:

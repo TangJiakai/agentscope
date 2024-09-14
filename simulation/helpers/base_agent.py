@@ -30,9 +30,9 @@ class BaseAgent(AgentBase):
             model=self.model.model_name,
             api_key=self.model.api_key,
         )
-        # self.backend_server_url = "http://localhost:9111"
+        self.backend_server_url = "http://localhost:9111"
 
-    def _send_message(self, prompt, response):
+    def _send_message(self, prompt, response, selection_num=None):
         if hasattr(self, "backend_server_url"):
             url = f"{self.backend_server_url}/api/message"
             resp = requests.post(
@@ -43,6 +43,7 @@ class BaseAgent(AgentBase):
                     "completion": response.text,
                     "agent_type": type(self).__name__,
                     "agent_id": self.agent_id,
+                    "selection_num": selection_num,
                 },
             )
             if resp.status_code != 200:
@@ -191,10 +192,10 @@ class BaseAgent(AgentBase):
 
         if hasattr(x, "selection_num"):
             response = self.model(prompt_msg, extra_body={"selection_num": x.selection_num})
+            self._send_message(prompt_msg, response, x.selection_num)
         else:
             response = self.model(prompt_msg)
-
-        self._send_message(prompt_msg, response)
+            self._send_message(prompt_msg, response)
 
         add_memory_msg = Msg("user", instruction + observation + response.text, role="user")
         if not hasattr(x, "no_memory"):

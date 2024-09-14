@@ -56,6 +56,8 @@ class ShortLongReflectionMemory(ShortLongMemory):
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             try:
+                if hasattr(self, "_send_message"):
+                    self._send_message(prompt, response)
                 text = response.text
                 lines = re.split(r"\n", text.strip())
                 lines = [line for line in lines if line.strip()]  # remove empty lines
@@ -88,6 +90,8 @@ class ShortLongReflectionMemory(ShortLongMemory):
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             try:
+                if hasattr(self, "_send_message"):
+                    self._send_message(prompt, response)
                 text = response.text
                 lines = re.split(r"\n", text.strip())
                 lines = [line for line in lines if line.strip()]  # remove empty lines

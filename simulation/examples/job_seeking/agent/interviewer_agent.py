@@ -101,6 +101,7 @@ class InterviewerAgent(BaseAgent):
         self.memory = setup_memory(memory_config)
         self.memory.model = self.model
         self.memory.embedding_api = embedding_api
+        self.memory._send_message = self._send_message
 
         self.memory.get_tokennum_func = self.get_tokennum_func
 
@@ -152,7 +153,7 @@ class InterviewerAgent(BaseAgent):
     def screening_cv(self, seeker_info: str):
         msg = get_assistant_msg()
         msg.instruction = Template.screening_cv_instruction()
-        guided_choice = ["yes", "no"]
+        guided_choice = ["no", "yes"]
         msg.observation = Template.screening_cv_observation(seeker_info, guided_choice)
         msg.selection_num = len(guided_choice)
         response = guided_choice[int(self.reply(msg).content)]
@@ -162,7 +163,7 @@ class InterviewerAgent(BaseAgent):
     @set_state("interviewing")
     def interview(self, dialog: str):
         instruction = Template.interview_closing_instruction()
-        guided_choice = ["yes", "no"]
+        guided_choice = ["no", "yes"]
         observation = Template.make_interview_decision_observation(dialog, guided_choice)
         msg = get_assistant_msg()
         msg.instruction = instruction
