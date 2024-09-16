@@ -10,10 +10,7 @@ directory = "simulation/examples/recommendation/configs"
 meta_data_path = "all_recuser_agent_configs.json"
 
 scale_map = {
-    "1K": 1,
-    "10K": 10,
-    "100K": 100,
-    "1M": 1000,
+    "200K": 1,
 }
 
 

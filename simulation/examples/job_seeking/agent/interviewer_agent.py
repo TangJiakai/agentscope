@@ -134,7 +134,6 @@ class InterviewerAgent(BaseAgent):
         #         logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
 
     def get_attr(self, attr):
-        logger.info(f"Getting attribute: {attr}")
         if attr == "job":
             job = {
                 "Position Name": self.job.name,
@@ -155,7 +154,7 @@ class InterviewerAgent(BaseAgent):
         msg.instruction = Template.screening_cv_instruction()
         guided_choice = ["no", "yes"]
         msg.observation = Template.screening_cv_observation(seeker_info, guided_choice)
-        msg.selection_num = len(guided_choice)
+        msg.guided_choice = list(map(str, range(len(guided_choice))))
         response = guided_choice[int(self.reply(msg).content)]
         return response
 
@@ -168,7 +167,7 @@ class InterviewerAgent(BaseAgent):
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        msg.selection_num = len(guided_choice)
+        msg.guided_choice = list(map(str, range(len(guided_choice))))
         response = guided_choice[int(self.reply(msg).content)]
         return response
 

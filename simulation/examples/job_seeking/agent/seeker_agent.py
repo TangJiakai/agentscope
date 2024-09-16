@@ -135,7 +135,7 @@ class SeekerAgent(BaseAgent):
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        msg.selection_num = len(guided_choice)
+        msg.guided_choice = list(map(str, range(len(guided_choice))))
         response = guided_choice[int(self.reply(msg).content)]
         return response
 
@@ -150,7 +150,7 @@ class SeekerAgent(BaseAgent):
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        msg.selection_num = len(guided_choice)
+        msg.guided_choice = list(map(str, range(len(guided_choice))))
         response = guided_choice[int(self.reply(msg).content)]
         return int(response)
 
@@ -186,7 +186,7 @@ class SeekerAgent(BaseAgent):
             msg = Msg("user", None, role="user")
             msg.instruction = instruction
             msg.observation = observation
-            msg.selection_num = len(guided_choice)
+            msg.guided_choice = list(map(str, range(len(guided_choice))))
             response = guided_choice[int(self.reply(msg).content)]
 
             if response == "yes":
@@ -255,6 +255,16 @@ class SeekerAgent(BaseAgent):
         """Make decision."""
         if len(offer_interviewer_agent_infos) == 0:
             return -1
+        
+        if len(offer_interviewer_agent_infos) == 1:
+            agent = list(offer_interviewer_agent_infos.values())[0]
+            final_job = agent.job
+            self.seeker.working_condition = (
+                "Position Name: " + final_job["Position Name"]
+            )
+            self._update_profile()
+            agent.receive_notification(self.seeker.name, True)
+            return list(offer_interviewer_agent_infos.keys())[0]
 
         instruction = Template.make_final_decision_instruction()
         jobs = {agent.agent_id: agent.job for agent in offer_interviewer_agent_infos.values()}
@@ -263,7 +273,7 @@ class SeekerAgent(BaseAgent):
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        msg.selection_num = len(guided_choice)
+        msg.guided_choice = list(map(str, range(len(guided_choice))))
         response = guided_choice[int(self.reply(msg).content)]
 
         final_job = offer_interviewer_agent_infos[response].job
@@ -272,7 +282,7 @@ class SeekerAgent(BaseAgent):
         )
         self._update_profile()
 
-        results = []
+        # results = []
         for agent_id, agent in offer_interviewer_agent_infos.items():
             agent.receive_notification(self.seeker.name, agent_id == response)
 

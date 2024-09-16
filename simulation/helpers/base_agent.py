@@ -190,9 +190,9 @@ class BaseAgent(AgentBase):
             role="user"
         ))
 
-        if hasattr(x, "selection_num"):
-            response = self.model(prompt_msg, extra_body={"selection_num": x.selection_num})
-            self._send_message(prompt_msg, response, x.selection_num)
+        if hasattr(x, "guided_choice"):
+            response = self.model(prompt_msg, extra_body={"guided_choice": x.guided_choice})
+            self._send_message(prompt_msg, response, len(x.guided_choice))
         else:
             response = self.model(prompt_msg)
             self._send_message(prompt_msg, response)
