@@ -1,5 +1,24 @@
 # General Simulation
 ## Pre-requisites
+### 0. Install Dependencies
+**Agentscope**:
+Install from source code (https://github.com/pan-x-c/AgentScope/tree/feature/pxc/env). 
+    
+- Modify the default function parameter `timeout` of `call_agent_func` in `src.agentscope.rpc.rpc_client.py` to 60000.
+- Add two lines of code:
+    ```python
+    self.api_key = api_key
+    self.client_args = client_args or {}
+    ```
+In the ``__init__`` function of `OpenAIWrapperBase` in the file `src/agentscope/models/openai_model.py`.
+
+
+**vllm**
+```bash
+pip install vllm
+```
+
+
 ### 1. Launch Embedding Model
 1. [optional] Run 
 ```python
