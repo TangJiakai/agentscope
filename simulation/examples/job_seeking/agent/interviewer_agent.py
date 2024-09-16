@@ -147,7 +147,6 @@ class InterviewerAgent(BaseAgent):
             return job
         return super().get_attr(attr)
 
-    @async_func
     @set_state("screening cv")
     def screening_cv(self, seeker_info: str):
         msg = get_assistant_msg()
@@ -158,7 +157,6 @@ class InterviewerAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg).content)]
         return response
 
-    @async_func
     @set_state("interviewing")
     def interview(self, dialog: str):
         instruction = Template.interview_closing_instruction()
@@ -171,7 +169,6 @@ class InterviewerAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg).content)]
         return response
 
-    @async_func
     @set_state("receiving notification")
     def receive_notification(self, seeker_name: str, is_accept: bool, **kwargs):
         self.observe(

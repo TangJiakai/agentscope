@@ -82,7 +82,6 @@ class BaseAgent(AgentBase):
         setattr(obj, attrs[-1], value)
         return "success"
 
-    @async_func
     def get_attr(self, attr: str):
         attrs = attr.split(".")
         obj = self
