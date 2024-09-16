@@ -9,15 +9,6 @@ port=$1
 gpuid=${2:-0}
 export CUDA_VISIBLE_DEVICES="$gpuid"
 
-if [ -z "\$1" ]; then
-    echo "usage: $0 <port> [gpu_id]"
-    exit 1
-fi
-
-port=$1
-gpuid=${2:-0}
-export CUDA_VISIBLE_DEVICES="$gpuid"
-
 echo "GPU ID: $CUDA_VISIBLE_DEVICES"
 echo "Port: $port"
 
