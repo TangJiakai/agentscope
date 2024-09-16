@@ -12,11 +12,11 @@ to launch the embedding model server.
 ### 2. Launch LLM Model
 1. [optional] Run 
 ```bash
-bash llmtuning/scripts/launch_llm.sh
+bash llm/launch_llm.sh
 ```
 to launch the LLM model server.
 
-2. Get the `base_url` (for example, [http://localhost:8000/](http://localhost:8083/v1)), and fill that URL into `simulation/examples/job_seeking/configs/model_configs.json`.
+2. Get the `base_url` (for example, [http://localhost:8000/](http://localhost:8083/v1)), and fill that URL into `simulation/examples/job_seeking/configs/model_configs.json`. You can set multiply LLM models.
 
 ### 3. Config
 Configure the following files in the configs directory of the specific scenario (e.g., `examples/job_seeking`):

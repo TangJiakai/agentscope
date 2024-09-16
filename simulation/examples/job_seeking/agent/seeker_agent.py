@@ -162,15 +162,8 @@ class SeekerAgent(BaseAgent):
         search_job_ids = [self.job_ids_pool[i] for i in search_job_indices]
         interviewer_agent_infos = self.env.get_agents_by_ids(search_job_ids)
 
-        # for agent in interviewer_agent_infos.values():
-        #     agent.job = agent.get_attr("job")
-
-        results = []
         for agent in interviewer_agent_infos.values():
-            results.append(agent.get_attr("job"))
-
-        for agent, result in zip(interviewer_agent_infos.values(), results):
-            agent.job = result.result()
+            agent.job = agent.get_attr("job")
 
         return interviewer_agent_infos
 
@@ -206,7 +199,6 @@ class SeekerAgent(BaseAgent):
             apply_interviewer_agent_infos.items(), 
             results,
         ):
-            result = result.result()
             if "yes" == result:
                 cv_passed_interviewer_agent_infos[agent_id] = agent
 
@@ -233,7 +225,6 @@ class SeekerAgent(BaseAgent):
         for (agent_id, agent), result in zip(
             cv_passed_interviewer_agent_infos.items(), results
         ):
-            result = result.result()
             if "yes" == result:
                 offer_interviewer_agent_infos[agent_id] = agent
                 self.observe(
