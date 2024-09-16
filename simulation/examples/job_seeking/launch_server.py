@@ -38,8 +38,8 @@ def setup_participant_agent_server(host: str, port: int) -> None:
         host=host,
         port=port,
         # pool_type="redis",
-        max_pool_size=1638400000000,
-        max_timeout_seconds=1000000000000,
+        max_pool_size=8192000000,
+        max_expire_time=7200000,
     )
     assistant_server_launcher.launch(in_subprocess=False)
     assistant_server_launcher.wait_until_terminate()
