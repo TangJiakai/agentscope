@@ -81,9 +81,6 @@ class Simulator:
         model_configs = load_json(
             os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
         )
-        model_configs = load_json(
-            os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
-        )
         seeker_configs = load_json(
             os.path.join(scene_path, CONFIG_DIR, SEEKER_AGENT_CONFIG)
         )
@@ -194,28 +191,20 @@ class Simulator:
                 interviewer_agents[i].agent_id for i in list(index)
             ]
 
-        # tasks = []
-        # with futures.ThreadPoolExecutor() as executor:
-        #     for config in seeker_configs:
-        #         tasks.append(
-        #             executor.submit(
-        #                 index.search,
-        #                 np.array([config["args"]["embedding"]]),
-        #                 self.config["pool_size"],
-        #             ),
-        #         )
-        #     for config, task in zip(seeker_configs, tasks):
-        #         _, job_index = task.result()
-        #         config["args"]["job_ids_pool"] = [
-        #             interviewer_agents[index].agent_id for index in list(job_index[0])
-        #         ]
+        # Just for test
+        # for config in seeker_configs:
+        #     config["args"]["job_ids_pool"] = [
+        #         interviewer_agents[i].agent_id for i in random.sample(range(len(interviewer_agents)), k=self.config["pool_size"])
+        #     ]
 
+        logger.info("Set job_ids_pool for seeker agents")
         results = []
         for agent, config in zip(seeker_agents, seeker_configs):
             results.append(agent.set_attr(attr="job_ids_pool", value=config["args"]["job_ids_pool"]))
         for res in results:
             res.result()
 
+        logger.info("Set all_agents for envs")
         agent_dict = {agent.agent_id: agent for agent in seeker_agents + interviewer_agents}
         results = []
         for env in envs:

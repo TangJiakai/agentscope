@@ -98,10 +98,10 @@ class SeekerAgent(BaseAgent):
 
     def _update_profile(self):
         self._profile = """
-        Name: {name}
-        CV: {cv}
-        Trait: {trait}
-        Working Condition: {working_condition}
+        - Name: {name}
+        - CV: {cv}
+        - Trait: {trait}
+        - Working Condition: {working_condition}
         """.format(
             name=self.seeker.name,
             cv=self.seeker.cv,

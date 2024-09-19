@@ -13,6 +13,7 @@ def get_embedding(sentence, api, delay=5):
             return embedding
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
             print(f"Attempt {attempt} to get embedding failed. Retrying after {delay} seconds...")
+            delay = 2 * delay
             time.sleep(delay)  # 等待一段时间后重试
         except requests.exceptions.RequestException as e:
             raise RuntimeError(f"Request failed with error: {e}, Sentence: {sentence}, URL: {url}")
@@ -30,6 +31,7 @@ def get_embedding_dimension(api, delay=5):
             return embedding_dimension
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
             print(f"Attempt {attempt} to get embedding dimension failed. Retrying after {delay} seconds...")
+            delay = 2 * delay
             time.sleep(delay)  # 等待一段时间后重试
         except requests.exceptions.RequestException as e:
             raise RuntimeError(f"Request failed with error: {e}, URL: {url}")

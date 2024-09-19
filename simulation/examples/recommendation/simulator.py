@@ -1,5 +1,7 @@
 from datetime import timedelta
+import math
 import os
+import random
 import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
@@ -75,13 +77,24 @@ class Simulator:
 
     def _init_agents(self):
         # Load configs
+        model_configs = load_json(
+            os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
+        )
         agent_configs = load_json(os.path.join(scene_path, CONFIG_DIR, AGENT_CONFIG))
         memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
         item_infos = load_json(os.path.join(scene_path, CONFIG_DIR, ITEM_INFOS))
 
+        llm_num = len(model_configs)
+        agent_num = len(agent_configs)
+        agent_num_per_llm = math.ceil(agent_num / llm_num)
+
         # Prepare agent args
+        index_ls = list(range(agent_num))
         agent_relationships = []
-        for config in agent_configs:
+        random.shuffle(index_ls)
+        for config, shuffled_idx in zip(agent_configs, index_ls):
+            model_config = model_configs[shuffled_idx//agent_num_per_llm]
+            config["args"]["model_config_name"] = model_config["config_name"]
             memory_config["args"]["embedding_size"] = get_embedding_dimension(
                 self.config["embedding_api"]
             )
@@ -89,32 +102,41 @@ class Simulator:
             config["args"]["embedding_api"] = self.config["embedding_api"]
             agent_relationships.append(config["args"].pop("relationship"))
 
-        for config in agent_configs:
-            interest = str(config["args"]["interest"])
-            config["args"]["embedding"] = get_embedding(
-                interest, self.config["embedding_api"]
-            )
-        
         # Init env
         logger.info("Init environment")
-        env = RecommendationEnv(
-            name="env",
-            item_infos=item_infos,
-            embedding_api=self.config["embedding_api"],
-            to_dist=DistConf(host=self.config["host"], port=self.config["base_port"]),
-        )
+        user_num_per_env = 200
+        env_num = math.ceil(len(agent_configs) / user_num_per_env)
+        env_names = [f"environment-{str(i)}" for i in range(env_num)]
+        env_ports = [i % self.config["server_num_per_host"] + self.config["base_port"] for i in range(env_num)]
+
+        envs = []
+        tasks = []
+        with futures.ThreadPoolExecutor() as executor:
+            for name, port in zip(env_names, env_ports):
+                tasks.append(
+                    executor.submit(
+                        RecommendationEnv,
+                        name=name,
+                        item_infos=item_infos,
+                        embedding_api=self.config["embedding_api"],
+                        to_dist=DistConf(
+                            host=config["args"]["host"], port=port
+                        ),
+                    ),
+                )
+            for task in tasks:
+                envs.append(task.result())
 
         # Init agents
-        ist = time.time()
         logger.info(f"Init {len(agent_configs)} recuser agents")
         agents = []
         tasks = []
         with futures.ThreadPoolExecutor() as executor:
-            for config in agent_configs:
+            for i, config in enumerate(agent_configs):
                 tasks.append(
                     executor.submit(
                         RecUserAgent,
-                        env=env,
+                        env=envs[i // agent_num_per_llm],
                         **config["args"],
                         to_dist=DistConf(
                             host=config["args"]["host"], port=config["args"]["port"]
@@ -123,9 +145,8 @@ class Simulator:
                 )
             for task in tasks:
                 agents.append(task.result())
-        iet = time.time()
-        logger.info(f"Init agents time: {iet - ist:.2f}s")
 
+        logger.info("Set relationship to agents")
         results = []
         for i, agent in enumerate(agents):
             results.append(agent.set_attr(
@@ -135,16 +156,16 @@ class Simulator:
         for res in results:
             res.result()
 
-        env.set_attr(attr="all_agents", value={agent.agent_id: agent for agent in agents}).result()
+        logger.info("Set all agents to envs")  
+        results = []
+        for env in envs:
+            results.append(env.set_attr(attr="all_agents", value={agent.agent_id: agent for agent in agents}))
+        for res in results:
+            res.result()
 
         self.agents = agents
-        self.env = env
-
-    def get_agent_by_id(self, agent_id: str):
-        for agent in self.agents:
-            if agent.agent_id == agent_id:
-                return agent
-        return None
+        self.envs = envs
+        self.env = envs[0]
 
     def _one_round(self):
         results = []
@@ -175,13 +196,14 @@ class Simulator:
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 
-        # message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
-        # resp = requests.post(
-        #     "http://localhost:9000/store_message",
-        #     json={
-        #         "save_data_path": message_save_path,
-        #     }
-        # )
+
+        message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
+        resp = requests.post(
+            "http://localhost:9111/store_message",
+            json={
+                "save_data_path": message_save_path,
+            }
+        )
 
     def load(file_path):
         with open(file_path, "rb") as f:
@@ -199,9 +221,14 @@ class Simulator:
 
 
 if __name__ == "__main__":
+    start_time = time.time()
     simulator = Simulator()
+    end_time = time.time()
+    formatted_time = str(timedelta(seconds=end_time - start_time))
+    logger.info(f"Init Agent Total time: {formatted_time}")
+
     start_time = time.time()
     simulator.run()
     end_time = time.time()
     formatted_time = str(timedelta(seconds=end_time - start_time))
-    logger.info(f"Total time: {formatted_time}")
+    logger.info(f"Simulation Total time: {formatted_time}")

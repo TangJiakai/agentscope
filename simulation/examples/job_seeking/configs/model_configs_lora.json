@@ -2,11 +2,11 @@
     {
         "config_name": "LLM-1",
         "model_type": "openai_chat",
-        "model_name": "/data/pretrain_dir/Meta-Llama-3-8B-Instruct",
+        "model_name": "lora",
         "api_key": "tangjiakai",
         "client_args": {
             "max_retries": 10,
-            "base_url": "http://localhost:8084/v1",
+            "base_url": "http://localhost:8090/v1",
             "timeout": 6000
         },
         "generate_args": {
@@ -17,11 +17,11 @@
     {
         "config_name": "LLM-2",
         "model_type": "openai_chat",
-        "model_name": "/data/pretrain_dir/Meta-Llama-3-8B-Instruct",
+        "model_name": "lora",
         "api_key": "tangjiakai",
         "client_args": {
             "max_retries": 10,
-            "base_url": "http://localhost:8085/v1",
+            "base_url": "http://localhost:8091/v1",
             "timeout": 6000
         },
         "generate_args": {

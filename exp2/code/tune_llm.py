@@ -26,12 +26,13 @@ from utils.utils import check_load_adapter, check_dirs
 
 wandb.init(mode="disabled")
 tqdm.pandas()
+# os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 
 def parse_args() -> argparse.Namespace:
     """Parse arguments"""
     parser = argparse.ArgumentParser()
-    parser.add_argument("--tuning_mode", required=True, type=str, help="sft or ppo")
+    parser.add_argument("--tuning_mode", type=str, help="sft or ppo", default="sft")
     return parser.parse_args()
 
 
@@ -53,8 +54,8 @@ def sft_train(tokenizer):
     sft_config = SFTConfig(
         output_dir=SAVE_DIR,
         num_train_epochs=1,
-        per_device_train_batch_size=2,
-        max_seq_length=2048,
+        per_device_train_batch_size=1,
+        max_seq_length=8192,
     )
 
     if_load_adapter = check_load_adapter()
@@ -94,8 +95,10 @@ def sft_train(tokenizer):
         data_collator=collator,
         formatting_func=formatting_prompts_func,
     )
-
+    
+    print("Starting SFT training")
     trainer.train()
+
     trainer.save_model(SAVE_DIR)
     return model
 
@@ -107,6 +110,7 @@ def ppo_train(tokenizer):
         sample["response_ids"] = tokenizer.encode(sample["completion"])
         sample["query"] = tokenizer.decode(sample["query_ids"])
         sample["response"] = tokenizer.decode(sample["response_ids"])
+        sample['reward'] = float(sample['reward'])
         return sample
     dataset = dataset.map(tokenize, batch_size=False)
     dataset.set_format(type="torch", columns=["query_ids", "response_ids", "reward"])
@@ -148,10 +152,11 @@ def ppo_train(tokenizer):
     ref_model = create_reference_model(model)
     
     ppo_config = PPOConfig(
+        ppo_epochs=1,
         whiten_rewards=True,
         batch_size=len(dataset),
         remove_unused_columns=False,
-        mini_batch_size=2,
+        mini_batch_size=1,
     )
 
     def collator(data):
@@ -167,6 +172,7 @@ def ppo_train(tokenizer):
     )
 
     for _epoch, batch in tqdm(enumerate(trainer.dataloader)):
+        print(f"The batch size is {len(batch['reward'])}...")
         query_tensors = batch["query_ids"]
         response_tensors = batch["response_ids"]
         rewards_tensors = [x.float() for x in batch["reward"]]

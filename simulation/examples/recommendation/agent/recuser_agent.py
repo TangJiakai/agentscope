@@ -40,36 +40,6 @@ def set_state(flag: str):
     return decorator
 
 
-class RecUser(object):
-    def __init__(self, 
-                name: str, 
-                gender: str, 
-                age: int,
-                traits: str,
-                status: str,
-                interest: str,
-                feature: str,
-        ):
-        self.name = name
-        self.gender = gender
-        self.age = age
-        self.traits = traits
-        self.status = status
-        self.interest = interest
-        self.feature = feature
-
-    def __str__(self):
-        return (
-            f"Name: {self.name}\n"
-            f"Gender: {self.gender}\n"
-            f"Age: {self.age}\n"
-            f"Traits: {self.traits}\n"
-            f"Status: {self.status}\n"
-            f"Interest: {self.interest}\n"
-            f"Feature: {self.feature}\n"
-        )
-
-
 class RecUserAgent(BaseAgent):
     """recuser agent."""
 
@@ -79,12 +49,7 @@ class RecUserAgent(BaseAgent):
         model_config_name: str,
         memory_config: dict,
         embedding_api: str,
-        gender: str, 
-        age: int,
-        traits: str,
-        status: str,
-        interest: str,
-        feature: str,
+        profile: str, 
         env: RecommendationEnv,
         relationship = {},
         **kwargs,
@@ -98,15 +63,12 @@ class RecUserAgent(BaseAgent):
         self.memory = setup_memory(memory_config)
         self.memory.embedding_api = embedding_api
         self.memory.model = self.model
+        self.memory._send_message = self._send_message
         self.env = env
+        self._profile = f"- Name: {self.name} - Profile: {profile}"
         self.relationship = relationship
 
-        self.recuser = RecUser(name, gender, age, traits, status, interest, feature)
-        self._update_profile()
         self._state = "idle"
-
-    def _update_profile(self):
-        self._profile = self.recuser.__str__()
 
     @property
     def state(self):
@@ -154,7 +116,7 @@ class RecUserAgent(BaseAgent):
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        msg.selection_num = len(guided_choice)
+        msg.guided_choice = list(map(str, range(len(guided_choice))))
         response = guided_choice[int(self.reply(msg).content)]
         action = response.split(":")[0]
 
@@ -164,7 +126,7 @@ class RecUserAgent(BaseAgent):
 
     @set_state("watching")
     def recommend(self):
-        user_info = self._profile + \
+        user_info = self.profile + \
             "\nMemory:" + "\n- ".join([m.content for m in self.memory.get_memory()])
         guided_choice = self.env.recommend4user(user_info)
         instruction = Template.recommend_instruction()
@@ -172,7 +134,7 @@ class RecUserAgent(BaseAgent):
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        msg.selection_num = len(guided_choice)
+        msg.guided_choice = list(map(str, range(len(guided_choice))))
         response = guided_choice[int(self.reply(msg).content)]['title']
 
         logger.info(f"[{self.name}] selected movie {response}")
@@ -194,25 +156,26 @@ class RecUserAgent(BaseAgent):
 
         return dialog_observation
     
-    @set_state("chatting")
-    def respond_conversation(self, observation: str):
-        instruction = Template.conversation_instruction()
-        format_instruction = INSTRUCTION_BEGIN + instruction + INSTRUCTION_END
-        format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
-        memory = self.memory.get_memory(get_assistant_msg(instruction))
-        memory_msgs = get_memory_until_limit(
-            memory, 
-            self.get_tokennum_func,
-            format_instruction + format_profile + observation + f"\n{self.name}:"
-        )
-        memory_content = "-\n".join([m.content for m in memory_msgs])
-        format_memory = MEMORY_BEGIN + memory_content + MEMORY_END
-        response = self.model(self.model.format(Msg(
-            "user",
-            format_instruction + format_profile + format_memory + observation + f"\n{self.name}:",
-            role="user",
-        )))
-        return get_assistant_msg(f"\n{self.name}: {response.text}")
+    # @set_state("chatting")
+    # def respond_conversation(self, observation: str):
+    #     instruction = Template.conversation_instruction()
+    #     format_instruction = INSTRUCTION_BEGIN + instruction + INSTRUCTION_END
+    #     format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
+    #     memory = self.memory.get_memory(get_assistant_msg(instruction))
+    #     memory_msgs = get_memory_until_limit(
+    #         memory, 
+    #         self.get_tokennum_func,
+    #         format_instruction + format_profile + observation + f"\n{self.name}:",
+    #         4000,
+    #     )
+    #     memory_content = "-\n".join([m.content for m in memory_msgs])
+    #     format_memory = MEMORY_BEGIN + memory_content + MEMORY_END
+    #     response = self.model(self.model.format(Msg(
+    #         "user",
+    #         format_instruction + format_profile + format_memory + observation + f"\n{self.name}:",
+    #         role="user",
+    #     )))
+    #     return get_assistant_msg(f"\n{self.name}: {response.text}")
     
     @set_state("posting")
     def post(self):
@@ -241,10 +204,13 @@ class RecUserAgent(BaseAgent):
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        msg.selection_num = len(guided_choice)
-        
-        response = guided_choice[int(self.reply(msg).content)]
+        msg.guided_choice = list(map(str, range(len(guided_choice))))
+        answer = self.reply(msg).content
+        response = guided_choice[int(answer)]
+        logger.info(f"[{self.name}] selected action: {response}")
         action = response.split(":")[0].strip().lower()
         getattr(self, action)()
+
+        logger.info("Finished running recuser agent.")
         
-        return "success"
+        return "Done"

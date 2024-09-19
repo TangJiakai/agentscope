@@ -1,38 +1,44 @@
 import json
+import math
 import os
-import numpy as np
+import sys
+import random
 from copy import deepcopy
-from lmformatenforcer.integrations.vllm import (
-    build_vllm_logits_processor, build_vllm_token_enforcer_tokenizer_data)
-import vllm
 
 directory = "simulation/examples/recommendation/configs"
 meta_data_path = "all_recuser_agent_configs.json"
 
 scale_map = {
-    "200K": 1,
+    "3139": 0.015625,
+    "6279": 0.03125,
+    "12559": 0.0625,
+    "25118": 0.125,
+    "50237": 0.25,
+    "100474": 0.5,
+    "200948": 1,
 }
 
 
 def main():
     data = json.load(open(os.path.join(directory, meta_data_path), "r"))
-    base_num = len(data)
-    cnt = len(data)
-    max_rate = max(scale_map.values())
+    origin_data_sz = len(data)
+    print(f"The original datasize is {origin_data_sz}")
     new_data = []
-    for i in range(max_rate):
-        new_data.extend(deepcopy(data))
-    for i in range(1, max_rate):
-        cur_data = new_data[i*base_num:(i+1)*base_num]
-        for d in cur_data:
-            tmp_d = np.array(d["args"]["relationship"]) + cnt
-            d["args"]["relationship"] = tmp_d.tolist()
-        new_data[i*base_num:(i+1)*base_num] = cur_data
-        cnt += base_num
+    for v in scale_map.values():
+        new_data_sz = math.floor(v * origin_data_sz)
+        new_data_part = deepcopy(data[:new_data_sz])
+        for i, d in enumerate(new_data_part):
+            d['args']['relationship'] = random.sample(
+                list(range(i)) + list(range(i + 1, new_data_sz)),
+                5
+            )
+        new_data.append(new_data_part)
+        print(f"generated datasize is {math.floor(v * origin_data_sz)}")
 
-    for prefix, r in scale_map.items():
+    for prefix, d in zip(scale_map.keys(), new_data):
         with open(os.path.join(directory, f"{prefix}_{meta_data_path}"), "w") as f:
-            json.dump(new_data[:base_num*r], f, indent=4)
+            json.dump(d, f, indent=4)
+        print(f"Generated {prefix}_{meta_data_path}")
 
 if __name__ == "__main__":
     main()
