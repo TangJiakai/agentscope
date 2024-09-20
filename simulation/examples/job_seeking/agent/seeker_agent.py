@@ -276,7 +276,7 @@ class SeekerAgent(BaseAgent):
         for agent_id, agent in offer_interviewer_agent_infos.items():
             agent.receive_notification(self.seeker.name, agent_id == response)
 
-        return answer
+        return response
 
     @async_func
     def run(self, **kwargs):
