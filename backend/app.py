@@ -80,7 +80,7 @@ backend_server_url: str = None
 agent_coordinates: Dict[str, List[float]] = {}
 favorite_agents = []
 transform: Transform = Transform()
-avatar_radius = 15.0
+avatar_radius = 0.0001
 
 
 @asynccontextmanager
@@ -297,7 +297,8 @@ def get_agents(
         match = re.search(r"\d", agent.agent_id)
         num = match.group() if match else 0
         gender = agent.get_attr("gender")
-        if gender is None:
+        if gender is None or gender.lower() not in ["female", "male"]:
+            gender = None
             avatar_path = os.path.join(
                 avatar_path, random.choice(["female", "male"]), f"{num}.png"
             )
@@ -452,7 +453,8 @@ def get_favorite_agents():
         match = re.search(r"\d", agent.agent_id)
         num = match.group() if match else 0
         gender = agent.get_attr("gender")
-        if gender is None:
+        if gender is None or gender.lower() not in ["female", "male"]:
+            gender = None
             avatar_path = os.path.join(
                 avatar_path, random.choice(["female", "male"]), f"{num}.png"
             )
@@ -519,7 +521,8 @@ def get_agent(id: str):
                 num = match.group() if match else 0
                 gender = agent.get_attr("gender")
                 avatar_path = os.path.join("/assets", "avatar")
-                if gender is None:
+                if gender is None or gender.lower() not in ["female", "male"]:
+                    gender = None
                     avatar_path = os.path.join(
                         avatar_path, random.choice(["female", "male"]), f"{num}.png"
                     )
@@ -922,12 +925,11 @@ async def start():
     launch_server_sh_path = os.path.join(
         proj_path, "simulation", "examples", _scene, "launch_server.sh"
     )
-    run_sh_async(
+    run_sh_blocking(
         launch_server_sh_path,
         str(simulation_config["server_num_per_host"]),
         str(simulation_config["base_port"]),
     )
-    time.sleep(10)
 
     module_path = f"simulation.examples.{_scene}.simulator"
     Simulator = importlib.import_module(module_path).Simulator
@@ -1006,7 +1008,7 @@ async def reset():
     global simulator, simulation_thread, cur_msgs, agent_coordinates, favorite_agents, transform, avatar_radius
     manager.clear()
     transform = Transform()
-    avatar_radius = 15.0
+    avatar_radius = 0.0001
     simulator = None
     kill_event.set()
     play_event.set()

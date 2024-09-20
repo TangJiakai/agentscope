@@ -121,5 +121,5 @@ def generate_points_sampling(k, radius_ratio=0.4, initial_center_dist=0.12, canv
     return selected_positions, radius
 
 # 调用函数，生成并绘制100个实心圆
-selected_positions, raius = generate_points_sampling(k=30, radius_ratio=0.4, initial_center_dist=0.12, canvas_size=1.0)
+# selected_positions, raius = generate_points_sampling(k=30, radius_ratio=0.4, initial_center_dist=0.12, canvas_size=1.0)
 # print(selected_positions, radius)
