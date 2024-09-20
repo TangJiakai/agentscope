@@ -120,7 +120,7 @@ class RecUserAgent(BaseAgent):
             self._state = new_value
             url = f"{self.backend_server_url}/api/state"
             resp = requests.post(
-                url, json={"agent_id": self.agent_id, "state": new_value}
+                url, json={"agent_id": self.agent_id, "state": new_value},
             )
             if resp.status_code != 200:
                 logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")

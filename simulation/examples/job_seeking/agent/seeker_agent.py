@@ -89,6 +89,7 @@ class SeekerAgent(BaseAgent):
         self.job_ids_pool = job_ids_pool
         self.embedding = embedding
         self.env = env
+        self.gender = trait["Gender"]
 
         self.seeker = Seeker(name, cv, trait)
         self._update_profile()
@@ -172,7 +173,6 @@ class SeekerAgent(BaseAgent):
         interviewer_agent_infos = self.env.get_agents_by_ids(search_job_ids)
         for agent in interviewer_agent_infos.values():
             agent.job = agent.get_attr("job")
-            logger
 
         return interviewer_agent_infos
 
@@ -294,27 +294,27 @@ class SeekerAgent(BaseAgent):
                 return
 
         search_job_number = self._determine_search_job_number()
-        logger.info(f"Search job number: {search_job_number}")
+        # logger.info(f"Search job number: {search_job_number}")
 
         interviewer_agent_infos = self._determine_search_jobs(search_job_number)
-        logger.info(f"Search jobs: {list(interviewer_agent_infos.keys())}")
+        # logger.info(f"Search jobs: {list(interviewer_agent_infos.keys())}")
 
         apply_interviewer_agent_infos = self._determine_apply_job(
             interviewer_agent_infos
         )
-        logger.info(f"Apply jobs: {list(apply_interviewer_agent_infos.keys())}")
+        # logger.info(f"Apply jobs: {list(apply_interviewer_agent_infos.keys())}")
 
         cv_passed_interviewer_agent_infos = self._apply_job(
             apply_interviewer_agent_infos
         )
-        logger.info(f"CV passed jobs: {list(cv_passed_interviewer_agent_infos.keys())}")
+        # logger.info(f"CV passed jobs: {list(cv_passed_interviewer_agent_infos.keys())}")
 
         offer_interviewer_agent_infos = self._interview_fun(
             cv_passed_interviewer_agent_infos
         )
-        logger.info(f"Offer jobs: {list(offer_interviewer_agent_infos.keys())}")
+        # logger.info(f"Offer jobs: {list(offer_interviewer_agent_infos.keys())}")
 
         final_job_id = self._make_final_decision(offer_interviewer_agent_infos)
-        logger.info(f"Final job: {final_job_id}")
+        # logger.info(f"Final job: {final_job_id}")
 
         return final_job_id

@@ -9,7 +9,7 @@ from simulation.helpers.utils import load_json
 from simulation.helpers.constants import *
 
 scene_path = os.path.dirname(os.path.abspath(__file__))
-AGENT_CONFIG = "recuser_agent_configs.json"
+AGENT_CONFIG = "RecUserAgent_configs.json"
 
 def parse_args() -> argparse.Namespace:
     """Parse arguments"""

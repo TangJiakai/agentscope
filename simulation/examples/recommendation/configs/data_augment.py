@@ -7,7 +7,7 @@ from lmformatenforcer.integrations.vllm import (
 import vllm
 
 directory = "simulation/examples/recommendation/configs"
-meta_data_path = "all_recuser_agent_configs.json"
+meta_data_path = "all_RecUserAgent_configs.json"
 
 scale_map = {
     "1K": 1,

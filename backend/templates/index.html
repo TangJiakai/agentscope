@@ -64,7 +64,7 @@
         const chatSendButton = document.getElementById('chatSendButton');
         let chatWs = null;
 
-        const ws = new WebSocket("ws://localhost:9000/ws");
+        const ws = new WebSocket("ws://111.6.167.248:18000/ws");
         ws.onmessage = function (event) {
             const message = event.data;
             try {
@@ -171,7 +171,7 @@
                 if (chatWs) {
                     chatWs.close();
                 }
-                chatWs = new WebSocket(`ws://localhost:9000/chat/${userId}`);
+                chatWs = new WebSocket(`ws://111.6.167.248:18000/chat/${userId}`);
                 chatWs.onmessage = function (event) {
                     const message = event.data;
                     const msgElement = document.createElement('div');

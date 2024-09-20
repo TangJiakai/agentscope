@@ -7,4 +7,4 @@ if [ $# -eq 1 ]; then
     export PORT=$1
 fi
 
-uvicorn backend.app:app --host $HOST --port $PORT --reload
+uvicorn backend.app:app --host $HOST --port $PORT &

@@ -28,8 +28,7 @@ from simulation.examples.recommendation.environment.env import RecommendationEnv
 from simulation.helpers.emb_service import *
 from simulation.helpers.utils import *
 
-CUR_ROUND = 1
-AGENT_CONFIG = "recuser_agent_configs.json"
+AGENT_CONFIG = "RecUserAgent_configs.json"
 ITEM_INFOS = "item_infos.json"
 
 scene_path = os.path.dirname(os.path.abspath(__file__))
@@ -40,8 +39,7 @@ class Simulator:
         super().__init__()
         self.config = load_yaml(os.path.join(scene_path, CONFIG_DIR, SIMULATION_CONFIG))
 
-        global CUR_ROUND
-        self.cur_round = CUR_ROUND
+        self.cur_round = 1
         self._from_scratch()
 
     def _from_scratch(self):
@@ -50,8 +48,6 @@ class Simulator:
         if self.config["load_simulator_path"] is not None:
             loaded_simulator = Simulator.load(self.config["load_simulator_path"])
             self.__dict__.update(loaded_simulator.__dict__)
-            global CUR_ROUND
-            CUR_ROUND = self.cur_round
         else:
             self._init_agents()
 
@@ -175,13 +171,13 @@ class Simulator:
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 
-        message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
-        resp = requests.post(
-            "http://localhost:9000/store_message",
-            json={
-                "save_data_path": message_save_path,
-            }
-        )
+        # message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
+        # resp = requests.post(
+        #     "http://localhost:9000/store_message",
+        #     json={
+        #         "save_data_path": message_save_path,
+        #     }
+        # )
 
     def load(file_path):
         with open(file_path, "rb") as f:
@@ -190,9 +186,7 @@ class Simulator:
     def save(self):
         file_manager = FileManager.get_instance()
         save_path = os.path.join(file_manager.run_dir, f"ROUND-{self.cur_round}.pkl")
-        global CUR_ROUND
-        self.cur_round = CUR_ROUND + 1
-        CUR_ROUND = self.cur_round
+        self.cur_round += 1
         with open(save_path, "wb") as f:
             dill.dump(self, f)
         logger.info(f"Saved simulator to {save_path}")

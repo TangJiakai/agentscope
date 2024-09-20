@@ -3,11 +3,11 @@ model_configs_path: model_configs.json
 project_name: recommendation
 round_n: 2
 save_dir: 
-embedding_api: http://localhost:8002/
+embedding_api: http://localhost:8777/
 load_simulator_path: 
 host: localhost
-base_port: 13000
-server_num_per_host: 3
+base_port: 14000
+server_num_per_host: 200
 
 # custom settings
-recuser_agent_configs_path: recuser_agent_configs.json
+recuser_agent_configs_path: RecUserAgent_configs.json

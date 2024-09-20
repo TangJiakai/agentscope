@@ -1,6 +1,7 @@
 from typing import Any, Optional, Union, Sequence
 from loguru import logger
 import requests
+import time
 
 from agentscope.agents import AgentBase
 from agentscope.message import Msg
@@ -23,11 +24,12 @@ class BaseAgent(AgentBase):
             model_config_name=model_config_name,
         )
         self._profile = ""
-        self.backend_server_url = "http://localhost:9000"
+        # self.backend_server_url = "http://localhost:9000"
 
     def _send_message(self, prompt, response):
         if hasattr(self, "backend_server_url"):
             url = f"{self.backend_server_url}/api/message"
+            # logger.info(f"ready to Sending message to {url}")
             resp = requests.post(
                 url,
                 json={
@@ -38,6 +40,7 @@ class BaseAgent(AgentBase):
                     "agent_id": self.agent_id,
                 },
             )
+            # logger.info(f"Message sent to {url}")
             if resp.status_code != 200:
                 logger.error(f"Failed to send message: {self.agent_id}")
 
@@ -75,16 +78,21 @@ class BaseAgent(AgentBase):
         return "success"
 
     def get_attr(self, attr: str):
-        return getattr(self, attr)
+        return getattr(self, attr, None)
 
     def external_interview(self, observation, **kwargs):
         instruction = "You are participating in a simple interview where you need to answer some questions."
         observation = "Question:" + observation + "Answer:"
+        # logger.info("agent can reach here")
         msg = get_assistant_msg()
+        # logger.info("agent can reach here")
         msg.instruction = instruction
         msg.observation = observation
         msg.no_memory = True
+        msg.external_interview = True
+        # logger.info(f"Agent has ready to answer the question: {observation}")
         response = self(msg).content
+        # logger.info(f"Agent has answered the question: {response}")
         return response
 
     def session_chat(self, announcement, participants, **kwargs):
@@ -152,6 +160,7 @@ class BaseAgent(AgentBase):
             memory_query += x.content
             prompt_content.append(x.content)
 
+        # logger.info("agent has ready to get_memory")
         memory = self.memory.get_memory(get_assistant_msg(memory_query))
         if len(memory) > 0:
             insert_index = -2 if len(prompt_content) > 1 else -1
@@ -160,18 +169,22 @@ class BaseAgent(AgentBase):
             prompt_content.insert(insert_index, MEMORY_BEGIN + memory_content + MEMORY_END)
 
         prompt_content = "\n".join(prompt_content)
+        # logger.info(f"prompt_content: {prompt_content}")
 
         prompt_msg = self.model.format(Msg(
             "user", 
             prompt_content, 
             role="user"
         ))
+        # logger.info(f"agent can reach here, prompt_msg: {prompt_msg}")
         response = self.model(prompt_msg)
+        # logger.info(f"agent can reach here, response: {response}")
 
-        self._send_message(prompt_msg, response)
+        if not hasattr(x, "external_interview"):
+            self._send_message(prompt_msg, response)
 
-        logger.info(f"prompt: {prompt_content}")
-        logger.info(f"response: {response.text}\n\n")
+        # logger.info(f"prompt: {prompt_content}")
+        # logger.info(f"response: {response.text}\n\n")
 
         add_memory_msg = Msg("user", instruction + observation + response.text, role="user")
         if not hasattr(x, "no_memory"):

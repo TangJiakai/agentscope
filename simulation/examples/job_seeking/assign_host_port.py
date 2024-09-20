@@ -10,8 +10,8 @@ from simulation.helpers.utils import load_json
 from simulation.helpers.constants import *
 
 scene_path = os.path.dirname(os.path.abspath(__file__))
-SEEKER_AGENT_CONFIG = "seeker_agent_configs.json"
-INTERVIEWER_AGENT_CONFIG = "interviewer_agent_configs.json"
+SEEKER_AGENT_CONFIG = "SeekerAgent_configs.json"
+INTERVIEWER_AGENT_CONFIG = "InterviewerAgent_configs.json"
 
 def parse_args() -> argparse.Namespace:
     """Parse arguments"""
