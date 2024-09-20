@@ -11,7 +11,11 @@ Install from source code (https://github.com/pan-x-c/AgentScope/tree/feature/pxc
     self.client_args = client_args or {}
     ```
 In the ``__init__`` function of `OpenAIWrapperBase` in the file `src/agentscope/models/openai_model.py`.
-
+- Modify the variables in the `src/agentscope/constants.py` file:
+    ```python
+    _DEFAULT_RPC_TIMEOUT = 2
+    _DEFAULT_RPC_RETRY_TIMES = 20
+    ```
 
 **vllm**
 ```bash

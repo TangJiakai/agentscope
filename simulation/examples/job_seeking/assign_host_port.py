@@ -37,7 +37,7 @@ def main(args):
         os.path.join(scene_path, CONFIG_DIR, simulation_config['seeker_agent_configs_path'])
     )
     interviewer_configs = load_json(
-        os.path.join(scene_path, CONFIG_DIR, simulation_config_path['interviewer_agent_configs_path'])
+        os.path.join(scene_path, CONFIG_DIR, simulation_config['interviewer_agent_configs_path'])
     )
 
     print("len(seeker_configs):", len(seeker_configs))
@@ -52,7 +52,7 @@ def main(args):
         agent_config["args"]["port"] = base_port + i % available_port_num
 
     save_agent_configs(seeker_configs, os.path.join(scene_path, CONFIG_DIR, simulation_config['seeker_agent_configs_path']))
-    save_agent_configs(interviewer_configs, os.path.join(scene_path, CONFIG_DIR, simulation_config_path['interviewer_agent_configs_path']))
+    save_agent_configs(interviewer_configs, os.path.join(scene_path, CONFIG_DIR, simulation_config['interviewer_agent_configs_path']))
 
 
 if __name__ == "__main__":
