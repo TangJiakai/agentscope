@@ -30,7 +30,7 @@ class BaseAgent(AgentBase):
             model=self.model.model_name,
             api_key=self.model.api_key,
         )
-        self.backend_server_url = "http://localhost:9111"
+        # self.backend_server_url = "http://localhost:9111"
 
     def _send_message(self, prompt, response, selection_num=None):
         if hasattr(self, "backend_server_url"):

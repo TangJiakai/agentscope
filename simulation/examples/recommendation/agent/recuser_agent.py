@@ -156,27 +156,6 @@ class RecUserAgent(BaseAgent):
 
         return dialog_observation
     
-    # @set_state("chatting")
-    # def respond_conversation(self, observation: str):
-    #     instruction = Template.conversation_instruction()
-    #     format_instruction = INSTRUCTION_BEGIN + instruction + INSTRUCTION_END
-    #     format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
-    #     memory = self.memory.get_memory(get_assistant_msg(instruction))
-    #     memory_msgs = get_memory_until_limit(
-    #         memory, 
-    #         self.get_tokennum_func,
-    #         format_instruction + format_profile + observation + f"\n{self.name}:",
-    #         4000,
-    #     )
-    #     memory_content = "-\n".join([m.content for m in memory_msgs])
-    #     format_memory = MEMORY_BEGIN + memory_content + MEMORY_END
-    #     response = self.model(self.model.format(Msg(
-    #         "user",
-    #         format_instruction + format_profile + format_memory + observation + f"\n{self.name}:",
-    #         role="user",
-    #     )))
-    #     return get_assistant_msg(f"\n{self.name}: {response.text}")
-    
     @set_state("posting")
     def post(self):
         instruction = Template.post_instruction()

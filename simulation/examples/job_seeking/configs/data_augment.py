@@ -6,12 +6,13 @@ directory = "simulation/examples/job_seeking/configs"
 meta_data_path = "all_seeker_agent_configs.json"
 
 scale_map = {
-    "3234": 1,
-    "12918": 5,
-    "25023": 10,
-    "97653": 40,
-    "121863": 50,
-    "1211313": 500,
+    "2421": 1,
+    "4842": 2,
+    "9684": 4,
+    "19368": 8,
+    "38736": 16,
+    "77472": 32,
+    "154944": 64,
 }
 
 

@@ -5,11 +5,11 @@ import argparse
 import math
 import json
 
-from simulation.helpers.utils import load_json
+from simulation.helpers.utils import load_json, load_yaml
 from simulation.helpers.constants import *
 
 scene_path = os.path.dirname(os.path.abspath(__file__))
-AGENT_CONFIG = "recuser_agent_configs.json"
+simulation_config_path = os.path.join(scene_path, CONFIG_DIR, SIMULATION_CONFIG)
 
 def parse_args() -> argparse.Namespace:
     """Parse arguments"""
@@ -31,7 +31,8 @@ def main(args):
     server_num_per_host = args.server_num_per_host
     available_port_num = server_num_per_host
 
-    agent_configs = load_json(os.path.join(scene_path, CONFIG_DIR, AGENT_CONFIG))
+    simulation_config = load_yaml(simulation_config_path)
+    agent_configs = load_json(os.path.join(scene_path, CONFIG_DIR, simulation_config['recuser_agent_configs_path']))
 
     print("len(agent_configs):", len(agent_configs))
 
@@ -43,7 +44,7 @@ def main(args):
         agent_config["args"]["host"] = host
         agent_config["args"]["port"] = base_port + i % available_port_num
 
-    save_agent_configs(agent_configs, os.path.join(scene_path, CONFIG_DIR, AGENT_CONFIG))
+    save_agent_configs(agent_configs, os.path.join(scene_path, CONFIG_DIR, simulation_config['recuser_agent_configs_path']))
 
 
 if __name__ == "__main__":

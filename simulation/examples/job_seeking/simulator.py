@@ -32,8 +32,6 @@ from simulation.helpers.emb_service import *
 from simulation.helpers.utils import *
 
 CUR_ROUND = 1
-SEEKER_AGENT_CONFIG = "seeker_agent_configs.json"
-INTERVIEWER_AGENT_CONFIG = "interviewer_agent_configs.json"
 
 scene_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -78,14 +76,15 @@ class Simulator:
 
     def _init_agents(self):
         # Load configs
+        logger.info("Load configs")
         model_configs = load_json(
             os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
         )
         seeker_configs = load_json(
-            os.path.join(scene_path, CONFIG_DIR, SEEKER_AGENT_CONFIG)
+            os.path.join(scene_path, CONFIG_DIR, self.config['seeker_agent_configs_path'])
         )
         interviewer_configs = load_json(
-            os.path.join(scene_path, CONFIG_DIR, INTERVIEWER_AGENT_CONFIG)
+            os.path.join(scene_path, CONFIG_DIR, self.config['interviewer_agent_configs_path'])
         )
         memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
         memory_config["args"]["embedding_size"] = get_embedding_dimension(self.config["embedding_api"])
@@ -95,6 +94,7 @@ class Simulator:
         agent_num_per_llm = math.ceil(agent_num / llm_num)
 
         # Prepare agent args
+        logger.info("Prepare agent args")
         index_ls = list(range(len(seeker_configs + interviewer_configs)))
         random.shuffle(index_ls)
         for config, shuffled_idx in zip(seeker_configs+interviewer_configs, index_ls):
@@ -122,7 +122,7 @@ class Simulator:
         # Init env
         logger.info("Init environment")
         seeker_num_per_env = 200
-        env_num = (len(seeker_configs) + seeker_num_per_env - 1) // seeker_num_per_env
+        env_num = math.ceil(len(seeker_configs) / seeker_num_per_env)
         env_names = [f"environment-{str(i)}" for i in range(env_num)]
         env_ports = [i % self.config["server_num_per_host"] + self.config["base_port"] for i in range(env_num)]
 
@@ -245,13 +245,13 @@ class Simulator:
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 
-        message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
-        resp = requests.post(
-            "http://localhost:9111/store_message",
-            json={
-                "save_data_path": message_save_path,
-            }
-        )
+        # message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
+        # resp = requests.post(
+        #     "http://localhost:9111/store_message",
+        #     json={
+        #         "save_data_path": message_save_path,
+        #     }
+        # )
 
     def load(file_path):
         with open(file_path, "rb") as f:

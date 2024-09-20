@@ -11,3 +11,4 @@ server_num_per_host: 200
 
 # custom settings
 recuser_agent_configs_path: recuser_agent_configs.json
+item_infos_path: item_infos.json

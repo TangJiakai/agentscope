@@ -12,7 +12,6 @@ from loguru import logger
 
 import agentscope
 from agentscope.manager import FileManager
-from agentscope.message import Msg
 from agentscope.agents.agent import DistConf
 
 from simulation.helpers.events import (
@@ -31,8 +30,6 @@ from simulation.helpers.emb_service import *
 from simulation.helpers.utils import *
 
 CUR_ROUND = 1
-AGENT_CONFIG = "recuser_agent_configs.json"
-ITEM_INFOS = "item_infos.json"
 
 scene_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -77,18 +74,20 @@ class Simulator:
 
     def _init_agents(self):
         # Load configs
+        logger.info("Load configs")
         model_configs = load_json(
             os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
         )
-        agent_configs = load_json(os.path.join(scene_path, CONFIG_DIR, AGENT_CONFIG))
+        agent_configs = load_json(os.path.join(scene_path, CONFIG_DIR, self.config["recuser_agent_configs_path"]))
         memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
-        item_infos = load_json(os.path.join(scene_path, CONFIG_DIR, ITEM_INFOS))
+        item_infos = load_json(os.path.join(scene_path, CONFIG_DIR, self.config['item_infos_path']))
 
         llm_num = len(model_configs)
         agent_num = len(agent_configs)
         agent_num_per_llm = math.ceil(agent_num / llm_num)
 
         # Prepare agent args
+        logger.info("Prepare agent args")
         index_ls = list(range(agent_num))
         agent_relationships = []
         random.shuffle(index_ls)
@@ -196,14 +195,13 @@ class Simulator:
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 
-
-        message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
-        resp = requests.post(
-            "http://localhost:9111/store_message",
-            json={
-                "save_data_path": message_save_path,
-            }
-        )
+        # message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
+        # resp = requests.post(
+        #     "http://localhost:9111/store_message",
+        #     json={
+        #         "save_data_path": message_save_path,
+        #     }
+        # )
 
     def load(file_path):
         with open(file_path, "rb") as f:
