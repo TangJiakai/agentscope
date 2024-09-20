@@ -1,113 +1,125 @@
-# Rewriting the required functions again before calling them for the plotting
-
 import random
 import math
-from collections import deque
-
 import matplotlib.pyplot as plt
 
-def get_cell_coords(point, cell_size):
-    return int(point[0] // cell_size), int(point[1] // cell_size)
+def generate_points_sampling(k, radius_ratio=0.4, initial_center_dist=0.12, canvas_size=1.0):
+    """
+    根据指定的参数生成随机选择的圆并绘制在画布上。
 
-def distance(p1, p2):
-    return math.hypot(p1[0]-p2[0], p1[1]-p2[1])
+    参数：
+    - k：需要绘制的圆的数量。
+    - radius_ratio：半径占圆心距的比例，默认为0.4。
+    - initial_center_dist：初始圆心距，默认为0.12。
+    - canvas_size：画布的大小，默认为1.0（即1x1的画布）。
 
-def point_valid(point, samples, grid, grid_width, grid_height, cell_size, min_distance, width, height):
-    if not (0 <= point[0] <= width and 0 <= point[1] <= height):
-        return False
+    返回：
+    - selected_positions：选择的圆的圆心坐标列表。
+    - radius：圆的半径。
+    """
+    # 计算圆心之间的距离
+    def calculate_n(center_dist, canvas_size):
+        """
+        根据圆心距计算画布上能放置的最大圆数
+        """
+        # 每行能放的圆的个数
+        circles_per_row = int(canvas_size // center_dist)
+        # 每列能放的圆的个数
+        circles_per_col = int(canvas_size // center_dist)
+        
+        # 总的圆数
+        return circles_per_row * circles_per_col, circles_per_row, circles_per_col
 
-    cell_x, cell_y = get_cell_coords(point, cell_size)
-    neighbor_range = 3  # 检查周围的邻居格子
-    for i in range(max(0, cell_x - neighbor_range), min(grid_width, cell_x + neighbor_range + 1)):
-        for j in range(max(0, cell_y - neighbor_range), min(grid_height, cell_y + neighbor_range + 1)):
-            index = grid.get((i, j))
-            if index is not None:
-                neighbor_point = samples[index]
-                if distance(point, neighbor_point) < min_distance:
-                    return False
-    return True
+    def generate_grid_positions(circles_per_row, circles_per_col, center_dist):
+        """
+        根据每行每列能放的圆数和圆心距生成所有圆的坐标
+        """
+        positions = []
+        for i in range(circles_per_row):
+            for j in range(circles_per_col):
+                # 计算圆心位置
+                x = (i + 0.5) * center_dist
+                y = (j + 0.5) * center_dist
+                positions.append((x, y))
+        return positions
 
-def poisson_disk_sampling(width, height, n_samples, initial_radius, k=30):
-    # 初始化参数
-    min_distance = 2 * initial_radius  # 最小间距为直径
-    cell_size = initial_radius / math.sqrt(2)  # 网格大小
-    grid_width = int(width / cell_size) + 1
-    grid_height = int(height / cell_size) + 1
-
-    while True:
-        grid = {}
-        samples = []
-        active_list = []
-
-        # 随机选择初始点
-        initial_point = (width / 2, height / 2)
-        samples.append(initial_point)
-        active_list.append(0)
-        grid[get_cell_coords(initial_point, cell_size)] = 0
-
-        while active_list and len(samples) < n_samples:
-            idx = random.choice(active_list)
-            point = samples[idx]
-            found = False
-            for _ in range(k):
-                angle = random.uniform(0, 2 * math.pi)
-                radius = random.uniform(min_distance, 2 * min_distance)
-                new_point = (
-                    point[0] + radius * math.cos(angle),
-                    point[1] + radius * math.sin(angle)
-                )
-                if point_valid(new_point, samples, grid, grid_width, grid_height, cell_size, min_distance, width, height):
-                    samples.append(new_point)
-                    active_list.append(len(samples) - 1)
-                    grid[get_cell_coords(new_point, cell_size)] = len(samples) - 1
-                    found = True
-                    if len(samples) >= n_samples:
-                        break
-            if not found:
-                active_list.remove(idx)
-        if len(samples) >= n_samples:
-            break
-        else:
-            # 无法放置所有点，缩小半径
-            initial_radius *= 0.9
-            if initial_radius < 0.1:
-                return None, None
-            min_distance = 2 * initial_radius
-            cell_size = initial_radius / math.sqrt(2)
-            grid_width = int(width / cell_size) + 1
-            grid_height = int(height / cell_size) + 1
-    return samples, initial_radius
-
-# Function to plot points on the graph
-def plot_points(points, width, height, final_radius):
-    fig, ax = plt.subplots(figsize=(8, 8))
+    def plot_points(points, radius):
+        """
+        画出选择的圆
+        """
+        fig, ax = plt.subplots(figsize=(8, 8))
+        
+        # 设置坐标范围为画布大小
+        ax.set_xlim(0, canvas_size)
+        ax.set_ylim(0, canvas_size)
     
-    # Set the plot limits to match the sampling area
-    ax.set_xlim(0, width)
-    ax.set_ylim(0, height)
+        # 画出选择的圆，使用实心填充
+        for point in points:
+            circle = plt.Circle(point, radius, color='r', fill=True)  # 修改为实心圆
+            ax.add_patch(circle)
+            # ax.plot(point[0], point[1], 'ro')  # 红色点标记圆心
+    
+        ax.set_aspect('equal')
+        plt.title(f'随机选择的 {len(points)} 个圆')
+        plt.show()
 
-    # Draw the points
-    for point in points:
-        circle = plt.Circle(point, final_radius, color='b', fill=False)
-        ax.add_patch(circle)
-        ax.plot(point[0], point[1], 'ro')
+    # 初始化参数
+    center_dist = initial_center_dist
 
-    ax.set_aspect('equal')
-    plt.title(f'Poisson Disk Sampling with {len(points)} points')
-    plt.show()
+    # 计算初始的最大圆数n
+    n, circles_per_row, circles_per_col = calculate_n(center_dist, canvas_size)
+    
+    # 如果 k > n，需要调整圆心距，缩短圆心距来放更多圆
+    while k > n:
+        center_dist *= 0.9  # 缩短圆心距
+        n, circles_per_row, circles_per_col = calculate_n(center_dist, canvas_size)
+    
+    # 如果 k 远小于 n，可以增大圆心距，使圆之间间隔更大
+    while k / n < 0.5 and center_dist * 1.1 < canvas_size / min(circles_per_row, circles_per_col):
+        center_dist *= 1.1  # 增加圆心距
+        n, circles_per_row, circles_per_col = calculate_n(center_dist, canvas_size)
+    
+    # 根据圆心距计算圆的半径
+    radius = center_dist * radius_ratio
 
-# # Parameters
-# width, height = 1280.0, 720.0  # 采样区域的宽和高
-# n_samples = 500  # 需要生成的点数
-# initial_radius = 15.0  # 初始半径
+    # 生成所有圆的坐标
+    positions = generate_grid_positions(circles_per_row, circles_per_col, center_dist)
 
-# # Generate points using Poisson disk sampling
-# points, final_radius = poisson_disk_sampling(width, height, n_samples, initial_radius)
+    # 检查圆是否在画布内（考虑半径）
+    valid_positions = []
+    for pos in positions:
+        x, y = pos
+        if radius <= x <= canvas_size - radius and radius <= y <= canvas_size - radius:
+            valid_positions.append(pos)
 
-# if points is None:
-#     print("Failed to generate points.")
+    # 更新可用的圆数量
+    n = len(valid_positions)
 
-# # Plot the sampled points on a graph
-# plot_points(points, width, height, final_radius)
+    # 如果可用的圆少于需要的数量，调整参数
+    while k > n:
+        center_dist *= 0.9  # 缩短圆心距
+        radius = center_dist * radius_ratio
+        n, circles_per_row, circles_per_col = calculate_n(center_dist, canvas_size)
+        positions = generate_grid_positions(circles_per_row, circles_per_col, center_dist)
+        valid_positions = []
+        for pos in positions:
+            x, y = pos
+            if radius <= x <= canvas_size - radius and radius <= y <= canvas_size - radius:
+                valid_positions.append(pos)
+        n = len(valid_positions)
 
-# print(f"Final radius: {final_radius}")
+    # 随机选择k个圆
+    selected_positions = random.sample(valid_positions, k)
+
+    # 画出这些随机选择的圆
+    plot_points(selected_positions, radius)
+
+    # print(f"最终圆心距: {center_dist}")
+    # print(f"最终半径: {radius}")
+    # print(f"可用的圆的数量: {n}")
+    # print(f"选择的圆的数量: {k}")
+
+    return selected_positions, radius
+
+# 调用函数，生成并绘制100个实心圆
+selected_positions, raius = generate_points_sampling(k=30, radius_ratio=0.4, initial_center_dist=0.12, canvas_size=1.0)
+# print(selected_positions, radius)

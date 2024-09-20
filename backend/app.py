@@ -57,7 +57,7 @@ from simulation.memory import (
     ShortLongReflectionMemory,
 )
 from backend.utils.utils import run_sh_async, run_sh_blocking
-from backend.utils.sample import poisson_disk_sampling
+from backend.utils.sample import generate_points_sampling
 from backend.chatgpt_api import rewritten_responses, rate_responses
 
 
@@ -933,12 +933,19 @@ async def start():
     for res in results:
         res.result()
     # Parameters
-    width, height = 1280.0, 720.0  # 采样区域的宽和高
+    # width, height = 1280.0, 720.0  # 采样区域的宽和高
+    # n_samples = len(agents)  # 需要生成的点数
+    # initial_radius = 15.0  # 初始半径
+
+    # Parameters
     n_samples = len(agents)  # 需要生成的点数
-    initial_radius = 15.0  # 初始半径
+    canvas_size=1.0  # 画布的尺寸，此时默认为1*1的
+    initial_center_dist = 0.12  # 初始默认圆心距
+    radius_ratio = 0.4  # 初始默认半径占圆心距的比例
 
     # Generate points using Poisson disk sampling
-    points, final_radius = poisson_disk_sampling(width, height, n_samples, initial_radius)
+    # points, final_radius = poisson_disk_sampling(width, height, n_samples, initial_radius)
+    points, final_radius = generate_points_sampling(k=n_samples, radius_ratio=radius_ratio, initial_center_dist=initial_center_dist, canvas_size=canvas_size)
     avatar_radius = final_radius
     for idx, agent in enumerate(agents):
         agent_coordinates[agent.agent_id] = list(points[idx])
