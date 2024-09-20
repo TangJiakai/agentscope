@@ -8,6 +8,7 @@ from typing import Optional
 import math
 import faiss
 import numpy as np
+from loguru import logger
 
 from agentscope.models import ModelResponse
 from agentscope.message import Msg
@@ -41,13 +42,16 @@ class ShortLongMemory(ShortMemory):
         self.retriever = faiss.IndexFlatL2(embedding_size)
 
         self.model, self.embedding_api = None, None
+        self.get_tokennum_func = None
 
     def _score_memory_importance(self, memory_content: str) -> float:
-        msg = Msg("user", Template.score_importance_prompt(memory_content), role="user")
+        msg = Msg("assistant", Template.score_importance_prompt(memory_content), role="assistant")
         prompt = self.model.format(msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             try:
+                if hasattr(self, "_send_message"):
+                    self._send_message(prompt, response)
                 match = re.search(r"^\D*(\d+)", response.text.strip())
                 if match:
                     res = (float(match.group(1)) / 10) * self.importance_weight
@@ -59,7 +63,6 @@ class ShortLongMemory(ShortMemory):
                     f"Invalid response format in parse_func "
                     f"with response: {response.text}",
                 )
-
         response = self.model(prompt, parse_func=parse_func).raw
         return response
 

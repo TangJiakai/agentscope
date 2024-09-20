@@ -6,7 +6,6 @@ from jinja2 import Environment, FileSystemLoader
 
 from agentscope.models import ModelResponse
 from agentscope.message import Msg
-from agentscope.message import Msg
 
 from simulation.memory.short_long_memory import ShortLongMemory
 from simulation.helpers.utils import get_memory_until_limit
@@ -39,12 +38,17 @@ class ShortLongReflectionMemory(ShortLongMemory):
         self.reflection_threshold = reflection_threshold
         self.reflecting = False
         self.aggregate_importance = 0.0
+        self.get_tokennum_func = None
 
-    def _get_topics_of_reflection(self, last_k: int = 50):
+    def _get_topics_of_reflection(self, last_k: int = 10):
         msg = Msg(
             "user",
             Template.get_topics_of_reflection_prompt(
-                get_memory_until_limit([x for x in self.ltm_memory[-last_k:]])
+                get_memory_until_limit(
+                    [x for x in self.ltm_memory[-last_k:]],
+                    self.get_tokennum_func,
+                    limit=3000
+                )
             ),
             role="user",
         )
@@ -52,6 +56,8 @@ class ShortLongReflectionMemory(ShortLongMemory):
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             try:
+                if hasattr(self, "_send_message"):
+                    self._send_message(prompt, response)
                 text = response.text
                 lines = re.split(r"\n", text.strip())
                 lines = [line for line in lines if line.strip()]  # remove empty lines
@@ -68,7 +74,12 @@ class ShortLongReflectionMemory(ShortLongMemory):
 
     def _get_insights_on_topic(self, topic: Msg) -> List[str]:
         retrieved_memories = self.get_ltm_memory(topic)
-        limited_retrieved_memories = get_memory_until_limit([x for x in retrieved_memories], topic.content, 5000)
+        limited_retrieved_memories = get_memory_until_limit(
+            [x for x in retrieved_memories], 
+            self.get_tokennum_func,
+            topic.content, 
+            3000
+        )
         memory_contents = [x.content for x in limited_retrieved_memories]
         msg = Msg(
             "user",
@@ -79,6 +90,8 @@ class ShortLongReflectionMemory(ShortLongMemory):
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             try:
+                if hasattr(self, "_send_message"):
+                    self._send_message(prompt, response)
                 text = response.text
                 lines = re.split(r"\n", text.strip())
                 lines = [line for line in lines if line.strip()]  # remove empty lines
@@ -96,9 +109,9 @@ class ShortLongReflectionMemory(ShortLongMemory):
     def pause_to_reflect(self):
         topics = self._get_topics_of_reflection()
         for topic in topics:
-            insights = self._get_insights_on_topic(Msg("user", topic, role="user"))
+            insights = self._get_insights_on_topic(Msg("assistant", topic, role="assistant"))
             for insight in insights:
-                self.add_ltm_memory(Msg("user", insight, role="user"))
+                self.add_ltm_memory(Msg("assistant", insight, role="assistant"))
 
     def add(self, memory: Union[Sequence[Msg], Msg, None] = None):
         if memory is None: return

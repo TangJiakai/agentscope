@@ -31,22 +31,11 @@ Finally, please consider the interview situation and decide whether to hire the 
 
 {##################################### Observation #####################################}
 {% macro make_choice_observation(actions) %}
-Please make a choice from the actions below:
+Please make a choice from the actions below (output the index, e.g., 0):
 {% for action in actions %}
-    - {{action}}
+    ({{loop.index0}}) {{action}}
 {% endfor %}
 Answer:
-{% endmacro %}
-
-{% macro parse_value_observation(content, actions) %}
-{{make_choice_observation(actions)}}
-{{content}}
-
-You need to extract the answer from the following text.
-{{content}}
-Now please directly give the extracted answer in the following format:
-The answer is [{{actions[0]}}].
-If you can't extract the answer, please reply directly:\nI CAN'T.
 {% endmacro %}
 
 {% macro screening_cv_observation(seeker_info, actions) %}
@@ -58,7 +47,7 @@ The information of the job seeker is as follows:
 {% macro make_interview_decision_observation(dialog, actions) %}
 The interview is over.
 The conversation is as follows:
-{{dialog}}
+{{ dialog }}
 
 You need to make a final decision based on the interview.
 {{ make_choice_observation(actions) }}
@@ -68,8 +57,8 @@ You need to make a final decision based on the interview.
 {% macro receive_notification_observation(seeker_name, is_accept) %}
 Job seeker {{seeker_name}} chose to
 {% if is_accept %}
-{{seeker_name}} accept the offer.
+{{ seeker_name }} accept the offer.
 {% else %}
-{{seeker_name}} reject the offer.
+{{ seeker_name }} reject the offer.
 {% endif %}
 {% endmacro %}

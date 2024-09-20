@@ -1,6 +1,5 @@
 import random
 import os
-import requests
 import jinja2
 from loguru import logger
 
@@ -86,10 +85,13 @@ class SeekerAgent(BaseAgent):
         self.memory = setup_memory(memory_config)
         self.memory.embedding_api = embedding_api
         self.memory.model = self.model
+        self.memory._send_message = self._send_message
         self.job_ids_pool = job_ids_pool
         self.embedding = embedding
         self.env = env
         self.gender = trait["Gender"]
+
+        self.memory.get_tokennum_func = self.get_tokennum_func
 
         self.seeker = Seeker(name, cv, trait)
         self._update_profile()
@@ -97,10 +99,10 @@ class SeekerAgent(BaseAgent):
 
     def _update_profile(self):
         self._profile = """
-        Name: {name}
-        CV: {cv}
-        Trait: {trait}
-        Working Condition: {working_condition}
+        - Name: {name}
+        - CV: {cv}
+        - Trait: {trait}
+        - Working Condition: {working_condition}
         """.format(
             name=self.seeker.name,
             cv=self.seeker.cv,
@@ -128,20 +130,14 @@ class SeekerAgent(BaseAgent):
     @set_state("determining if seeking")
     def _determine_if_seeking(self, **kwargs):
         instruction = Template.determine_if_seeking_instruction()
-        guided_choice = ["yes", "no"]
+        guided_choice = ["no", "yes"]
         observation = Template.make_choice_observation(guided_choice)
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        content = self.reply(msg).content
-        prompt = Template.parse_value_observation(content, guided_choice)
-        reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
-        answer = random.choice(guided_choice)
-        for c in guided_choice:
-            if c in reponse:
-                answer = c
-                break
-        return answer
+        msg.guided_choice = list(map(str, range(len(guided_choice))))
+        response = guided_choice[int(self.reply(msg).content)]
+        return response
 
     @set_state("determining search job number")
     def _determine_search_job_number(self, **kwargs):
@@ -154,15 +150,9 @@ class SeekerAgent(BaseAgent):
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        content = self.reply(msg).content
-        prompt = Template.parse_value_observation(content, guided_choice)
-        reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
-        answer = random.choice(guided_choice)
-        for c in guided_choice:
-            if c in reponse:
-                answer = c
-                break
-        return int(answer)
+        msg.guided_choice = list(map(str, range(len(guided_choice))))
+        response = guided_choice[int(self.reply(msg).content)]
+        return int(response)
 
     @set_state("determining search jobs")
     def _determine_search_jobs(self, search_job_number: int, **kwargs):
@@ -181,23 +171,17 @@ class SeekerAgent(BaseAgent):
         """Determine which jobs to apply."""
         instruction = Template.determine_apply_jobs_instruction()
         apply_interviewer_agent_infos = {}
-        guided_choice = ["yes", "no"]
+        guided_choice = ["no", "yes"]
         for job_id, agent in interviewer_agent_infos.items():
             job_info = agent.job
             observation = Template.determine_apply_jobs_observation(job_info, guided_choice)
             msg = Msg("user", None, role="user")
             msg.instruction = instruction
             msg.observation = observation
-            content = self.reply(msg).content
-            prompt = Template.parse_value_observation(content, guided_choice)
-            reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
-            answer = random.choice(guided_choice)
-            for c in guided_choice:
-                if c in reponse:
-                    answer = c
-                    break
+            msg.guided_choice = list(map(str, range(len(guided_choice))))
+            response = guided_choice[int(self.reply(msg).content)]
 
-            if answer == "yes":
+            if response == "yes":
                 apply_interviewer_agent_infos[job_id] = agent
 
         return apply_interviewer_agent_infos
@@ -206,16 +190,17 @@ class SeekerAgent(BaseAgent):
     def _apply_job(self, apply_interviewer_agent_infos: dict, **kwargs):
         """Apply jobs."""
         results = []
-        for agent in apply_interviewer_agent_infos.values():
+        cv_passed_interviewer_agent_infos = {}
+        for agent_id, agent in apply_interviewer_agent_infos.items():
             results.append(agent.screening_cv(str(self.seeker)))
 
-        cv_passed_interviewer_agent_infos = {}
         for (agent_id, agent), result in zip(
-            apply_interviewer_agent_infos.items(), results
+            apply_interviewer_agent_infos.items(), 
+            results,
         ):
-            result = result.result()
             if "yes" == result:
                 cv_passed_interviewer_agent_infos[agent_id] = agent
+
         if len(cv_passed_interviewer_agent_infos) > 0:
             self.observe(
                 get_assistant_msg(
@@ -228,12 +213,17 @@ class SeekerAgent(BaseAgent):
     @set_state("interviewing")
     def _interview_fun(self, cv_passed_interviewer_agent_infos: dict, **kwargs):
         """Interview."""
+        results = []
         offer_interviewer_agent_infos = {}
         for agent_id, agent in cv_passed_interviewer_agent_infos.items():
             announcement = Template.interview_announcement_instruction()
             dialog_observation = self.chat(announcement, [self, agent])
             self.observe(get_assistant_msg(announcement + dialog_observation))
-            result = agent.interview(dialog_observation)
+            results.append(agent.interview(dialog_observation))
+
+        for (agent_id, agent), result in zip(
+            cv_passed_interviewer_agent_infos.items(), results
+        ):
             if "yes" == result:
                 offer_interviewer_agent_infos[agent_id] = agent
                 self.observe(
@@ -255,6 +245,16 @@ class SeekerAgent(BaseAgent):
         """Make decision."""
         if len(offer_interviewer_agent_infos) == 0:
             return -1
+        
+        if len(offer_interviewer_agent_infos) == 1:
+            agent = list(offer_interviewer_agent_infos.values())[0]
+            final_job = agent.job
+            self.seeker.working_condition = (
+                "Position Name: " + final_job["Position Name"]
+            )
+            self._update_profile()
+            agent.receive_notification(self.seeker.name, True)
+            return list(offer_interviewer_agent_infos.keys())[0]
 
         instruction = Template.make_final_decision_instruction()
         jobs = {agent.agent_id: agent.job for agent in offer_interviewer_agent_infos.values()}
@@ -263,27 +263,18 @@ class SeekerAgent(BaseAgent):
         msg = Msg("user", None, role="user")
         msg.instruction = instruction
         msg.observation = observation
-        content = self.reply(msg).content
-        prompt = Template.parse_value_observation(content, guided_choice)
-        reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
-        answer = random.choice(guided_choice)
-        for c in guided_choice:
-            if c in reponse:
-                answer = c
-                break
+        msg.guided_choice = list(map(str, range(len(guided_choice))))
+        response = guided_choice[int(self.reply(msg).content)]
 
-        final_job = offer_interviewer_agent_infos[answer].job
+        final_job = offer_interviewer_agent_infos[response].job
         self.seeker.working_condition = (
             "Position Name: " + final_job["Position Name"]
         )
         self._update_profile()
 
-        results = []
+        # results = []
         for agent_id, agent in offer_interviewer_agent_infos.items():
-            results.append(agent.receive_notification(self.seeker.name, agent_id == answer))
-
-        for result in results:
-            result.result()
+            agent.receive_notification(self.seeker.name, agent_id == response)
 
         return answer
 
@@ -291,30 +282,30 @@ class SeekerAgent(BaseAgent):
     def run(self, **kwargs):
         if self.seeker.working_condition != "unemployed":
             if "no" in self._determine_if_seeking():
-                return
+                return "Done"
 
         search_job_number = self._determine_search_job_number()
-        # logger.info(f"Search job number: {search_job_number}")
+        logger.info(f"Search job number: {search_job_number}")
 
         interviewer_agent_infos = self._determine_search_jobs(search_job_number)
-        # logger.info(f"Search jobs: {list(interviewer_agent_infos.keys())}")
+        logger.info(f"Search jobs: {list(interviewer_agent_infos.keys())}")
 
         apply_interviewer_agent_infos = self._determine_apply_job(
             interviewer_agent_infos
         )
-        # logger.info(f"Apply jobs: {list(apply_interviewer_agent_infos.keys())}")
+        logger.info(f"Apply jobs: {list(apply_interviewer_agent_infos.keys())}")
 
         cv_passed_interviewer_agent_infos = self._apply_job(
             apply_interviewer_agent_infos
         )
-        # logger.info(f"CV passed jobs: {list(cv_passed_interviewer_agent_infos.keys())}")
+        logger.info(f"CV passed jobs: {list(cv_passed_interviewer_agent_infos.keys())}")
 
         offer_interviewer_agent_infos = self._interview_fun(
             cv_passed_interviewer_agent_infos
         )
-        # logger.info(f"Offer jobs: {list(offer_interviewer_agent_infos.keys())}")
+        logger.info(f"Offer jobs: {list(offer_interviewer_agent_infos.keys())}")
 
         final_job_id = self._make_final_decision(offer_interviewer_agent_infos)
-        # logger.info(f"Final job: {final_job_id}")
+        logger.info(f"Final job: {final_job_id}")
 
         return final_job_id

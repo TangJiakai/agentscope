@@ -40,36 +40,6 @@ def set_state(flag: str):
     return decorator
 
 
-class RecUser(object):
-    def __init__(self, 
-                name: str, 
-                gender: str, 
-                age: int,
-                traits: str,
-                status: str,
-                interest: str,
-                feature: str,
-        ):
-        self.name = name
-        self.gender = gender
-        self.age = age
-        self.traits = traits
-        self.status = status
-        self.interest = interest
-        self.feature = feature
-
-    def __str__(self):
-        return (
-            f"Name: {self.name}\n"
-            f"Gender: {self.gender}\n"
-            f"Age: {self.age}\n"
-            f"Traits: {self.traits}\n"
-            f"Status: {self.status}\n"
-            f"Interest: {self.interest}\n"
-            f"Feature: {self.feature}\n"
-        )
-
-
 class RecUserAgent(BaseAgent):
     """recuser agent."""
 
@@ -79,12 +49,7 @@ class RecUserAgent(BaseAgent):
         model_config_name: str,
         memory_config: dict,
         embedding_api: str,
-        gender: str, 
-        age: int,
-        traits: str,
-        status: str,
-        interest: str,
-        feature: str,
+        profile: str, 
         env: RecommendationEnv,
         relationship = {},
         **kwargs,
@@ -98,15 +63,12 @@ class RecUserAgent(BaseAgent):
         self.memory = setup_memory(memory_config)
         self.memory.embedding_api = embedding_api
         self.memory.model = self.model
+        self.memory._send_message = self._send_message
         self.env = env
+        self._profile = f"- Name: {self.name} - Profile: {profile}"
         self.relationship = relationship
 
-        self.recuser = RecUser(name, gender, age, traits, status, interest, feature)
-        self._update_profile()
         self._state = "idle"
-
-    def _update_profile(self):
-        self._profile = self.recuser.__str__()
 
     @property
     def state(self):
@@ -120,7 +82,7 @@ class RecUserAgent(BaseAgent):
             self._state = new_value
             url = f"{self.backend_server_url}/api/state"
             resp = requests.post(
-                url, json={"agent_id": self.agent_id, "state": new_value},
+                url, json={"agent_id": self.agent_id, "state": new_value}
             )
             if resp.status_code != 200:
                 logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
@@ -139,36 +101,32 @@ class RecUserAgent(BaseAgent):
     def rating_item(self, movie):
         instruction = Template.rating_item_instruction()
         guided_choice = [
-            "Rating 1: Very poor quality, unenjoyable, with major flaws.",
-            "Rating 2: Noticeable issues, disappointing, with a few redeeming moments.",
-            "Rating 3: Decent but unremarkable, watchable with some strengths and weaknesses.",
-            "Rating 4: Well-made and enjoyable, with minor flaws.",
-            "Rating 5: Outstanding in all aspects, highly enjoyable, and memorable."
+            "Rating 0.5",
+            "Rating 1.0",
+            "Rating 1.5",
+            "Rating 2.0",
+            "Rating 2.5",
+            "Rating 3.0",
+            "Rating 3.5",
+            "Rating 4.0",
+            "Rating 4.5",
+            "Rating 5.0"
         ]
         observation = Template.rating_item_observation(movie, guided_choice)
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        content = self.reply(msg).content
-        prompt = Template.parse_value_observation(content, guided_choice)
-        reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
+        msg.guided_choice = list(map(str, range(len(guided_choice))))
+        response = guided_choice[int(self.reply(msg).content)]
+        action = response.split(":")[0]
 
-        logger.info(f"prompt: {prompt}")
-        logger.info(f"response: {reponse}")
+        logger.info(f"[{self.name}] rated {action} for movie {movie}")
 
-        answer = -1
-        for c in list(map(str, range(1, 6))):
-            if c in reponse:
-                answer = c
-                break
-
-        logger.info(f"[{self.name}] rated {answer} for movie {movie}")
-
-        return answer
+        return action
 
     @set_state("watching")
     def recommend(self):
-        user_info = self._profile + \
+        user_info = self.profile + \
             "\nMemory:" + "\n- ".join([m.content for m in self.memory.get_memory()])
         guided_choice = self.env.recommend4user(user_info)
         instruction = Template.recommend_instruction()
@@ -176,24 +134,13 @@ class RecUserAgent(BaseAgent):
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        content = self.reply(msg).content
-        guided_choice = [m['title'] for m in guided_choice]
-        prompt = Template.parse_value_observation(content, guided_choice)
-        reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
+        msg.guided_choice = list(map(str, range(len(guided_choice))))
+        response = guided_choice[int(self.reply(msg).content)]['title']
 
-        logger.info(f"prompt: {prompt}")
-        logger.info(f"response: {reponse}")
+        logger.info(f"[{self.name}] selected movie {response}")
 
-        answer = random.choice(guided_choice)
-        for c in guided_choice:
-            if c in reponse:
-                answer = c
-                break
-
-        logger.info(f"[{self.name}] selected movie {answer}")
-
-        feeling = self.generate_feeling(answer)
-        rating = self.rating_item(answer)
+        feeling = self.generate_feeling(response)
+        rating = self.rating_item(response)
 
     @set_state("chatting")
     def conversation(self):
@@ -209,22 +156,26 @@ class RecUserAgent(BaseAgent):
 
         return dialog_observation
     
-    @set_state("chatting")
-    def respond_conversation(self, observation: str):
-        instruction = Template.conversation_instruction()
-        format_instruction = INSTRUCTION_BEGIN + instruction + INSTRUCTION_END
-        format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
-        memory = self.memory.get_memory(get_assistant_msg(instruction))
-        memory_msgs = get_memory_until_limit(memory, 
-            format_instruction + format_profile + observation + f"\n{self.name}:")
-        memory_content = "-\n".join([m.content for m in memory_msgs])
-        format_memory = MEMORY_BEGIN + memory_content + MEMORY_END
-        response = self.model(self.model.format(Msg(
-            "user",
-            format_instruction + format_profile + format_memory + observation + f"\n{self.name}:",
-            role="user",
-        )))
-        return get_assistant_msg(f"\n{self.name}: {response.text}")
+    # @set_state("chatting")
+    # def respond_conversation(self, observation: str):
+    #     instruction = Template.conversation_instruction()
+    #     format_instruction = INSTRUCTION_BEGIN + instruction + INSTRUCTION_END
+    #     format_profile = PROFILE_BEGIN + self._profile + PROFILE_END
+    #     memory = self.memory.get_memory(get_assistant_msg(instruction))
+    #     memory_msgs = get_memory_until_limit(
+    #         memory, 
+    #         self.get_tokennum_func,
+    #         format_instruction + format_profile + observation + f"\n{self.name}:",
+    #         4000,
+    #     )
+    #     memory_content = "-\n".join([m.content for m in memory_msgs])
+    #     format_memory = MEMORY_BEGIN + memory_content + MEMORY_END
+    #     response = self.model(self.model.format(Msg(
+    #         "user",
+    #         format_instruction + format_profile + format_memory + observation + f"\n{self.name}:",
+    #         role="user",
+    #     )))
+    #     return get_assistant_msg(f"\n{self.name}: {response.text}")
     
     @set_state("posting")
     def post(self):
@@ -253,20 +204,13 @@ class RecUserAgent(BaseAgent):
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        content = self.reply(msg).content
-        guided_choice = ['recommend', 'conversation', 'post']
-        prompt = Template.parse_value_observation(content, guided_choice)
-        reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
+        msg.guided_choice = list(map(str, range(len(guided_choice))))
+        answer = self.reply(msg).content
+        response = guided_choice[int(answer)]
+        logger.info(f"[{self.name}] selected action: {response}")
+        action = response.split(":")[0].strip().lower()
+        getattr(self, action)()
 
-        logger.info(f"prompt: {prompt}")
-        logger.info(f"response: {reponse}")
-
-        answer = random.choice(guided_choice)
-        for c in guided_choice:
-            if c in reponse.lower():
-                answer = c
-                break
+        logger.info("Finished running recuser agent.")
         
-        getattr(self, answer)()
-        
-        return "success"
+        return "Done"

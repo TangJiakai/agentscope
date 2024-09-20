@@ -8,7 +8,6 @@ from agentscope.server import RpcAgentServerLauncher
 
 from simulation.helpers.constants import *
 from simulation.helpers.utils import load_yaml
-from simulation.helpers.constants import *
 
 from agent import *
 
@@ -19,7 +18,7 @@ def parse_args() -> argparse.Namespace:
     """Parse arguments"""
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="localhost")
-    parser.add_argument("--base_port", type=int, default=12010)
+    parser.add_argument("--base_port", type=int, default=13000)
     return parser.parse_args()
 
 
@@ -38,10 +37,9 @@ def setup_participant_agent_server(host: str, port: int) -> None:
     assistant_server_launcher = RpcAgentServerLauncher(
         host=host,
         port=port,
-        max_pool_size=1638400000000,
-        max_timeout_seconds=10000000000000,
-        # custom_agent_classes=[BaseAgent, RecUserAgent, EnvironmentAgent],
-        # studio_url="http://127.0.0.1:5000",
+        # pool_type="redis",
+        max_pool_size=8192000000,
+        max_expire_time=7200000,
     )
     assistant_server_launcher.launch(in_subprocess=False)
     assistant_server_launcher.wait_until_terminate()

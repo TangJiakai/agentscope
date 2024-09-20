@@ -1,7 +1,6 @@
 import argparse
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import List
 from sentence_transformers import SentenceTransformer
 import torch
 import uvicorn
@@ -46,7 +45,7 @@ def main():
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Run a FastAPI server for sentence embedding.")
     parser.add_argument("--gpu", type=int, default=0, help="GPU ID to use (default: 0)")
-    parser.add_argument("--model_path", type=str, default="/data/tangjiakai/general_simulation/simulation/Downloads/m3e-base", help="Path to the model")
+    parser.add_argument("--model_path", type=str, default="/data/pretrain_dir/m3e-base", help="Path to the model")
     parser.add_argument("--port", type=int, default=8000, help="Port number to run the server on (default: 8000)")
 
     args = parser.parse_args()

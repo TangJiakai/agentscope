@@ -35,7 +35,7 @@ class RecommendationEnv(BaseEnv):
         logger.info("Building index......")
         item_embs = [
             get_embedding(
-                item_info["title"] + item_info["genre"] + item_info["description"],
+                item_info["title"] + item_info["genres"],
                 self.embedding_api,
             )
             for item_info in item_infos

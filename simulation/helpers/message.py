@@ -12,6 +12,7 @@ class MessageUnit(BaseModel):
     completion: str
     rewritten_response: Optional[str] = None
     rating: Optional[int] = None
+    selection_num: Optional[int] = None
 
 
 class StateUnit(BaseModel):

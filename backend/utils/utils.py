@@ -15,7 +15,6 @@ def try_serialize_dict(data):
             pass
     return serialized_data
 
-
 def run_sh_async(script_path: str, *args):
     command = ["bash", script_path, *args]
     try:

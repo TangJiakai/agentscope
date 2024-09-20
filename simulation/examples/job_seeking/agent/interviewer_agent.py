@@ -1,9 +1,8 @@
 import os
-import requests
 from typing import List
 from jinja2 import Environment, FileSystemLoader
-import random
-from loguru import logger
+
+from agentscope.rpc import async_func
 
 from agentscope.rpc import async_func
 
@@ -104,6 +103,10 @@ class InterviewerAgent(BaseAgent):
         self.memory = setup_memory(memory_config)
         self.memory.model = self.model
         self.memory.embedding_api = embedding_api
+        self.memory._send_message = self._send_message
+
+        self.memory.get_tokennum_func = self.get_tokennum_func
+
         self.job = Job(name=name, jd=jd, jr=jr, company=company, salary=salary, benefits=benefits, location=location)
         self.embedding = embedding
         self.env = env
@@ -120,16 +123,17 @@ class InterviewerAgent(BaseAgent):
 
     @state.setter
     def state(self, new_value):
-        if hasattr(self, "backend_server_url"):
-            if new_value not in InterviewerAgentStates:
-                raise ValueError(f"Invalid state: {new_value}")
-            self._state = new_value
-            url = f"{self.backend_server_url}/api/state"
-            resp = requests.post(
-                url, json={"agent_id": self.agent_id, "state": new_value}
-            )
-            if resp.status_code != 200:
-                logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
+        pass
+        # if hasattr(self, "backend_server_url"):
+        #     if new_value not in InterviewerAgentStates:
+        #         raise ValueError(f"Invalid state: {new_value}")
+        #     self._state = new_value
+        #     url = f"{self.backend_server_url}/api/state"
+        #     resp = requests.post(
+        #         url, json={"agent_id": self.agent_id, "state": new_value}
+        #     )
+        #     if resp.status_code != 200:
+        #         logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
 
     def get_attr(self, attr):
         if attr == "job":
@@ -150,35 +154,23 @@ class InterviewerAgent(BaseAgent):
     def screening_cv(self, seeker_info: str):
         msg = get_assistant_msg()
         msg.instruction = Template.screening_cv_instruction()
-        guided_choice = ["yes", "no"]
+        guided_choice = ["no", "yes"]
         msg.observation = Template.screening_cv_observation(seeker_info, guided_choice)
-        content = self.reply(msg).content
-        prompt = Template.parse_value_observation(content, guided_choice)
-        reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
-        answer = random.choice(guided_choice)
-        for c in guided_choice:
-            if c in reponse:
-                answer = c
-                break
-        return answer
+        msg.guided_choice = list(map(str, range(len(guided_choice))))
+        response = guided_choice[int(self.reply(msg).content)]
+        return response
 
     @set_state("interviewing")
     def interview(self, dialog: str):
         instruction = Template.interview_closing_instruction()
-        guided_choice = ["yes", "no"]
+        guided_choice = ["no", "yes"]
         observation = Template.make_interview_decision_observation(dialog, guided_choice)
         msg = get_assistant_msg()
         msg.instruction = instruction
         msg.observation = observation
-        content = self.reply(msg).content
-        prompt = Template.parse_value_observation(content, guided_choice)
-        reponse = self.model(self.model.format(get_assistant_msg(prompt))).text
-        answer = random.choice(guided_choice)
-        for c in guided_choice:
-            if c in reponse:
-                answer = c
-                break
-        return answer
+        msg.guided_choice = list(map(str, range(len(guided_choice))))
+        response = guided_choice[int(self.reply(msg).content)]
+        return response
 
     @async_func
     @set_state("receiving notification")
@@ -188,7 +180,7 @@ class InterviewerAgent(BaseAgent):
                 Template.receive_notification_observation(seeker_name, is_accept)
             )
         )
-        return get_assistant_msg("sucesss")
+        return "success"
 
     @async_func
     def run(self, **kwargs):

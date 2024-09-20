@@ -150,4 +150,8 @@ Downloads
 national-brain/
 test.py
 nohup.out
-*_all_*_agent_configs.json
+*all_*_agent_configs.json
+exp1/
+exp2/datasets/ori_data
+exp2/*saves
+sample.ipynb

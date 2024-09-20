@@ -1,3 +1,4 @@
+import json
 from typing import Dict, List, Literal, Optional, Union
 
 from fastapi import WebSocket
@@ -25,7 +26,7 @@ class ConnectionManager:
             self.agent_connections_history[agent_id] = []
         else:
             self.state_connection = websocket
-            await self.state_connection.send_text(str(self.all_agents_state))
+            await self.state_connection.send_text(json.dumps(self.all_agents_state))
 
     async def disconnect(self, websocket: WebSocket, agent_id: Optional[str] = None):
         if agent_id:

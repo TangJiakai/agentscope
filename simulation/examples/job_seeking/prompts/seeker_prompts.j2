@@ -62,9 +62,9 @@ The jobs you have currently searched is as follows:
 
 {##################################### Observation #####################################}
 {% macro make_choice_observation(actions) %}
-Please make a choice from the actions below:
+Please make a choice from the actions below (output the index, e.g., 0):
 {% for action in actions %}
-    - {{action}}
+    ({{loop.index0}}) {{action}}
 {% endfor %}
 Answer:
 {% endmacro %}
@@ -101,7 +101,6 @@ Success
 Failure
 {% endif %}
 {% endmacro %}
-
 
 {% macro make_final_decision_observation(jobs, actions) %}
 Your received offer is as follows (IDs are in <>).

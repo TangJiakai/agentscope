@@ -1,5 +1,24 @@
 # General Simulation
 ## Pre-requisites
+### 0. Install Dependencies
+**Agentscope**:
+Install from source code (https://github.com/pan-x-c/AgentScope/tree/feature/pxc/env). 
+    
+- Modify the default function parameter `timeout` of `call_agent_func` in `src.agentscope.rpc.rpc_client.py` to 60000.
+- Add two lines of code:
+    ```python
+    self.api_key = api_key
+    self.client_args = client_args or {}
+    ```
+In the ``__init__`` function of `OpenAIWrapperBase` in the file `src/agentscope/models/openai_model.py`.
+
+
+**vllm**
+```bash
+pip install vllm
+```
+
+
 ### 1. Launch Embedding Model
 1. [optional] Run 
 ```python
@@ -7,16 +26,16 @@ python simulation/tools/launch_emb_model.py
 ```
 to launch the embedding model server.
 
-2. Get the `embedding_api` (for example, [http://localhost:8000/](http://localhost:8000/)), and fill that URL into `simulation/examples/job_seeking/configs/simulation_config.yml`.
+2. Get the `embedding_api` (for example, [http://localhost:8003/](http://localhost:8003/)), and fill that URL into `simulation/examples/job_seeking/configs/simulation_config.yml`.
 
 ### 2. Launch LLM Model
 1. [optional] Run 
 ```bash
-bash llmtuning/scripts/launch_llm.sh
+bash llm/launch_llm.sh
 ```
 to launch the LLM model server.
 
-2. Get the `base_url` (for example, [http://localhost:8000/](http://localhost:8083/v1)), and fill that URL into `simulation/examples/job_seeking/configs/model_configs.json`.
+2. Get the `base_url` (for example, [http://localhost:8000/](http://localhost:8083/v1)), and fill that URL into `simulation/examples/job_seeking/configs/model_configs.json`. You can set multiply LLM models.
 
 ### 3. Config
 Configure the following files in the configs directory of the specific scenario (e.g., `examples/job_seeking`):

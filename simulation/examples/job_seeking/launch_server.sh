@@ -11,14 +11,18 @@ fi
 server_num_per_host=$1
 base_port=$2
 
+mkdir -p log
+
 > "${script_dir}/.pid"
 
 for ((i=0; i<server_num_per_host; i++)); do
     port=$((base_port + i))
-    python "${script_dir}/launch_server.py" --base_port ${port} &
+    python "${script_dir}/launch_server.py" --base_port ${port} > log/${port}.log 2>&1 &
     echo $! >> "${script_dir}/.pid"
     echo "Started agent server on localhost:${port} with PID $!"
 done
+
+sleep 10
 
 echo "All servers started."
 

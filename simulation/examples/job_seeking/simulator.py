@@ -1,5 +1,7 @@
 from datetime import timedelta
+import math
 import os
+import random
 import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
@@ -72,6 +74,9 @@ class Simulator:
 
     def _init_agents(self):
         # Load configs
+        model_configs = load_json(
+            os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
+        )
         seeker_configs = load_json(
             os.path.join(scene_path, CONFIG_DIR, SEEKER_AGENT_CONFIG)
         )
@@ -79,15 +84,21 @@ class Simulator:
             os.path.join(scene_path, CONFIG_DIR, INTERVIEWER_AGENT_CONFIG)
         )
         memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
+        memory_config["args"]["embedding_size"] = get_embedding_dimension(self.config["embedding_api"])
+        
+        llm_num = len(model_configs)
+        agent_num = len(seeker_configs) + len(interviewer_configs)
+        agent_num_per_llm = math.ceil(agent_num / llm_num)
 
         # Prepare agent args
-        for config in seeker_configs + interviewer_configs:
-            memory_config["args"]["embedding_size"] = get_embedding_dimension(
-                self.config["embedding_api"]
-            )
+        index_ls = list(range(len(seeker_configs + interviewer_configs)))
+        random.shuffle(index_ls)
+        for config, shuffled_idx in zip(seeker_configs+interviewer_configs, index_ls):
+            model_config = model_configs[shuffled_idx//agent_num_per_llm]
+            config["args"]["model_config_name"] = model_config["config_name"]
             config["args"]["memory_config"] = memory_config
             config["args"]["embedding_api"] = self.config["embedding_api"]
-
+        
         for config in seeker_configs:
             cv = str(config["args"]["cv"])
             config["args"]["embedding"] = get_embedding(
@@ -164,33 +175,32 @@ class Simulator:
             for task in tasks:
                 interviewer_agents.append(task.result())
 
+        logger.info("searching for job_ids_pool")
         index = faiss.IndexFlatL2(get_embedding_dimension(self.config["embedding_api"]))
         index.add(
             np.array([config["args"]["embedding"] for config in interviewer_configs])
         )
+        embeddings = np.array([config["args"]["embedding"] for config in seeker_configs])
+        _, job_index = index.search(embeddings, self.config["pool_size"])
+        for config, index in zip(seeker_configs, job_index):
+            config["args"]["job_ids_pool"] = [
+                interviewer_agents[i].agent_id for i in list(index)
+            ]
 
-        tasks = []
-        with futures.ThreadPoolExecutor() as executor:
-            for config in seeker_configs:
-                tasks.append(
-                    executor.submit(
-                        index.search,
-                        np.array([config["args"]["embedding"]]),
-                        self.config["pool_size"],
-                    ),
-                )
-            for config, task in zip(seeker_configs, tasks):
-                _, job_index = task.result()
-                config["args"]["job_ids_pool"] = [
-                    interviewer_agents[index].agent_id for index in list(job_index[0])
-                ]
+        # Just for test
+        # for config in seeker_configs:
+        #     config["args"]["job_ids_pool"] = [
+        #         interviewer_agents[i].agent_id for i in random.sample(range(len(interviewer_agents)), k=self.config["pool_size"])
+        #     ]
 
+        logger.info("Set job_ids_pool for seeker agents")
         results = []
         for agent, config in zip(seeker_agents, seeker_configs):
             results.append(agent.set_attr(attr="job_ids_pool", value=config["args"]["job_ids_pool"]))
         for res in results:
             res.result()
 
+        logger.info("Set all_agents for envs")
         agent_dict = {agent.agent_id: agent for agent in seeker_agents + interviewer_agents}
         results = []
         for env in envs:
@@ -233,7 +243,7 @@ class Simulator:
 
         # message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
         # resp = requests.post(
-        #     "http://localhost:9000/store_message",
+        #     "http://localhost:9111/store_message",
         #     json={
         #         "save_data_path": message_save_path,
         #     }

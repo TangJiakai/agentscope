@@ -92,14 +92,14 @@ async def lifespan(app: FastAPI):
     backend_server_url = f"http://{host}:{port}"
     # Launch LLM
     # launch_llm_sh_path = os.path.join(
-    #     proj_path, "llmtuning", "scripts", "launch_llm.sh"
+    #     proj_path, "llm", "launch_llm.sh"
     # )
     # run_sh_async(launch_llm_sh_path)
 
     yield
 
     # Kill LLM
-    # kill_llm_sh_path = os.path.join(proj_path, "llmtuning", "scripts", "kill_llm.sh")
+    # kill_llm_sh_path = os.path.join(proj_path, "llm", "kill_llm.sh")
     # run_sh_blocking(kill_llm_sh_path)
 
     # Clean distributed servers
@@ -816,21 +816,22 @@ def chatgpt(req: GPTReq):
 
 @app.post("/tune/{mode}")
 def tune(mode: Literal["rewrite", "rate"]):
+    
+    # Kill LLM
+    # kill_llm_sh_path = os.path.join(proj_path, "llm", "kill_llm.sh")
+    # run_sh_blocking(kill_llm_sh_path)
+
     # Tune LLM
-    tune_llm_sh_path = os.path.join(proj_path, "llmtuning", "scripts", "tune_llm.sh")
+    tune_llm_sh_path = os.path.join(proj_path, "exp2", "scripts", "tune_llm.sh")
     if mode == "rewrite":
         tuning_mode = "sft"
     elif mode == "rate":
         tuning_mode = "ppo"
     run_sh_blocking(tune_llm_sh_path, tuning_mode)
 
-    # Kill LLM
-    # kill_llm_sh_path = os.path.join(proj_path, "llmtuning", "scripts", "kill_llm.sh")
-    # run_sh_blocking(kill_llm_sh_path)
-
     # Launch LLM
     launch_llm_sh_path = os.path.join(
-        proj_path, "llmtuning", "scripts", "launch_llm.sh"
+        proj_path, "llm", "launch_llm.sh"
     )
     run_sh_async(launch_llm_sh_path)
 
@@ -840,7 +841,7 @@ def tune(mode: Literal["rewrite", "rate"]):
     for agent in agents:
         results.append(agent.set_attr("model.model_name", "lora"))
     for res in results:
-        res.get()
+        res.result()
 
     return HTMLResponse()
 
@@ -856,7 +857,7 @@ def export_changed_messages(mode: Literal["rewrite", "rate"]):
             if msg.rewritten_response
         ]
         export_path = os.path.join(
-            proj_path, "llmtuning", "datasets", "sft_data", "sft_data.json"
+            proj_path, "exp2", "datasets", "sft_data", "sft_data.json"
         )
         with open(export_path, "w") as f:
             json.dump(msgs, f, ensure_ascii=False, indent=4)
@@ -867,7 +868,7 @@ def export_changed_messages(mode: Literal["rewrite", "rate"]):
             if msg.rating
         ]
         export_path = os.path.join(
-            proj_path, "llmtuning", "datasets", "ppo_data", "ppo_data.json"
+            proj_path, "exp2", "datasets", "ppo_data", "ppo_data.json"
         )
         with open(export_path, "w") as f:
             json.dump(msgs, f, ensure_ascii=False, indent=4)
@@ -890,7 +891,7 @@ def post_messages(message: MessageUnit):
 
 @app.get("/avatar-radius")
 def get_avatar_radius():
-    if simulator is not None:
+    if simulator is None:
         return HTMLResponse(
             content="Simulator is not running. You should start first.",
             status_code=400,
@@ -920,7 +921,7 @@ async def start():
         str(simulation_config["server_num_per_host"]),
         str(simulation_config["base_port"]),
     )
-    time.sleep(5)
+    time.sleep(10)
 
     module_path = f"simulation.examples.{_scene}.simulator"
     Simulator = importlib.import_module(module_path).Simulator
@@ -1010,9 +1011,10 @@ async def read_root():
 
 
 @app.post("/store_message")
-async def store_message(save_data_path: str = Body(..., embed=True)):
+def store_message(save_data_path: str = Body(..., embed=True)):
     data = [x.model_dump() for x in message_manager.messages]
     with open(save_data_path, "w") as f:
-        await json.dump(data, f, indent=4)
+        json.dump(data, f, indent=4)
     message_manager.clear()
-    return HTMLResponse()
+    logger.info(f"Store message to {save_data_path}")
+    return {"status": "success"}
