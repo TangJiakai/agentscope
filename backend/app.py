@@ -6,22 +6,26 @@ import importlib
 import inspect
 from pathlib import Path
 from queue import Empty, Queue
+import re
 from threading import Thread, Event
 import threading
 import time
 from typing import Dict, List, Literal, Optional, Union
+from concurrent.futures import ThreadPoolExecutor
+from starlette.websockets import WebSocketState
 
 import aiofiles
 from ruamel.yaml import YAML
 from agentscope.message import Msg
 from contextlib import asynccontextmanager
-from fastapi import Body, FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import Body, FastAPI, WebSocket, WebSocketDisconnect, UploadFile
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
-from backend.utils.connection import manager
+from backend.utils.connection import ChatMessage, manager
 from simulation.helpers.message import message_manager, MessageUnit, StateUnit
 from simulation.helpers.events import (
     play_event,
@@ -39,10 +43,12 @@ from backend.utils.body_models import (
     DistributedArgs,
     DistributedConfig,
     BroadcastMsg,
+    Coord,
     AgentInfo,
     AgentStateInfo,
     GPTReq,
     ChangedMsg,
+    Transform,
 )
 from simulation.memory import (
     NoneMemory,
@@ -51,12 +57,15 @@ from simulation.memory import (
     ShortLongReflectionMemory,
 )
 from backend.utils.utils import run_sh_async, run_sh_blocking
+from backend.utils.sample import generate_points_sampling
 from backend.chatgpt_api import rewritten_responses, rate_responses
 
 
 yaml = YAML()
+executor = ThreadPoolExecutor()
 proj_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 templates = Jinja2Templates(directory=os.path.join(proj_path, "backend", "templates"))
+assets_files = StaticFiles(directory=os.path.join(proj_path, "assets"))
 
 
 _scene = "job_seeking"
@@ -64,11 +73,14 @@ events: Dict[str, Event] = {}
 queue = Queue()
 simulator = None
 simulation_thread: Thread
-lock = threading.Lock()
+lock = threading.RLock()
 distributed: bool = True
 cur_msgs: List[MessageUnit] = None
 backend_server_url: str = None
 agent_coordinates: Dict[str, List[float]] = {}
+favorite_agents = []
+transform: Transform = Transform()
+avatar_radius = 15.0
 
 
 @asynccontextmanager
@@ -79,15 +91,15 @@ async def lifespan(app: FastAPI):
     port = os.environ.get("PORT", 9000)
     backend_server_url = f"http://{host}:{port}"
     # Launch LLM
-    launch_llm_sh_path = os.path.join(
-        proj_path, "llmtuning", "scripts", "launch_llm.sh"
-    )
+    # launch_llm_sh_path = os.path.join(
+    #     proj_path, "llm", "launch_llm.sh"
+    # )
     # run_sh_async(launch_llm_sh_path)
 
     yield
 
     # Kill LLM
-    kill_llm_sh_path = os.path.join(proj_path, "llmtuning", "scripts", "kill_llm.sh")
+    # kill_llm_sh_path = os.path.join(proj_path, "llm", "kill_llm.sh")
     # run_sh_blocking(kill_llm_sh_path)
 
     # Clean distributed servers
@@ -99,6 +111,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.mount("/assets", assets_files, name="assets")
 
 app.add_middleware(
     CORSMiddleware,
@@ -154,7 +167,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
             # listen for filter condition without timeout
             try:
-                data = await asyncio.wait_for(websocket.receive_text(), timeout=0.01)
+                data = await asyncio.wait_for(websocket.receive_text(), timeout=1)
                 filter_condition = json.loads(data)
                 logger.info(f"Receive new filter condition: {filter_condition}")
                 filter_condition = FilterCondition(**filter_condition)
@@ -169,39 +182,71 @@ async def websocket_endpoint(websocket: WebSocket):
             ):
                 await manager.send(state)
     except WebSocketDisconnect:
-        await manager.disconnect(websocket)
+        logger.info("WebSocket /ws disconnected")
     finally:
-        await manager.disconnect(websocket)
+        if websocket.client_state == WebSocketState.CONNECTED:
+            await manager.disconnect(websocket)
+
+
+@app.websocket("/round")
+async def websocket_round_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        cur_round = -1
+        if simulator is not None:
+            cur_round = simulator.cur_round
+            await websocket.send_json({"round": cur_round})
+        while True:
+            await asyncio.sleep(1)
+            if simulator is not None and cur_round != simulator.cur_round:
+                cur_round = simulator.cur_round
+                await websocket.send_json({"round": cur_round})
+    except WebSocketDisconnect:
+        logger.info("WebSocket /round disconnected")
+    finally:
+        if websocket.client_state == WebSocketState.CONNECTED:
+            await websocket.close()
 
 
 @app.websocket("/chat/{id}")
 async def websocket_chat_endpoint(websocket: WebSocket, id: str):
     await manager.connect(websocket, id)
     try:
-        env = simulator.env
+        send_msgs = [msg.model_dump_json() for msg in manager.agent_connections_history[id]]
+        await manager.agent_connections[id].send_text(f"[{', '.join(send_msgs)}]")
+        env = None
+        if simulator is not None:
+            env = simulator.env
         while True:
             data = await websocket.receive_text()
             logger.info(f"Receive chat message: {data}")
+            manager.agent_connections_history[id].append(
+                ChatMessage(sender="human", message=data)
+            )
             if data == "exit":
                 break
-            resp = env.interview(id, data)
+            loop = asyncio.get_event_loop()
+            resp = await loop.run_in_executor(executor, env.interview, id, data)
+            # resp = env.interview(id, data)
+            logger.info(f"Send chat message: {resp}")
             await manager.send_to_agent(id, resp)
     except WebSocketDisconnect:
-        await manager.disconnect(websocket, id)
+        logger.info(f"WebSocket /chat/{id} disconnected")
     finally:
-        await manager.disconnect(websocket, id)
+        if websocket.client_state == WebSocketState.CONNECTED:
+            await manager.disconnect(websocket, id)
 
 
 @app.get("/scene", response_model=List[Scene])
 def get_scenes():
-    assets_path = os.path.join(proj_path, "assets")
+    assets_path = os.path.join(proj_path, "assets", "scenes")
     scenes = []
     for scene in os.listdir(assets_path):
         scene_path = os.path.join(assets_path, scene)
         if os.path.isdir(scene_path):
             with open(os.path.join(scene_path, "desc.txt"), "r") as f:
                 desc = f.read()
-            pic_path = os.path.join(scene_path, "pic.png")
+            pic_path = os.path.join("/assets", scene, "pic.png")
             scenes.append(Scene(name=scene, desc=desc, pic_path=pic_path))
     return scenes
 
@@ -210,40 +255,116 @@ def get_scenes():
 def put_scene(scene_name: str):
     global _scene
     _scene = scene_name
-    return {"status": "success"}
+    return HTMLResponse()
+
+
+@app.get("/transform", response_model=Transform)
+def get_transform():
+    return transform
+
+
+@app.put("/transform")
+def put_transform(req: Transform):
+    global transform
+    transform = req
+    return HTMLResponse()
 
 
 @app.get("/agents", response_model=List[AgentInfo])
-def get_agents(query: Optional[str] = None):
-    agents = simulator.agents
-    # assign agent coordinates
-    for agent in agents:
-        if agent.agent_id not in agent_coordinates:
-            agent_coordinates[agent.agent_id] = [
-                random.uniform(0, 1),
-                random.uniform(0, 1),
-            ]
-
-    def fuzzy_search(agents, query):
-        return [
-            agent
-            for agent in agents
-            if query.lower() in agent.name.lower() or query == agent.agent_id
-        ]
+def get_agents(
+    type: Literal["name", "id"] = "name",
+    query: Optional[str] = None,
+    favorite: bool = False,
+):
+    if simulator is None:
+        return []
+    if favorite:
+        agents = favorite_agents
+    else:
+        agents = simulator.agents
 
     if query:
-        agents = fuzzy_search(agents, query)
-    return [
-        AgentInfo(
-            name=agent.name,
-            id=agent.agent_id,
-            cls=agent._init_settings["class_name"],
-            state=agent.get_attr(attr="state"),
-            profile=agent.get_attr(attr="_profile"),
-            coordinates=agent_coordinates[agent.agent_id],
+        if type == "name":
+            agents = [agent for agent in agents if query.lower() in agent.name.lower()]
+        elif type == "id":
+            agents = [agent for agent in agents if query == agent.agent_id]
+
+    resp = []
+    for agent in agents:
+        avatar_path = os.path.join("/assets", "avatar")
+        match = re.search(r"\d", agent.agent_id)
+        num = match.group() if match else 0
+        gender = agent.get_attr("gender")
+        if gender is None:
+            avatar_path = os.path.join(
+                avatar_path, random.choice(["female", "male"]), f"{num}.png"
+            )
+        else:
+            gender = gender.lower()
+            avatar_path = os.path.join(avatar_path, gender, f"{num}.png")
+        resp.append(
+            AgentInfo(
+                name=agent.name,
+                id=agent.agent_id,
+                cls=agent._init_settings["class_name"],
+                state=agent.get_attr(attr="state"),
+                profile=agent.get_attr(attr="_profile"),
+                gender=gender,
+                coordinates=Coord(x=agent_coordinates[agent.agent_id][0], y=agent_coordinates[agent.agent_id][1]),
+                avatar=avatar_path,
+            )
         )
-        for agent in agents
-    ]
+
+    # if _scene == "job_seeking":
+    #     for agent in agents:
+    #         match = re.search(r'\d', agent.agent_id)
+    #         num = match.group() if match else 0
+    #         if agent._init_settings["class_name"] == "SeekerAgent":
+    #             avatar_path = os.path.join(avatar_path, agent.seeker.trait["Gender"].lower(), f"{num}.png")
+    #         elif agent._init_settings["class_name"] == "InterviewerAgent":
+    #             avatar_path = os.path.join(avatar_path, f"{random.choice(["female", "male"])}", f"{num}.png")
+    #         resp.append(
+    #             AgentInfo(
+    #                 name=agent.name,
+    #                 id=agent.agent_id,
+    #                 cls=agent._init_settings["class_name"],
+    #                 state=agent.get_attr(attr="state"),
+    #                 profile=agent.get_attr(attr="_profile"),
+    #                 coordinates=agent_coordinates[agent.agent_id],
+    #                 avatar=avatar_path,
+    #             )
+    #         )
+    # elif _scene == "recommendation":
+    #     for agent in agents:
+    #         match = re.search(r'\d', agent.agent_id)
+    #         num = match.group() if match else 0
+    #         resp.append(
+    #             AgentInfo(
+    #                 name=agent.name,
+    #                 id=agent.agent_id,
+    #                 cls=agent._init_settings["class_name"],
+    #                 state=agent.get_attr(attr="state"),
+    #                 profile=agent.get_attr(attr="_profile"),
+    #                 coordinates=agent_coordinates[agent.agent_id],
+    #                 avatar=os.path.join(avatar_path, agent.recuser.gender, f"{num}.png"),
+    #             )
+    #         )
+    # else:
+    #     for agent in agents:
+    #         match = re.search(r'\d', agent.agent_id)
+    #         num = match.group() if match else 0
+    #         resp.append(
+    #             AgentInfo(
+    #                 name=agent.name,
+    #                 id=agent.agent_id,
+    #                 cls=agent._init_settings["class_name"],
+    #                 state=agent.get_attr(attr="state"),
+    #                 profile=agent.get_attr(attr="_profile"),
+    #                 coordinates=agent_coordinates[agent.agent_id],
+    #                 avatar=os.path.join(avatar_path, f"{random.choice(["female", "male"])}", f"{num}.png"),
+    #             )
+    #         )
+    return resp
 
 
 # @app.get("/agents")
@@ -262,61 +383,154 @@ def get_agents(query: Optional[str] = None):
 #     return [try_serialize_dict(agent.__dict__) for agent in agents]
 
 
-@app.get("/agent/config", response_model=List[AgentConfig])
-def get_agent_config():
-    configs_path = Path(
-        os.path.join(proj_path, "simulation", "examples", _scene, "configs")
-    )
-    all_agent_configs = configs_path.glob("all_*_agent_configs.json")
-    resp = []
-    for agent_config in all_agent_configs:
-        with open(agent_config, "r") as f:
-            agent_config = json.load(f)
-            agent_cls = {
-                "class": agent_config[0]["class"],
-                "num_agents": len(agent_config),
-            }
-            print(agent_cls)
-            resp.append(AgentConfig(**agent_cls))
+@app.get("/agent/config", response_model=List[str])
+def get_agent_classes_config():
+    agent_module = importlib.import_module(f"simulation.examples.{_scene}.agent")
+    agent_classes = inspect.getmembers(agent_module, inspect.isclass)
+    resp = [agent_cls[0] for agent_cls in agent_classes]
+    # configs_path = Path(
+    #     os.path.join(proj_path, "simulation", "examples", _scene, "configs")
+    # )
+    # all_agent_configs = configs_path.glob("all_*_agent_configs.json")
+    # resp = []
+    # for agent_config in all_agent_configs:
+    #     with open(agent_config, "r") as f:
+    #         agent_config = json.load(f)
+    #         agent_cls = {
+    #             "class": agent_config[0]["class"],
+    #             "num_agents": len(agent_config),
+    #         }
+    #         print(agent_cls)
+    #         resp.append(AgentConfig(**agent_cls))
     return resp
 
 
 @app.put("/agent/config")
-def put_agent_config(req: List[AgentConfig]):
-    req = {agent.cls: agent.num_agents for agent in req}
-    configs_path = Path(
-        os.path.join(proj_path, "simulation", "examples", _scene, "configs")
+def put_agent_config(req: AgentConfig):
+    configs_path = os.path.join(proj_path, "simulation", "examples", _scene, "configs")
+    profile_path = os.path.join(configs_path, f"all_{req.cls}_configs.json")
+    with open(profile_path, "r") as f:
+        agent_configs = json.load(f)
+        agent_configs = random.choices(agent_configs, k=req.num_agents)
+        agent_configs_path = os.path.join(
+            configs_path, f"{req.cls}_configs.json"
+        )
+        with open(agent_configs_path, "w") as agent_config_file:
+            json.dump(agent_configs, agent_config_file, ensure_ascii=False, indent=4)
+    return HTMLResponse()
+
+
+@app.post("/agent/profile/{cls}", response_model=AgentConfig)
+async def post_agent_profile(cls: str, profile: UploadFile):
+    profile_path = os.path.join(
+        proj_path,
+        "simulation",
+        "examples",
+        _scene,
+        "configs",
+        f"all_{cls}_configs.json",
     )
-    all_agent_configs = configs_path.glob("all_*_agent_configs.json")
-    for all_agent_config in all_agent_configs:
-        with open(all_agent_config, "r") as f:
-            agent_configs = json.load(f)
-            agent_num = req[agent_configs[0]["class"]]
-            agent_configs = random.choices(agent_configs, k=agent_num)
-            agent_configs_path = os.path.join(
-                configs_path, all_agent_config.name.removeprefix("all_")
+    async with aiofiles.open(profile_path, "wb") as f:
+        await f.write(await profile.read())
+    with open(profile_path, "r") as f:
+        agent_configs = json.load(f)
+        num_agents = len(agent_configs)
+    return AgentConfig(**{"class": cls, "num_agents": num_agents})
+
+
+@app.get("/agent/favorite", response_model=List[AgentInfo])
+def get_favorite_agents():
+    if simulator is None:
+        return []
+
+    resp = []
+    for agent in favorite_agents:
+        avatar_path = os.path.join("/assets", "avatar")
+        match = re.search(r"\d", agent.agent_id)
+        num = match.group() if match else 0
+        gender = agent.get_attr("gender")
+        if gender is None:
+            avatar_path = os.path.join(
+                avatar_path, random.choice(["female", "male"]), f"{num}.png"
             )
-            with open(agent_configs_path, "w") as agent_config_file:
-                json.dump(
-                    agent_configs, agent_config_file, ensure_ascii=False, indent=4
-                )
-    return {"status": "success"}
+        else:
+            gender = gender.lower()
+            avatar_path = os.path.join(avatar_path, gender, f"{num}.png")
+        resp.append(
+            AgentInfo(
+                name=agent.name,
+                id=agent.agent_id,
+                cls=agent._init_settings["class_name"],
+                state=agent.get_attr(attr="state"),
+                profile=agent.get_attr(attr="_profile"),
+                gender=gender,
+                coordinates=Coord(x=agent_coordinates[agent.agent_id][0], y=agent_coordinates[agent.agent_id][1]),
+                avatar=avatar_path,
+            )
+        )
+    return resp
+
+
+@app.get("/agent/favorite/{id}")
+def get_favorite_agent(id: str):
+    if simulator is None:
+        return HTMLResponse(content="Simulator is not running.", status_code=400)
+    if id in [agent.agent_id for agent in favorite_agents]:
+        return True
+    else:
+        return False
+
+
+@app.post("/agent/favorite/{id}")
+def post_favorite_agent(id: str):
+    global favorite_agents
+    if simulator is None:
+        return HTMLResponse(content="Simulator is not running.", status_code=400)
+    agents = simulator.agents
+    for agent in agents:
+        if agent.agent_id == id:
+            favorite_agents.append(agent)
+            return HTMLResponse()
+    return HTMLResponse(content="Agent not found.", status_code=404)
+
+
+@app.delete("/agent/favorite/{id}")
+def delete_favorite_agent(id: str):
+    if simulator is None:
+        return HTMLResponse(content="Simulator is not running.", status_code=400)
+    global favorite_agents
+    favorite_agents = [agent for agent in favorite_agents if agent.agent_id != id]
+    return HTMLResponse()
 
 
 @app.get("/agent/{id}", response_model=AgentInfo)
 def get_agent(id: str):
-    agent = simulator.get_agent_by_id(id)
-    if agent:
-        return AgentInfo(
-            name=agent.name,
-            id=agent.agent_id,
-            cls=agent._init_settings["class_name"],
-            state=agent.get_attr(attr="state"),
-            profile=agent.get_attr(attr="_profile"),
-            coordinates=agent_coordinates[agent.agent_id],
-        )
-    else:
-        return HTMLResponse(content="Agent not found.", status_code=404)
+    if simulator is not None:
+        agents = simulator.agents
+        for agent in agents:
+            if agent.agent_id == id:
+                match = re.search(r"\d", agent.agent_id)
+                num = match.group() if match else 0
+                gender = agent.get_attr("gender")
+                avatar_path = os.path.join("/assets", "avatar")
+                if gender is None:
+                    avatar_path = os.path.join(
+                        avatar_path, random.choice(["female", "male"]), f"{num}.png"
+                    )
+                else:
+                    gender = gender.lower()
+                    avatar_path = os.path.join(avatar_path, gender, f"{num}.png")
+                return AgentInfo(
+                    name=agent.name,
+                    id=id,
+                    cls=agent._init_settings["class_name"],
+                    state=agent.get_attr(attr="state"),
+                    profile=agent.get_attr(attr="_profile"),
+                    gender=gender,
+                    coordinates=Coord(x=agent_coordinates[id][0], y=agent_coordinates[id][1]),
+                    avatar=avatar_path,
+                )
+    return HTMLResponse(content="Agent not found.", status_code=404)
 
 
 # @app.put("/agent/{id}")
@@ -325,16 +539,18 @@ def get_agent(id: str):
 #     try:
 #         agent = agents[id]
 #         agent.update_from_dict(new_agent)
-#         return {"status": "success"}
+#         return HTMLResponse()
 #     except IndexError:
 #         return HTMLResponse(content="Agent not found.", status_code=404)
 
 
 @app.post("/broadcast")
 def post_broadcast(broadcast_msg: BroadcastMsg):
+    if simulator is None:
+        return HTMLResponse(content="Simulator is not running.", status_code=400)
     env = simulator.env
     env.broadcast(broadcast_msg.msg)
-    return {"status": "success"}
+    return HTMLResponse()
 
 
 @app.get("/model", response_model=List[ModelConfig])
@@ -349,15 +565,20 @@ async def get_model_configs():
         return model_configs
 
 
-@app.put("/model", response_model=List[ModelConfig])
-async def put_model_configs(model_configs: List[ModelConfig]):
+@app.put("/model")
+def put_model_configs(model_configs: List[ModelConfig]):
     config_file = os.path.join(
         proj_path, "simulation", "examples", _scene, "configs", "model_configs.json"
     )
     logger.info(f"Put model config to {config_file}")
-    async with aiofiles.open(config_file, "w") as f:
-        await f.write(model_configs)
-    return {"status": "success"}
+    with open(config_file, "w") as f:
+        json.dump(
+            [config.model_dump() for config in model_configs],
+            f,
+            ensure_ascii=False,
+            indent=4,
+        )
+    return HTMLResponse()
 
 
 @app.get("/memory", response_model=List[MemoryConfig])
@@ -378,14 +599,14 @@ async def get_memory_config():
 
 
 @app.put("/memory")
-async def put_memory_config(memory_config: MemoryConfig):
+def put_memory_config(memory_config: MemoryConfig):
     config_file = os.path.join(
         proj_path, "simulation", "examples", _scene, "configs", "memory_configs.json"
     )
     logger.info(f"Put memory config to {config_file}")
-    async with aiofiles.open(config_file, "w") as f:
-        await f.write(memory_config)
-    return {"status": "success"}
+    with open(config_file, "w") as f:
+        json.dump(memory_config.model_dump(), f, ensure_ascii=False, indent=4)
+    return HTMLResponse()
 
 
 # @app.get("/checkpoint/{scene}", response_model=List[CheckpointResp])
@@ -439,7 +660,7 @@ def load_checkpoint(checkpoint_req: PathReq):
     simulation_config["load_simulator_path"] = checkpoint_path
     with open(simulation_config_path, "w") as f:
         yaml.dump(simulation_config, f)
-    return {"status": "success"}
+    return HTMLResponse()
 
 
 @app.get("/savedir", response_model=PathReq)
@@ -463,7 +684,7 @@ def put_savedir(req: PathReq):
     simulation_config["save_dir"] = savedir
     with open(simulation_config_path, "w") as f:
         yaml.dump(simulation_config, f)
-    return {"status": "success"}
+    return HTMLResponse()
 
 
 @app.get("/distributed", response_model=DistributedConfig)
@@ -496,7 +717,7 @@ def put_distributed_config(req: DistributedConfig):
     simulation_config["server_num_per_host"] = req.args.server_num_per_host
     with open(simulation_config_path, "w") as f:
         yaml.dump(simulation_config, f)
-    return {"status": "success"}
+    return HTMLResponse()
 
 
 @app.get("/states", response_model=List[AgentStateInfo])
@@ -550,7 +771,7 @@ def random_selection_messages(num: int):
     with lock:
         cur_msgs = message_manager.messages.copy()
     cur_msgs = sorted(random.choices(cur_msgs, k=num), key=lambda x: x.msg_id)
-    return {"status": "success"}
+    return HTMLResponse()
 
 
 @app.post("/messages/random/undo")
@@ -558,13 +779,13 @@ def undo_random_selection():
     global cur_msgs
     with lock:
         cur_msgs = message_manager.messages.copy()
-    return {"status": "success"}
+    return HTMLResponse()
 
 
 @app.put("/messages/{mode}")
 def save_changed_messages(mode: Literal["rewrite", "rate"], msgs: List[ChangedMsg]):
     change_msgs(mode, msgs)
-    return {"status": "success"}
+    return HTMLResponse()
 
 
 @app.post("/gpt")
@@ -590,26 +811,27 @@ def chatgpt(req: GPTReq):
                 for idx, msg_id in enumerate(req.msg_ids)
             ],
         )
-    return {"status": "success"}
+    return HTMLResponse()
 
 
 @app.post("/tune/{mode}")
 def tune(mode: Literal["rewrite", "rate"]):
+    
+    # Kill LLM
+    # kill_llm_sh_path = os.path.join(proj_path, "llm", "kill_llm.sh")
+    # run_sh_blocking(kill_llm_sh_path)
+
     # Tune LLM
-    tune_llm_sh_path = os.path.join(proj_path, "llmtuning", "scripts", "tune_llm.sh")
+    tune_llm_sh_path = os.path.join(proj_path, "exp2", "scripts", "tune_llm.sh")
     if mode == "rewrite":
         tuning_mode = "sft"
     elif mode == "rate":
         tuning_mode = "ppo"
     run_sh_blocking(tune_llm_sh_path, tuning_mode)
 
-    # Kill LLM
-    kill_llm_sh_path = os.path.join(proj_path, "llmtuning", "scripts", "kill_llm.sh")
-    # run_sh_blocking(kill_llm_sh_path)
-
     # Launch LLM
     launch_llm_sh_path = os.path.join(
-        proj_path, "llmtuning", "scripts", "launch_llm.sh"
+        proj_path, "llm", "launch_llm.sh"
     )
     run_sh_async(launch_llm_sh_path)
 
@@ -619,9 +841,9 @@ def tune(mode: Literal["rewrite", "rate"]):
     for agent in agents:
         results.append(agent.set_attr("model.model_name", "lora"))
     for res in results:
-        res.get()
-    
-    return {"status": "success"}
+        res.result()
+
+    return HTMLResponse()
 
 
 @app.post("/export/{mode}")
@@ -635,7 +857,7 @@ def export_changed_messages(mode: Literal["rewrite", "rate"]):
             if msg.rewritten_response
         ]
         export_path = os.path.join(
-            proj_path, "llmtuning", "datasets", "sft_data", "sft_data.json"
+            proj_path, "exp2", "datasets", "sft_data", "sft_data.json"
         )
         with open(export_path, "w") as f:
             json.dump(msgs, f, ensure_ascii=False, indent=4)
@@ -646,27 +868,45 @@ def export_changed_messages(mode: Literal["rewrite", "rate"]):
             if msg.rating
         ]
         export_path = os.path.join(
-            proj_path, "llmtuning", "datasets", "ppo_data", "ppo_data.json"
+            proj_path, "exp2", "datasets", "ppo_data", "ppo_data.json"
         )
         with open(export_path, "w") as f:
             json.dump(msgs, f, ensure_ascii=False, indent=4)
-    return {"status": "success"}
+    return HTMLResponse()
 
 
 @app.post("/api/state")
 def post_state(state: StateUnit):
     message_manager.add_state(state)
-    return {"status": "success"}
+    # logger.info(f"state: {state.agent_id} -- {state.state}")
+    return HTMLResponse()
 
 
 @app.post("/api/message")
 def post_messages(message: MessageUnit):
     message_manager.add_message(message)
-    return {"status": "success"}
+    # logger.info(f"message: {message.agent_id} -- {message.completion}")
+    return HTMLResponse()
+
+
+@app.get("/avatar-radius")
+def get_avatar_radius():
+    if simulator is None:
+        return HTMLResponse(
+            content="Simulator is not running. You should start first.",
+            status_code=400,
+        )
+    return {"radius": avatar_radius}
 
 
 @app.post("/start")
 async def start():
+    global simulator, simulation_thread, avatar_radius
+    if simulator is not None:
+        return HTMLResponse(
+            content="Simulator is already running. You should reset first.",
+            status_code=400,
+        )
     # launch server
     simulation_config_path = os.path.join(
         proj_path, "simulation", "examples", _scene, "configs", "simulation_config.yml"
@@ -676,25 +916,43 @@ async def start():
     launch_server_sh_path = os.path.join(
         proj_path, "simulation", "examples", _scene, "launch_server.sh"
     )
-    run_sh_blocking(
+    run_sh_async(
         launch_server_sh_path,
         str(simulation_config["server_num_per_host"]),
         str(simulation_config["base_port"]),
     )
+    time.sleep(10)
 
     module_path = f"simulation.examples.{_scene}.simulator"
     Simulator = importlib.import_module(module_path).Simulator
-    global simulator, simulation_thread
     simulator = Simulator()
     agents = simulator.agents
     results = []
     for agent in agents:
         results.append(agent.set_attr("backend_server_url", backend_server_url))
     for res in results:
-        res.get()
+        res.result()
+    # Parameters
+    # width, height = 1280.0, 720.0  # 采样区域的宽和高
+    # n_samples = len(agents)  # 需要生成的点数
+    # initial_radius = 15.0  # 初始半径
+
+    # Parameters
+    n_samples = len(agents)  # 需要生成的点数
+    canvas_size=1.0  # 画布的尺寸，此时默认为1*1的
+    initial_center_dist = 0.12  # 初始默认圆心距
+    radius_ratio = 0.4  # 初始默认半径占圆心距的比例
+
+    # Generate points using Poisson disk sampling
+    # points, final_radius = poisson_disk_sampling(width, height, n_samples, initial_radius)
+    points, final_radius = generate_points_sampling(k=n_samples, radius_ratio=radius_ratio, initial_center_dist=initial_center_dist, canvas_size=canvas_size)
+    avatar_radius = final_radius
+    for idx, agent in enumerate(agents):
+        agent_coordinates[agent.agent_id] = list(points[idx])
+    manager.all_agents_state = {agent.agent_id: agent.get_attr("state") for agent in agents}
     simulation_thread = Thread(target=simulator.run)
     simulation_thread.start()
-    return {"status": "success"}
+    return HTMLResponse()
 
 
 @app.post("/pause")
@@ -715,13 +973,13 @@ async def pause_and_resume():
         message_manager.message_queue.put("Resume simulation.")
         play_event.set()
         pause_success_event.clear()
-    return {"status": "success"}
+    return HTMLResponse()
 
 
 @app.post("/stop")
 async def stop():
     stop_event.set()
-    return {"status": "success"}
+    return HTMLResponse()
 
 
 @app.post("/reset")
@@ -731,21 +989,27 @@ async def reset():
         kill_server_sh_path = os.path.join(
             proj_path, "simulation", "examples", _scene, "kill_all_server.sh"
         )
-        # run_sh_blocking(kill_server_sh_path)
-    global simulator, simulation_thread, cur_msgs
+        run_sh_blocking(kill_server_sh_path)
+    global simulator, simulation_thread, cur_msgs, agent_coordinates, favorite_agents, transform, avatar_radius
+    manager.clear()
+    transform = Transform()
+    avatar_radius = 15.0
     simulator = None
     kill_event.set()
     play_event.set()
-    simulation_thread.join()
+    if simulation_thread is not None:
+        simulation_thread.join()
     simulation_thread = None
     cur_msgs = None
+    agent_coordinates = {}
+    favorite_agents = []
     message_manager.clear()
     play_event.clear()
     stop_event.clear()
     kill_event.clear()
     pause_success_event.clear()
     message_manager.message_queue.put("Reset simulation.")
-    return {"status": "success"}
+    return HTMLResponse()
 
 
 @app.get("/", response_class=HTMLResponse)

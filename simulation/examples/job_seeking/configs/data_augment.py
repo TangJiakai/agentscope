@@ -3,7 +3,7 @@ import os
 
 
 directory = "simulation/examples/job_seeking/configs"
-meta_data_path = "all_seeker_agent_configs.json"
+meta_data_path = "all_SeekerAgent_configs.json"
 
 scale_map = {
     "2421": 1,

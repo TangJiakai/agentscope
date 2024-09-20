@@ -86,7 +86,7 @@ class BaseAgent(AgentBase):
         attrs = attr.split(".")
         obj = self
         for attr in attrs:
-            obj = getattr(obj, attr)
+            obj = getattr(obj, attr, None)
         return obj
 
     def external_interview(self, observation, **kwargs):
@@ -96,6 +96,7 @@ class BaseAgent(AgentBase):
         msg.instruction = instruction
         msg.observation = observation
         msg.no_memory = True
+        msg.external_interview = True
         response = self(msg).content
         return response
 
@@ -191,10 +192,12 @@ class BaseAgent(AgentBase):
 
         if hasattr(x, "guided_choice"):
             response = self.model(prompt_msg, extra_body={"guided_choice": x.guided_choice})
-            self._send_message(prompt_msg, response, len(x.guided_choice))
+            if not hasattr(x, "external_interview"):
+                self._send_message(prompt_msg, response, len(x.guided_choice))
         else:
             response = self.model(prompt_msg)
-            self._send_message(prompt_msg, response)
+            if not hasattr(x, "external_interview"):
+                self._send_message(prompt_msg, response)
 
         add_memory_msg = Msg("user", instruction + observation + response.text, role="user")
         if not hasattr(x, "no_memory"):

@@ -1,0 +1,252 @@
+[
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Firmware Engineer",
+            "jd": "Develop and maintain firmware for embedded systems and devices.",
+            "jr": [
+                "Bachelor's degree in Computer Engineering or Electrical Engineering",
+                "3+ years of experience in firmware development",
+                "Proficient in C and assembly language",
+                "Experience with debugging tools"
+            ],
+            "company": "Samsung Electronics, a leading technology company",
+            "salary": "USD 100,000 - 130,000 annually",
+            "benefits": [
+                "Health and wellness benefits",
+                "Flexible working conditions",
+                "Paid time off",
+                "Employee discounts"
+            ],
+            "location": "Seoul, South Korea",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 14020
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Safety Officer",
+            "jd": "Develop and implement safety policies and procedures to ensure a safe working environment.",
+            "jr": [
+                "Bachelor's degree in Occupational Health and Safety or related field",
+                "3+ years of experience in safety management",
+                "Strong knowledge of OSHA regulations",
+                "Excellent communication skills"
+            ],
+            "company": "Boeing, an aerospace company",
+            "salary": "USD 85,000 - 100,000 annually",
+            "benefits": [
+                "Health insurance",
+                "Retirement plans",
+                "Paid time off",
+                "Training and development opportunities"
+            ],
+            "location": "Chicago, Illinois, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 14021
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Environmental Policy Analyst",
+            "jd": "Analyze and develop policies to promote environmental sustainability and compliance with regulations.",
+            "jr": [
+                "Master's degree in Environmental Science, Policy, or related field",
+                "2+ years of experience in policy analysis",
+                "Strong research and analytical skills",
+                "Excellent written and verbal communication skills"
+            ],
+            "company": "Environmental Defense Fund, a nonprofit organization focused on environmental issues",
+            "salary": "USD 70,000 - 90,000 annually",
+            "benefits": [
+                "Flexible work hours",
+                "Health and wellness programs",
+                "Paid volunteer time",
+                "Retirement savings plan"
+            ],
+            "location": "New York, New York, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 14022
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Telecommunications Sales Agent",
+            "jd": "Sell telecommunications services and products to residential and business customers, providing excellent customer service.",
+            "jr": [
+                "High school diploma or equivalent",
+                "Previous sales experience preferred",
+                "Strong communication skills",
+                "Ability to work in a fast-paced environment"
+            ],
+            "company": "AT&T, a leading telecommunications company",
+            "salary": "USD 40,000 - 60,000 annually",
+            "benefits": [
+                "Health benefits",
+                "Employee discounts",
+                "Paid training",
+                "Flexible scheduling"
+            ],
+            "location": "Dallas, Texas, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 14023
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Design Director",
+            "jd": "Lead and manage the design team, overseeing the creative process and ensuring alignment with company goals.",
+            "jr": [
+                "Bachelor's degree in Design or related field",
+                "5+ years of experience in design leadership",
+                "Strong portfolio demonstrating leadership in design projects",
+                "Excellent communication and team management skills"
+            ],
+            "company": "Adobe Inc., a multinational computer software company",
+            "salary": "USD 120,000 - 150,000 annually",
+            "benefits": [
+                "Stock options",
+                "Health and wellness programs",
+                "Generous vacation policy",
+                "Continuing education opportunities"
+            ],
+            "location": "San Jose, California, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 14024
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Catering Coordinator",
+            "jd": "Assist in planning and coordinating all aspects of catering services for events.",
+            "jr": [
+                "Associate's degree in Hospitality or related field",
+                "1-2 years of experience in catering or event coordination",
+                "Strong attention to detail",
+                "Ability to multitask and work under pressure"
+            ],
+            "company": "Taste Buds Catering, known for its personalized service and diverse menu options",
+            "salary": "USD 40,000 - 55,000 annually",
+            "benefits": [
+                "Health insurance",
+                "Employee discounts",
+                "Paid training programs",
+                "Flexible scheduling"
+            ],
+            "location": "Miami, Florida, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 14025
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Power Electronics Engineer",
+            "jd": "Design and develop power conversion systems, focusing on efficiency and reliability for various applications.",
+            "jr": [
+                "Bachelor's degree in Electrical Engineering",
+                "4+ years of experience in power electronics design",
+                "Familiarity with simulation tools like PSpice and MATLAB",
+                "Experience in renewable energy applications is a plus"
+            ],
+            "company": "Siemens, a global technology company focusing on electrification and automation",
+            "salary": "USD 95,000 - 125,000 annually",
+            "benefits": [
+                "Comprehensive health plans",
+                "Retirement savings plans",
+                "Paid vacation and sick leave",
+                "Employee training programs"
+            ],
+            "location": "Munich, Germany",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 14026
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Sales Operations Analyst",
+            "jd": "Analyze sales data, create reports, and provide insights to improve sales processes and performance.",
+            "jr": [
+                "Bachelor's degree in Business, Finance, or related field",
+                "2+ years of experience in sales operations or analytics",
+                "Proficient in Excel and data visualization tools",
+                "Strong attention to detail"
+            ],
+            "company": "Oracle, a multinational computer technology corporation",
+            "salary": "USD 70,000 - 90,000 annually",
+            "benefits": [
+                "Comprehensive health insurance",
+                "401(k) retirement plan",
+                "Flexible work schedule",
+                "Employee wellness programs"
+            ],
+            "location": "Austin, Texas, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 14027
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Pharmacist",
+            "jd": "Dispense medications and counsel patients on their proper use and potential side effects.",
+            "jr": [
+                "Doctor of Pharmacy (Pharm.D.) degree",
+                "State licensure as a pharmacist",
+                "Strong attention to detail and communication skills",
+                "Experience in retail or clinical pharmacy settings"
+            ],
+            "company": "Walgreens Boots Alliance, a global pharmacy-led health and wellbeing company",
+            "salary": "USD 100,000 - 125,000 annually",
+            "benefits": [
+                "Health, dental, and vision insurance",
+                "Employee stock purchase plan",
+                "Paid time off and holidays",
+                "Continuing education support"
+            ],
+            "location": "Deerfield, IL, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 14028
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Education Technology Specialist",
+            "jd": "Integrate technology into educational practices, enhancing teaching and learning experiences.",
+            "jr": [
+                "Master's degree in Educational Technology",
+                "3+ years of experience in tech integration in education",
+                "Strong understanding of emerging technologies",
+                "Ability to train educators in technology use"
+            ],
+            "company": "TechEd Solutions, focused on innovative educational technologies.",
+            "salary": "USD 85,000 - 115,000 annually",
+            "benefits": [
+                "Health and wellness programs",
+                "Flexible work hours",
+                "Continuing education support",
+                "Paid time off"
+            ],
+            "location": "Atlanta, Georgia, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 14029
+        }
+    }
+]

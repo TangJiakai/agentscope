@@ -1,4 +1,5 @@
 import json
+import random
 import subprocess
 
 from loguru import logger
@@ -13,7 +14,6 @@ def try_serialize_dict(data):
         except (TypeError, ValueError):
             pass
     return serialized_data
-
 
 def run_sh_async(script_path: str, *args):
     command = ["bash", script_path, *args]
@@ -43,3 +43,19 @@ def run_sh_blocking(script_path: str, *args):
 
     except Exception as e:
         logger.error(f"Error running {script_path}: {e}")
+
+def traverse_gender(obj):
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if key.lower() == "gender":
+                return value.lower()
+            if isinstance(value, (dict, object)) and not isinstance(value, (str, int, float, bool)):
+                traverse_gender(value)
+    elif hasattr(obj, '__dict__'):
+        for key, value in obj.__dict__.items():
+            if key.lower() == "gender":
+                return value.lower()
+            if isinstance(value, (dict, object)) and not isinstance(value, (str, int, float, bool)):
+                traverse_gender(value)
+    else:
+        return random.choice(["female", "male"])

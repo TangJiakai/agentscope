@@ -39,8 +39,7 @@ class Simulator:
         super().__init__()
         self.config = load_yaml(os.path.join(scene_path, CONFIG_DIR, SIMULATION_CONFIG))
 
-        global CUR_ROUND
-        self.cur_round = CUR_ROUND
+        self.cur_round = 1
         self._from_scratch()
 
     def _from_scratch(self):
@@ -49,8 +48,6 @@ class Simulator:
         if self.config["load_simulator_path"] is not None:
             loaded_simulator = Simulator.load(self.config["load_simulator_path"])
             self.__dict__.update(loaded_simulator.__dict__)
-            global CUR_ROUND
-            CUR_ROUND = self.cur_round
         else:
             self._init_agents()
 
@@ -210,9 +207,7 @@ class Simulator:
     def save(self):
         file_manager = FileManager.get_instance()
         save_path = os.path.join(file_manager.run_dir, f"ROUND-{self.cur_round}.pkl")
-        global CUR_ROUND
-        self.cur_round = CUR_ROUND + 1
-        CUR_ROUND = self.cur_round
+        self.cur_round += 1
         with open(save_path, "wb") as f:
             dill.dump(self, f)
         logger.info(f"Saved simulator to {save_path}")

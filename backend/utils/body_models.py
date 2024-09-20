@@ -12,6 +12,7 @@ class Scene(BaseModel):
 class _ClientArgs(BaseModel):
     max_retries: int
     base_url: str
+    timeout: Optional[float] = None
 
 
 class _GenerateArgs(BaseModel):
@@ -69,13 +70,20 @@ class BroadcastMsg(BaseModel):
     msg: str
 
 
+class Coord(BaseModel):
+    x: float
+    y: float
+
+
 class AgentInfo(BaseModel):
     name: str
     id: str
     cls: str
     state: str
     profile: str
-    coordinates: List[float]
+    gender: Optional[Literal["female", "male"]] = None
+    coordinates: Coord
+    avatar: str
 
 
 class AgentStateInfo(BaseModel):
@@ -97,3 +105,12 @@ class ChangedMsg(BaseModel):
     msg_id: int
     rewritten_response: Optional[str] = None
     rating: Optional[int] = None
+
+
+class Transform(BaseModel):
+    scaleX: float = 1
+    scaleY: float = 1
+    translateX: float = 0
+    translateY: float = 0
+    skewX: float = 0
+    skewY: float = 0

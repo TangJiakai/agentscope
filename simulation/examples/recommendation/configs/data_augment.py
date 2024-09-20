@@ -6,7 +6,7 @@ import random
 from copy import deepcopy
 
 directory = "simulation/examples/recommendation/configs"
-meta_data_path = "all_recuser_agent_configs.json"
+meta_data_path = "all_RecUserAgent_configs.json"
 
 scale_map = {
     "3139": 0.015625,
