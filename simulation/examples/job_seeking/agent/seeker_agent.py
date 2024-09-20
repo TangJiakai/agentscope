@@ -69,8 +69,8 @@ class SeekerAgent(BaseAgent):
         model_config_name: str,
         memory_config: dict,
         embedding_api: str,
-        cv: dict,
-        trait: dict,
+        cv: str,
+        trait: str,
         embedding: list,
         env: BaseEnv,
         job_ids_pool: list[str] = [],
@@ -89,7 +89,6 @@ class SeekerAgent(BaseAgent):
         self.job_ids_pool = job_ids_pool
         self.embedding = embedding
         self.env = env
-        self.gender = trait["Gender"]
 
         self.memory.get_tokennum_func = self.get_tokennum_func
 
@@ -116,16 +115,17 @@ class SeekerAgent(BaseAgent):
 
     @state.setter
     def state(self, new_value):
-        if hasattr(self, "backend_server_url"):
-            if new_value not in SeekerAgentStates:
-                raise ValueError(f"Invalid state: {new_value}")
-            self._state = new_value
-            url = f"{self.backend_server_url}/api/state"
-            resp = requests.post(
-                url, json={"agent_id": self.agent_id, "state": new_value}
-            )
-            if resp.status_code != 200:
-                logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
+        pass
+        # if hasattr(self, "backend_server_url"):
+        #     if new_value not in SeekerAgentStates:
+        #         raise ValueError(f"Invalid state: {new_value}")
+        #     self._state = new_value
+        #     url = f"{self.backend_server_url}/api/state"
+        #     resp = requests.post(
+        #         url, json={"agent_id": self.agent_id, "state": new_value}
+        #     )
+        #     if resp.status_code != 200:
+        #         logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
 
     @set_state("determining if seeking")
     def _determine_if_seeking(self, **kwargs):
@@ -161,6 +161,7 @@ class SeekerAgent(BaseAgent):
         )
         search_job_ids = [self.job_ids_pool[i] for i in search_job_indices]
         interviewer_agent_infos = self.env.get_agents_by_ids(search_job_ids)
+
         for agent in interviewer_agent_infos.values():
             agent.job = agent.get_attr("job")
 
