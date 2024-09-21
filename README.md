@@ -2,7 +2,7 @@
 ## Pre-requisites
 ### 0. Install Dependencies
 **Agentscope**:
-Install from source code (https://github.com/pan-x-c/AgentScope/tree/feature/pxc/env). 
+Install from source code (https://github.com/pan-x-c/AgentScope/tree/feature/pxc/async_create_agent). 
     
 - Modify the default function parameter `timeout` of `call_agent_func` in `src.agentscope.rpc.rpc_client.py` to 60000.
 - Add two lines of code:
