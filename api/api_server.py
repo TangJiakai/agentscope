@@ -29,7 +29,7 @@ from vllm.entrypoints.logger import RequestLogger
 from vllm.entrypoints.openai.cli_args import make_arg_parser
 # yapf conflicts with isort for this block
 # yapf: disable
-from vllm.entrypoints.openai.protocol import (#ChatCompletionRequest,
+from vllm.entrypoints.openai.protocol import (ChatCompletionRequest,
                                               ChatCompletionResponse,
                                               CompletionRequest,
                                               CompletionResponse,
@@ -55,7 +55,7 @@ from vllama_judge import LlamaForJudge
 
 import openai
 from datetime import datetime
-from custom_serving_chat import OpenAIServingChat,ChatCompletionRequest
+from custom_serving_chat import OpenAIServingChat
 
 TIMEOUT_KEEP_ALIVE = 5  # seconds
 
@@ -78,6 +78,7 @@ os.environ['VLLM_WORKER_MULTIPROC_METHOD'] = 'spawn'
 # Register the custom model
 ModelRegistry.register_model("LlamaForCausalLM", LlamaForJudge)
 token_mapping={'!': '0', '"': '1', '#': '2', '$': '3', '%': '4', '&': '5', "'": '6', '(': '7', ')': '8', '*': '9'}
+use_index=False
 
 def model_is_embedding(model_name: str, trust_remote_code: bool,
                        quantization: Optional[str]) -> bool:
@@ -297,24 +298,15 @@ async def show_version():
 async def create_chat_completion(request: ChatCompletionRequest,
                                  raw_request: Request):
 
-    # print("Request:",request)
-    # print("Raw Request:",raw_request)
     generator = await openai_serving_chat.create_chat_completion(
-        request, raw_request)
+        request, raw_request,use_index)
 
     if isinstance(generator, ErrorResponse):
         return JSONResponse(content=generator.model_dump(),
                             status_code=generator.code)
 
     elif isinstance(generator, ChatCompletionResponse):
-        data=generator.model_dump()
-        if request.selection_num is not None:
-            if data['choices'][0]['message']['content'] in token_mapping:
-                data['choices'][0]['message']['content']=token_mapping[data['choices'][0]['message']['content']]
-                print("Token Error request:",request)
-                print("Token Error response:",data)
-        logger.info(f"Chat completion:\n Request:{request}\nResponse:{data}")
-        return JSONResponse(content=data)
+        return JSONResponse(content=generator.model_dump())
 
     return StreamingResponse(content=generator, media_type="text/event-stream")
 
@@ -430,7 +422,7 @@ def wait_for_server(url, timeout=100):
 
 
 
-async def warmup(llm_engine):
+async def warmup(args,llm_engine):
 
     print("Warmup prefix caching")
     def extract_macro_instructions(content):
@@ -438,12 +430,17 @@ async def warmup(llm_engine):
         macros = re.findall(macro_pattern, content, re.DOTALL)
         return macros
     
-    file="/data/wl/BigBrain/job.j2"
-    with open(file, 'r') as f:
-        content = f.read()
+    dir_path=args.prompt_dir
+    contents=""
+    for root, dirs, files in os.walk(dir_path):
+        for file in files:
+            if file.endswith('.j2'):
+                file_path= os.path.join(root, file)
+                with open(file_path, 'r') as f:
+                    contents+= f.read()
 
-    instructions = extract_macro_instructions(content)
-
+    instructions = extract_macro_instructions(contents)
+    logger.info("Instructions: %s", instructions)
     for instruction in instructions:
         def prepare_request(data, instruction):
             # 修改 content 字段为 instruction
@@ -456,7 +453,7 @@ async def warmup(llm_engine):
                 model=data['model'],
                 messages=data['messages'],
                 temperature=data.get('temperature', 0.7),
-                max_tokens=data.get('max_tokens', 8192),
+                max_tokens=data.get('max_tokens', 10),
                 stream=data.get('stream', False)
             )
 
@@ -465,7 +462,6 @@ async def warmup(llm_engine):
         data = {
             'temperature': 0.7,
             'max_tokens': 10,
-            'selection_num': 5,
             'model': '/data/pretrain_dir/Meta-Llama-3-8B-Instruct',
             'messages': [{
                 'role': 'user',
@@ -476,8 +472,7 @@ async def warmup(llm_engine):
 
         # 调用函数生成 create_chat_completion 所需的参数
         request_data = prepare_request(data, instruction)
-        
-        response = await openai_serving_chat.create_chat_completion(request_data, None)
+        _ = await openai_serving_chat.create_chat_completion(request_data, None,False)
         blocks = llm_engine.engine.scheduler[0].block_manager.gpu_allocator.evictor.free_table
         for k in blocks.keys():
             blocks[k].last_accessed = datetime(3000, 12, 31, 23, 59, 59).timestamp()
@@ -558,7 +553,9 @@ async def run_server(args, **uvicorn_kwargs) -> None:
             return
 
         app = await init_app(async_engine_client, args)
-        await warmup(async_engine_client)
+        if args.prompt_dir is not None:
+            await warmup(args,async_engine_client)
+
         shutdown_task = await serve_http(
             app,
             engine=async_engine_client,
@@ -583,6 +580,9 @@ if __name__ == "__main__":
     parser = FlexibleArgumentParser(
         description="vLLM OpenAI-Compatible RESTful API server.")
     parser = make_arg_parser(parser)
+    parser.add_argument('--prompt-dir', type=str, help='The file path to the prompt file',default=None)
+    parser.add_argument('--use-index', action='store_true', help='Whether to use index')
     args = parser.parse_args()
-
+    if args.use_index:
+        use_index=True
     asyncio.run(run_server(args))

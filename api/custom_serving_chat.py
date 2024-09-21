@@ -57,12 +57,9 @@ def create_logit_processor(i):
     logit_processor.index = i
     return logit_processor
 
-logit_processors=[create_logit_processor(i) for i in range(1, 10)]
+logit_processors=[create_logit_processor(i) for i in range(1, 11)]
 
-class ChatCompletionRequest(ChatCompletionRequest):
-    selection_num: Optional[int] =None
-
-
+token_mapping={'!': '0', '"': '1', '#': '2', '$': '3', '%': '4', '&': '5', "'": '6', '(': '7', ')': '8', '*': '9'}
 
 class OpenAIServingChat(OpenAIServing):
 
@@ -113,6 +110,7 @@ class OpenAIServingChat(OpenAIServing):
         self,
         request: ChatCompletionRequest,
         raw_request: Optional[Request] = None,
+        use_index: Optional[bool] = False,
     ) -> Union[AsyncGenerator[str, None], ChatCompletionResponse,
                ErrorResponse]:
         """Completion API similar to OpenAI's API.
@@ -178,6 +176,12 @@ class OpenAIServingChat(OpenAIServing):
                 "--enable-auto-tool-choice and --tool-call-parser to be set")
 
         request_id = f"chat-{random_uuid()}"
+       
+        if use_index:
+            selection_num=None
+            if request.guided_choice is not None:
+                selection_num = len(request.guided_choice)
+                request.guided_choice = None
         try:
             guided_decode_logits_processor = (
                 await self._guided_decode_logits_processor(request, tokenizer))
@@ -205,11 +209,13 @@ class OpenAIServingChat(OpenAIServing):
                 default_max_tokens=self.max_model_len -
                 len(prompt_inputs["prompt_token_ids"]))
 
-            if request.selection_num is not None:
+            if use_index and selection_num is not None:
                 sampling_params.logits_processors.append(
-                    logit_processors[request.selection_num - 1])
+                    logit_processors[selection_num - 1])
                 sampling_params.max_tokens = 1
-            #sampling_params.logits_processors.append()
+                request.max_tokens=1
+                sampling_params.logprobs=10
+                
 
 
             self._log_inputs(request_id,
@@ -602,6 +608,12 @@ class OpenAIServingChat(OpenAIServing):
 
         role = self.get_chat_request_role(request)
         for output in final_res.outputs:
+            if request.max_tokens==1:
+                if output.text in token_mapping:
+                    output.text=token_mapping[output.text]
+                        
+                for i in range(len(output.token_ids)):
+                    output.token_ids[i]+=15
             token_ids = output.token_ids
             out_logprobs = output.logprobs
 

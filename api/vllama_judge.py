@@ -51,6 +51,41 @@ from vllm.platforms import current_platform
 import math
 
 
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+
+import torch
+from torch import nn
+from transformers import LlamaConfig
+
+from vllm.attention import Attention, AttentionMetadata
+from vllm.config import CacheConfig, LoRAConfig
+from vllm.distributed import (get_pp_group, get_tensor_model_parallel_rank,
+                              get_tensor_model_parallel_world_size)
+from vllm.model_executor.layers.activation import SiluAndMul
+from vllm.model_executor.layers.layernorm import RMSNorm
+from vllm.model_executor.layers.linear import (MergedColumnParallelLinear,
+                                               QKVParallelLinear,
+                                               RowParallelLinear)
+from vllm.model_executor.layers.logits_processor import LogitsProcessor
+from vllm.model_executor.layers.quantization.base_config import (
+    QuantizationConfig)
+from vllm.model_executor.layers.quantization.compressed_tensors.utils import (
+    get_compressed_tensors_cache_scale)
+from vllm.model_executor.layers.rotary_embedding import get_rope
+from vllm.model_executor.layers.sampler import Sampler, SamplerOutput
+from vllm.model_executor.layers.vocab_parallel_embedding import (
+    DEFAULT_VOCAB_PADDING_SIZE, ParallelLMHead, VocabParallelEmbedding)
+from vllm.model_executor.model_loader.weight_utils import (
+    default_weight_loader, kv_cache_scales_loader, maybe_remap_kv_scale_name)
+from vllm.model_executor.sampling_metadata import SamplingMetadata
+from vllm.sequence import IntermediateTensors
+from vllm.utils import is_hip
+
+from vllm.model_executor.models.interfaces import SupportsLoRA
+from vllm.model_executor.models.utils import PPMissingLayer, is_pp_missing_parameter, make_layers
+
+
+
 def _prune_hidden_states(
     hidden_states: torch.Tensor,
     sampling_metadata: SamplingMetadata,
@@ -160,9 +195,11 @@ class ChoiceLogitsProcessor(nn.Module):
 
             # Apply logits processors (if any).
             logits = _apply_logits_processors(logits, sampling_metadata)
-            inf_tensor = torch.full((logits.shape[0], 15), -math.inf, device=logits.device)
-            # 沿着列的维度（dim=1）将 inf_tensor 和原始 tensor 拼接
-            logits = torch.cat((inf_tensor, logits), dim=1)
+
+            # inf_tensor = torch.full((logits.shape[0], 15), -math.inf, device=logits.device)
+            # # 沿着列的维度（dim=1）将 inf_tensor 和原始 tensor 拼接
+            # logits = torch.cat((inf_tensor, logits), dim=1)
+
         return logits
 
     def _get_logits(
@@ -188,8 +225,10 @@ class ChoiceLogitsProcessor(nn.Module):
         # # Remove paddings in vocab (if any).
         logits = lm_head(hidden_states)
         logits = logits.float()
+
         if logits is not None:
             logits = logits[..., :self.org_vocab_size]
+        
         return logits
 
     def extra_repr(self) -> str:
@@ -204,14 +243,10 @@ class ChoiceLogitsProcessor(nn.Module):
 class LlamaForJudge(LlamaForCausalLM):
     def __init__(self, config, cache_config=None, quant_config=None, lora_config=None):
         super().__init__(config, cache_config, quant_config, lora_config)
-        token_indices = [15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
-        self.optimized_lm_head = self.create_optimized_lm_head(token_indices)
-        self.choice_logits_processor = ChoiceLogitsProcessor(self.unpadded_vocab_size,len(token_indices))
 
     def create_optimized_lm_head(self, token_indices: List[int]):
         # 提取指定token对应的权重
         weights = [self.lm_head.weight[idx, :].unsqueeze(0) for idx in token_indices]
-        
         # 形成新的小矩阵
         optimized_weights = torch.cat(weights, dim=0)
         
@@ -237,30 +272,84 @@ class LlamaForJudge(LlamaForCausalLM):
         
         # logits = self.logits_processor(self.lm_head, hidden_states,
         #                                sampling_metadata)
-        st=time.time()
         logits_processors=sampling_metadata.seq_groups[0].sampling_params.logits_processors
-        if logits_processors is not None and len(logits_processors)>0 and hasattr(logits_processors[0], 'is_choice_processor'):
+        choice=False
+        if logits_processors is not None and len(logits_processors)>0:
+            for processor in logits_processors:
+                if hasattr(processor, 'is_choice_processor'):
+                    choice=True
+                    break
+        if  choice:
             logits = self.choice_logits_processor(self.optimized_lm_head,hidden_states, sampling_metadata)
         else:
             logits = self.logits_processor(self.lm_head, hidden_states, sampling_metadata)
-        ed=time.time()
-        #print("Compute Logits Time:",ed-st)
+        #print(f"logits_processors:{logits_processors}\nchoice:{choice}\nlogits:{logits[:,:20]}\n")
         return logits
     
-    # def sample(
-    #     self,
-    #     logits: torch.Tensor,
-    #     sampling_metadata: SamplingMetadata,
-    # ) -> Optional[SamplerOutput]:
-    #     st=time.time()
-    #     next_tokens = self.sampler(logits, sampling_metadata)
-    #     logits_processors=sampling_metadata.seq_groups[0].sampling_params.logits_processors
-    #     if logits_processors is not None and len(logits_processors)>0 and hasattr(logits_processors[0], 'is_choice_processor'):
-    #         for output in next_tokens.outputs:
-    #             for sample in output.samples:
-    #                 token_id=sample.output_token+15
-    #                 sample.logprobs[token_id]=sample.logprobs.pop(sample.output_token)
-    #                 sample.output_token =token_id
-    #     ed=time.time()
-    #     print("Sample Time:",ed-st)
-    #     return next_tokens
+
+    def load_weights(self, weights: Iterable[Tuple[str, torch.Tensor]]):
+        stacked_params_mapping = [
+            # (param_name, shard_name, shard_id)
+            (".qkv_proj", ".q_proj", "q"),
+            (".qkv_proj", ".k_proj", "k"),
+            (".qkv_proj", ".v_proj", "v"),
+            (".gate_up_proj", ".gate_proj", 0),
+            (".gate_up_proj", ".up_proj", 1),
+        ]
+        params_dict = dict(self.named_parameters())
+        for name, loaded_weight in weights:
+            if "rotary_emb.inv_freq" in name:
+                continue
+            if ("rotary_emb.cos_cached" in name
+                    or "rotary_emb.sin_cached" in name):
+                # Models trained using ColossalAI may include these tensors in
+                # the checkpoint. Skip them.
+                continue
+            # With tie_word_embeddings, we can skip lm_head.weight
+            # The weight might appear unnecessarily in the files if the model is
+            # processed with quantization, LoRA, fine-tuning, etc.
+            if self.config.tie_word_embeddings and "lm_head.weight" in name:
+                continue
+            if scale_name := get_compressed_tensors_cache_scale(name):
+                # Loading kv cache scales for compressed-tensors quantization
+                param = params_dict[scale_name]
+                weight_loader = getattr(param, "weight_loader",
+                                        default_weight_loader)
+                loaded_weight = loaded_weight[0]
+                weight_loader(param, loaded_weight)
+                continue
+            for (param_name, weight_name, shard_id) in stacked_params_mapping:
+                if weight_name not in name:
+                    continue
+                name = name.replace(weight_name, param_name)
+                # Skip loading extra bias for GPTQ models.
+                if name.endswith(".bias") and name not in params_dict:
+                    continue
+
+                if is_pp_missing_parameter(name, self):
+                    continue
+
+                param = params_dict[name]
+                weight_loader = param.weight_loader
+                weight_loader(param, loaded_weight, shard_id)
+
+                break
+            else:
+                # Skip loading extra bias for GPTQ models.
+                if name.endswith(".bias") and name not in params_dict:
+                    continue
+                # Remapping the name of FP8 kv-scale.
+                name = maybe_remap_kv_scale_name(name, params_dict)
+                if name is None:
+                    continue
+
+                if is_pp_missing_parameter(name, self):
+                    continue
+
+                param = params_dict[name]
+                weight_loader = getattr(param, "weight_loader",
+                                        default_weight_loader)
+                weight_loader(param, loaded_weight)
+        token_indices = [15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+        self.optimized_lm_head = self.create_optimized_lm_head(token_indices)
+        self.choice_logits_processor = ChoiceLogitsProcessor(self.unpadded_vocab_size,len(token_indices))
