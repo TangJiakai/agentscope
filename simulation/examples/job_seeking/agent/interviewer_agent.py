@@ -62,13 +62,13 @@ class Job(dict):
         jr_string = "\n".join([f"- {r}" for r in self.jr])
         benefits_string = "\n".join([f"- {b}" for b in self.benefits])
         return (
-            f"Position Name: {self.name}\n"
-            f"Job Description: {self.jd}\n"
-            f"Job Requirements:\n{jr_string}"
-            f"Company: {self.company}\n"
-            f"Salary: {self.salary}\n"
-            f"Benefits:\n{benefits_string}"
-            f"Location: {self.location}\n"
+            f"# Position Name\n {self.name}\n"
+            f"# Job Description {self.jd}\n"
+            f"# Job Requirements \n{jr_string}"
+            f"# Company {self.company}\n"
+            f"# Salary: {self.salary}\n"
+            f"# Benefits:\n{benefits_string}"
+            f"# Location: {self.location}\n"
         )
 
 

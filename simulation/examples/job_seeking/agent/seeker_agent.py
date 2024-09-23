@@ -97,15 +97,41 @@ class SeekerAgent(BaseAgent):
         self._state = "idle"
 
     def _update_profile(self):
+        cv = self.seeker.cv
+        cv_mdstr = ""
+        level = 1  # Start with level 1 for the first key
+
+        for key, value in cv.items():
+            cv_mdstr += f"{'##' * level} {key}\n"  # Add the section title
+            level += 2  # Increase level for the next section
+
+            if isinstance(value, list):
+                for item in value:
+                    if isinstance(item, dict):  # For work experience
+                        cv_mdstr += f"{'#' * level} Company: {item['Company']}\n"
+                        cv_mdstr += f"{'#' * (level + 1)} Position: {item['Position']}\n"
+                        cv_mdstr += f"{'#' * (level + 1)} Time: {item['Time']}\n"
+                    else:  # For skills
+                        cv_mdstr += f"{'#' * level} - {item}\n"
+            else:
+                cv_mdstr += f"{value}\n"
+
+            level -= 1  # Reset level for the next key
+
+        cv_mdstr = cv_mdstr.strip()
+
+        trait = self.seeker.trait
+        trait_mdstr = "\n".join(["## {key}\n{value}".format(x) for x in trait.items()])
+
         self._profile = """
-        - Name: {name}
-        - CV: {cv}
-        - Trait: {trait}
-        - Working Condition: {working_condition}
+        # Name \n{name}
+        # CV {cv}
+        # Trait \n{trait}
+        # Working Condition \n{working_condition}
         """.format(
             name=self.seeker.name,
-            cv=self.seeker.cv,
-            trait=self.seeker.trait,
+            cv=cv_mdstr,
+            trait=trait_mdstr,
             working_condition=self.seeker.working_condition,
         )
 
