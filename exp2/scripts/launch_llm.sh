@@ -43,7 +43,7 @@ else
         --disable-frontend-multiprocessing \
         --guided-decoding-backend=lm-format-enforcer \
         --gpu-memory-utilization 0.7 \
-        2>> "${script_dir}/error.log" &
+        2>> "${script_dir}/llm_error.log" &
 fi
 
 echo $! >> "$(dirname "$0")/launch_llm.pid"

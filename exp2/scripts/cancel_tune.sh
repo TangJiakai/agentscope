@@ -17,6 +17,6 @@ else
     echo "No PID file found."
 fi
 
-rm -rf "$PARENT_PARENT_DIR/tmp_saves
+rm -rf "$PARENT_PARENT_DIR/tmp_saves"
 
 echo "Tuning process has been terminated."
