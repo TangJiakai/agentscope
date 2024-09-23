@@ -8,42 +8,28 @@ fi
 port=$1
 gpuid=${2:-0}
 export CUDA_VISIBLE_DEVICES="$gpuid"
+# export VLLM_ATTENTION_BACKEND=XFORMERS
 
 echo "GPU ID: $CUDA_VISIBLE_DEVICES"
 echo "Port: $port"
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [ -f "llmtuning/saves/adapter_config.json" ]; then
-    python -m vllm.entrypoints.openai.api_server \
-        --model your_llm_model_path \
-        --trust-remote-code \
-        --port $port \
-        --dtype auto \
-        --pipeline-parallel-size 1 \
-        --enforce-eager \
-        --enable-prefix-caching \
-        --enable-lora \
-        --lora-modules lora=llmtuning/saves \
-        --disable-frontend-multiprocessing \
-        --guided-decoding-backend=lm-format-enforcer \
-        2>> "${script_dir}/error.log" &
-else
-    python -m vllm.entrypoints.openai.api_server \
-        --model your_llm_model_path \
-        --trust-remote-code \
-        --port $port \
-        --dtype auto \
-        --pipeline-parallel-size 1 \
-        --enforce-eager \
-        --enable-prefix-caching \
-        --enable-lora \
-        --disable-frontend-multiprocessing \
-        --guided-decoding-backend=lm-format-enforcer \
-        2>> "${script_dir}/error.log" &
-fi
+python -m vllm.entrypoints.openai.api_server \
+    --model /data/Download/Meta-Llama-3-8B-Instruct \
+    --trust-remote-code \
+    --port $port \
+    --dtype auto \
+    --pipeline-parallel-size 1 \
+    --enforce-eager \
+    --enable-prefix-caching \
+    --enable-lora \
+    --disable-frontend-multiprocessing \
+    --guided-decoding-backend=lm-format-enforcer \
+    --gpu-memory-utilization 0.7 \
+    2>> "${script_dir}/error.log" &
 
-echo $! >> "$(dirname "$0")/.pid"
+echo $! >> "$(dirname "$0")/launch_llm.pid"
 
 sleep 10
 

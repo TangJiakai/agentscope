@@ -46,7 +46,7 @@ else
         2>> "${script_dir}/error.log" &
 fi
 
-echo $! >> "$(dirname "$0")/.pid"
+echo $! >> "$(dirname "$0")/launch_llm.pid"
 
 sleep 10
 

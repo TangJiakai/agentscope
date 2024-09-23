@@ -9,6 +9,8 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
-python "$PARENT_PARENT_DIR/code/tune_llm.py" --tuning_mode $1
+python "$PARENT_PARENT_DIR/code/tune_llm.py" --tuning_mode $1 & 
+
+echo $! >> "$(dirname "$0")/tune_llm.pid"
 
 echo "LLM tuning is done."

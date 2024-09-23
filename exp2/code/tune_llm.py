@@ -52,7 +52,7 @@ def sft_train(tokenizer):
 
     collator = DataCollatorForCompletionOnlyLM(response_template_ids, tokenizer=tokenizer)
     sft_config = SFTConfig(
-        output_dir=SAVE_DIR,
+        output_dir=TMP_SAVE_DIR,
         num_train_epochs=1,
         per_device_train_batch_size=1,
         max_seq_length=8192,
@@ -66,7 +66,7 @@ def sft_train(tokenizer):
             device_map="auto",
             torch_dtype=torch.bfloat16, 
         )
-        model = PeftModel.from_pretrained(model, SAVE_DIR)
+        model = PeftModel.from_pretrained(model, TMP_SAVE_DIR)
         for name, param in model.named_parameters():
             if 'lora' in name:
                 param.requires_grad = True
@@ -99,7 +99,7 @@ def sft_train(tokenizer):
     print("Starting SFT training")
     trainer.train()
 
-    trainer.save_model(SAVE_DIR)
+    trainer.save_model(TMP_SAVE_DIR)
     return model
 
 
@@ -123,7 +123,7 @@ def ppo_train(tokenizer):
             device_map="auto",
             torch_dtype=torch.bfloat16, 
         )
-        model = PeftModel.from_pretrained(model, SAVE_DIR)
+        model = PeftModel.from_pretrained(model, TMP_SAVE_DIR)
         model = AutoModelForCausalLMWithValueHead.from_pretrained(
             model,
             device_map="auto",
@@ -179,7 +179,13 @@ def ppo_train(tokenizer):
 
         stats = trainer.step(query_tensors, response_tensors, rewards_tensors)
 
-    trainer.save_pretrained(SAVE_DIR)
+    trainer.save_pretrained(TMP_SAVE_DIR)
+
+
+def copy_saves():
+    os.system(f"cp -r {TMP_SAVE_DIR} {SAVE_DIR}")
+    os.system(f"rm -r {TMP_SAVE_DIR}")
+    print(f"Copied the trained model to {SAVE_DIR}")
 
 
 def main(args):
@@ -204,3 +210,4 @@ if __name__ == "__main__":
     args = parse_args()
     check_dirs()
     main(args)
+    copy_saves()

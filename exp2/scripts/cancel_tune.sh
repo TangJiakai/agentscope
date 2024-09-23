@@ -1,6 +1,7 @@
 #!/bin/bash
 
-PID_FILE="$(realpath "$(dirname "${BASH_SOURCE[0]}")")/launch_llm.pid"
+PID_FILE="$(realpath "$(dirname "${BASH_SOURCE[0]}")")/tune_llm.pid"
+PARENT_PARENT_DIR="$(realpath "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")"
 
 if [ -f "$PID_FILE" ]; then
     while IFS= read -r PID; do
@@ -15,3 +16,7 @@ if [ -f "$PID_FILE" ]; then
 else
     echo "No PID file found."
 fi
+
+rm -rf "$PARENT_PARENT_DIR/tmp_saves
+
+echo "Tuning process has been terminated."
