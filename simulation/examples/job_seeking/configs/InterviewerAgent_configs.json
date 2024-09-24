@@ -2,126 +2,376 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Home Organizer",
-            "jd": "Help clients declutter and organize their homes, creating functional and aesthetically pleasing spaces.",
+            "name": "Colorist",
+            "jd": "Enhance the color and tone of film footage to create a visually striking final product.",
             "jr": [
-                "Strong organizational skills and attention to detail",
-                "Experience in home organization or interior design",
-                "Ability to work with diverse clients",
-                "Excellent communication skills"
+                "Bachelor's degree in Film or related field",
+                "3+ years of experience in color grading",
+                "Proficient in software such as DaVinci Resolve and Adobe SpeedGrade",
+                "Strong eye for color and detail"
             ],
-            "company": "ClutterBusters, a professional home organizing service",
-            "salary": "USD 35,000 - 55,000 annually",
-            "benefits": [
-                "Flexible scheduling",
-                "Health benefits",
-                "Training workshops",
-                "Travel opportunities"
-            ],
-            "location": "Atlanta, Georgia, USA",
-            "model_config_name": "Llama3",
-            "host": "localhost",
-            "port": 14010
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "Field Service Coordinator",
-            "jd": "Coordinate field service operations to ensure timely and efficient service delivery to customers.",
-            "jr": [
-                "Bachelor's degree in Business or Engineering",
-                "3+ years of experience in field service coordination",
-                "Strong organizational and communication skills",
-                "Familiarity with service management software"
-            ],
-            "company": "Siemens, a global engineering and technology company",
-            "salary": "USD 70,000 - 85,000 annually",
+            "company": "Netflix",
+            "salary": "USD 75,000 - 95,000 annually",
             "benefits": [
                 "Health insurance",
-                "Paid vacation",
-                "Retirement savings plan",
-                "Professional development opportunities"
+                "Flexible work arrangements",
+                "Paid time off",
+                "Employee discounts"
             ],
-            "location": "Munich, Germany",
+            "location": "Los Gatos, California, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 14011
+            "port": 15015
         }
     },
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Motion Graphics Designer",
-            "jd": "Create animated graphics and visual effects for video productions and digital media.",
+            "name": "Visual Effects Artist",
+            "jd": "Design and create visual effects for film to enhance storytelling through digital imagery.",
             "jr": [
-                "Bachelor's degree in Animation, Graphic Design, or related field",
-                "2+ years of experience in motion graphics or animation",
-                "Proficient in After Effects, Cinema 4D, and Adobe Creative Suite",
-                "Strong storytelling skills and attention to detail"
+                "Bachelor's degree in Animation or related field",
+                "4+ years of experience in VFX production",
+                "Proficient in software such as Maya and After Effects",
+                "Strong portfolio showcasing VFX work"
             ],
-            "company": "Warner Bros. Entertainment Inc., a major film and entertainment studio",
-            "salary": "USD 70,000 - 90,000 annually",
+            "company": "Industrial Light & Magic",
+            "salary": "USD 85,000 - 110,000 annually",
+            "benefits": [
+                "Health insurance",
+                "Retirement plans",
+                "On-site gym",
+                "Employee discounts"
+            ],
+            "location": "San Francisco, California, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15016
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Real Estate Marketing Specialist",
+            "jd": "Develop and implement marketing strategies to promote properties and attract buyers.",
+            "jr": [
+                "Bachelor's degree in Marketing, Real Estate, or related field",
+                "Experience in real estate marketing",
+                "Strong communication and creative skills",
+                "Proficiency in social media and digital marketing"
+            ],
+            "company": "Zillow Group, a leading online real estate marketplace",
+            "salary": "USD 55,000 - 85,000 annually",
+            "benefits": [
+                "Health insurance",
+                "Flexible work hours",
+                "Paid time off",
+                "Continuing education reimbursement"
+            ],
+            "location": "Seattle, Washington, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15017
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "AI Ethics Consultant",
+            "jd": "Provide guidance on ethical implications of AI technologies and develop frameworks for responsible AI deployment.",
+            "jr": [
+                "PhD in Philosophy, Ethics, or related field",
+                "5+ years of experience in AI ethics or policy",
+                "Strong understanding of machine learning technologies and their societal impacts",
+                "Excellent communication and stakeholder engagement skills"
+            ],
+            "company": "Accenture, a global professional services company specializing in IT services and consulting.",
+            "salary": "USD 130,000 - 160,000 annually",
+            "benefits": [
+                "Comprehensive health coverage",
+                "Flexible working hours",
+                "Professional development opportunities",
+                "Wellness programs"
+            ],
+            "location": "Dublin, Ireland",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15018
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Vehicle Design Artist",
+            "jd": "Create innovative and aesthetically pleasing vehicle designs using sketching and 3D modeling.",
+            "jr": [
+                "Bachelor's degree in Industrial Design or Fine Arts",
+                "Portfolio showcasing vehicle design projects",
+                "Proficient in graphic design software like Adobe Creative Suite",
+                "Strong understanding of automotive trends and consumer preferences"
+            ],
+            "company": "BMW AG, a German luxury vehicle and motorcycle manufacturer",
+            "salary": "USD 80,000 - 110,000 annually",
+            "benefits": [
+                "Health insurance",
+                "Company car",
+                "Paid sabbaticals",
+                "Creative work environment"
+            ],
+            "location": "Munich, Bavaria, Germany",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15019
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Fashion Designer",
+            "jd": "Design clothing, accessories, and footwear to meet consumer trends and brand identity.",
+            "jr": [
+                "Bachelor's degree in Fashion Design or related field",
+                "2+ years of experience in fashion design",
+                "Strong sketching and sewing skills",
+                "Knowledge of fashion trends and textiles"
+            ],
+            "company": "Chanel S.A., a luxury fashion brand",
+            "salary": "USD 100,000 - 130,000 annually",
+            "benefits": [
+                "Health benefits",
+                "Employee discounts on products",
+                "Paid time off",
+                "Travel opportunities for fashion shows"
+            ],
+            "location": "Paris, France",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15000
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Logistics Coordinator",
+            "jd": "Oversee and coordinate logistics operations to ensure timely delivery of goods.",
+            "jr": [
+                "Associate's degree or higher in Logistics or Business",
+                "1+ years of experience in logistics coordination",
+                "Strong communication and organizational skills",
+                "Experience with freight management systems"
+            ],
+            "company": "FedEx, a multinational courier delivery services company",
+            "salary": "USD 50,000 - 65,000 annually",
+            "benefits": [
+                "Health insurance",
+                "Paid vacation and sick leave",
+                "Employee discounts",
+                "401(k) with company match"
+            ],
+            "location": "Memphis, Tennessee, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15001
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Marketing Coordinator",
+            "jd": "Supports marketing initiatives and campaigns to promote hotel services and enhance brand visibility.",
+            "jr": [
+                "Bachelor's degree in Marketing or Communications",
+                "1-3 years of experience in marketing or hospitality",
+                "Strong writing and content creation skills",
+                "Proficiency in social media and digital marketing"
+            ],
+            "company": "Accor Hotels, a leading hospitality group",
+            "salary": "USD 45,000 - 60,000 annually",
             "benefits": [
                 "Health and wellness benefits",
-                "Flexible work arrangements",
-                "Professional development programs",
-                "Paid time off for volunteering"
+                "Professional development training",
+                "Flexible work schedules",
+                "Discounted hotel stays"
             ],
-            "location": "Burbank, California, USA",
+            "location": "Singapore",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 14012
+            "port": 15002
         }
     },
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Social Media Influencer - Lifestyle Niche",
-            "jd": "Create engaging content to promote lifestyle brands and products through social media channels.",
+            "name": "Natural Language Processing Engineer",
+            "jd": "Design and build NLP models to enhance user interactions and data understanding.",
             "jr": [
-                "Strong presence on social media platforms",
-                "Experience in content creation and photography",
-                "Ability to engage and grow an audience",
-                "Creative mindset"
+                "Master's degree in Linguistics, Computer Science, or a related field",
+                "3+ years of experience in NLP or data science",
+                "Proficiency in Python and NLP libraries like NLTK or SpaCy",
+                "Knowledge of machine learning frameworks"
             ],
-            "company": "Influencer Network, a platform connecting influencers with brands",
-            "salary": "USD 40,000 - 100,000 annually (varies based on sponsorships)",
+            "company": "Microsoft Corporation, a technology company that develops, licenses, and supports a wide range of software products.",
+            "salary": "USD 110,000 - 135,000 annually",
+            "benefits": [
+                "Health insurance",
+                "Generous vacation policy",
+                "Retirement plans",
+                "Employee training programs"
+            ],
+            "location": "Redmond, Washington, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15003
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Food and Beverage Director",
+            "jd": "Oversee all food and beverage operations, manage staff, and ensure quality standards.",
+            "jr": [
+                "Bachelor's degree in Culinary Arts or Hospitality Management",
+                "5+ years of experience in food and beverage management",
+                "Strong leadership skills",
+                "Knowledge of food safety regulations"
+            ],
+            "company": "Gourmet Bites, a culinary-focused hotel",
+            "salary": "USD 90,000 - 110,000 annually",
+            "benefits": [
+                "Health and dental insurance",
+                "Retirement plans",
+                "Paid time off",
+                "Employee meals"
+            ],
+            "location": "London, England",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15004
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Real Estate Agent",
+            "jd": "Assist clients in buying, selling, and renting properties, providing expert advice and negotiation skills.",
+            "jr": [
+                "Valid real estate license",
+                "Strong communication and interpersonal skills",
+                "Knowledge of local real estate market",
+                "Experience with CRM software"
+            ],
+            "company": "Keller Williams Realty, a global leader in residential real estate",
+            "salary": "USD 50,000 - 80,000 annually plus commissions",
             "benefits": [
                 "Flexible hours",
-                "Work-from-home options",
-                "Performance bonuses",
-                "Networking opportunities"
+                "Training and mentorship programs",
+                "Health insurance",
+                "Performance bonuses"
             ],
-            "location": "Nashville, Tennessee, USA",
+            "location": "Austin, Texas, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 14013
+            "port": 15005
         }
     },
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Audit Quality Reviewer",
-            "jd": "Review audit work performed by teams to ensure compliance with quality standards and regulations.",
+            "name": "Tax Technology Consultant",
+            "jd": "Implement and manage tax technology solutions to improve efficiency and compliance.",
             "jr": [
-                "Bachelor's degree in Accounting or Finance",
-                "5+ years of audit experience, with a focus on quality control",
-                "CPA or equivalent certification is required",
-                "Attention to detail and strong analytical skills"
+                "Bachelor's degree in IT, Accounting, or related field",
+                "3+ years of experience in tax technology or software implementation",
+                "Strong analytical and technical skills",
+                "Familiarity with tax software and systems"
             ],
-            "company": "BDO USA, an international network of public accounting firms",
-            "salary": "USD 95,000 - 120,000 annually",
+            "company": "Intuit, a financial software company",
+            "salary": "USD 90,000 - 110,000 annually",
             "benefits": [
-                "Comprehensive health benefits",
-                "401(k) plan with employer match",
-                "Generous vacation policy",
-                "Continuing education support"
+                "Health insurance",
+                "401(k) with matching",
+                "Paid sick leave",
+                "Flexible working conditions"
             ],
-            "location": "Los Angeles, CA, USA",
+            "location": "Mountain View, CA, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 14014
+            "port": 15006
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "M&A Analyst",
+            "jd": "Conduct research and analysis on potential mergers and acquisitions, and assist in deal execution.",
+            "jr": [
+                "Bachelor's degree in Finance, Economics, or Business",
+                "1-3 years of experience in mergers and acquisitions or investment banking",
+                "Strong analytical and quantitative skills",
+                "Ability to work in a fast-paced environment"
+            ],
+            "company": "Barclays, a British multinational investment bank and financial services company",
+            "salary": "USD 90,000 - 110,000 annually",
+            "benefits": [
+                "Health insurance",
+                "Flexible working hours",
+                "Paid vacation",
+                "Professional training programs"
+            ],
+            "location": "London, UK",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15007
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Automotive Production Supervisor",
+            "jd": "Supervise production lines and ensure quality standards are met in the manufacturing of vehicles.",
+            "jr": [
+                "Bachelor's degree in Engineering or Manufacturing Management",
+                "5+ years of experience in automotive production",
+                "Strong leadership and communication skills",
+                "Knowledge of lean manufacturing principles"
+            ],
+            "company": "Fiat Chrysler Automobiles, an American-Italian multinational corporation",
+            "salary": "USD 80,000 - 100,000 annually",
+            "benefits": [
+                "Health insurance",
+                "Paid time off",
+                "Retirement plans",
+                "Employee wellness programs"
+            ],
+            "location": "Auburn Hills, Michigan, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15008
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Territory Sales Manager",
+            "jd": "Oversee sales operations within a designated territory, driving revenue growth through strategic planning and execution.",
+            "jr": [
+                "Bachelor's degree in Sales, Marketing, or related field",
+                "5+ years of experience in territory management",
+                "Strong analytical and planning skills",
+                "Ability to travel frequently"
+            ],
+            "company": "Procter & Gamble, a multinational consumer goods corporation",
+            "salary": "USD 100,000 - 130,000 annually",
+            "benefits": [
+                "Comprehensive health benefits",
+                "Retirement savings plan",
+                "Paid time off and holidays",
+                "Employee wellness programs"
+            ],
+            "location": "Cincinnati, Ohio, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15009
         }
     }
 ]

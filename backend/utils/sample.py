@@ -16,26 +16,27 @@ def generate_points_sampling(k, radius_ratio=0.4, initial_center_dist=0.12, canv
     - selected_positions：选择的圆的圆心坐标列表。
     - radius：圆的半径。
     """
+    factor = 1
     # 计算圆心之间的距离
-    def calculate_n(center_dist, canvas_size):
+    def calculate_n(center_dist, canvas_size, k):
         """
         根据圆心距计算画布上能放置的最大圆数
         """
         # 每行能放的圆的个数
-        circles_per_row = int(canvas_size // center_dist)
+        circles_per_row = int(max(int(canvas_size // center_dist) - int(math.sqrt(k) / factor), 0))
         # 每列能放的圆的个数
-        circles_per_col = int(canvas_size // center_dist)
+        circles_per_col = int(max(int(canvas_size // center_dist) - int(math.sqrt(k) / factor), 0))
         
         # 总的圆数
         return circles_per_row * circles_per_col, circles_per_row, circles_per_col
 
-    def generate_grid_positions(circles_per_row, circles_per_col, center_dist):
+    def generate_grid_positions(circles_per_row, circles_per_col, center_dist, k):
         """
         根据每行每列能放的圆数和圆心距生成所有圆的坐标
         """
         positions = []
-        for i in range(circles_per_row):
-            for j in range(circles_per_col):
+        for i in range(circles_per_row + int(math.sqrt(k) / factor)):
+            for j in range(circles_per_col + int(math.sqrt(k) / factor)):
                 # 计算圆心位置
                 x = (i + 0.5) * center_dist
                 y = (j + 0.5) * center_dist
@@ -59,30 +60,30 @@ def generate_points_sampling(k, radius_ratio=0.4, initial_center_dist=0.12, canv
             # ax.plot(point[0], point[1], 'ro')  # 红色点标记圆心
     
         ax.set_aspect('equal')
-        plt.title(f'随机选择的 {len(points)} 个圆')
+        plt.title(f'{len(points)} points')
         plt.show()
 
     # 初始化参数
     center_dist = initial_center_dist
 
     # 计算初始的最大圆数n
-    n, circles_per_row, circles_per_col = calculate_n(center_dist, canvas_size)
+    n, circles_per_row, circles_per_col = calculate_n(center_dist, canvas_size, k)
     
     # 如果 k > n，需要调整圆心距，缩短圆心距来放更多圆
     while k > n:
         center_dist *= 0.9  # 缩短圆心距
-        n, circles_per_row, circles_per_col = calculate_n(center_dist, canvas_size)
+        n, circles_per_row, circles_per_col = calculate_n(center_dist, canvas_size, k)
     
     # 如果 k 远小于 n，可以增大圆心距，使圆之间间隔更大
     while k / n < 0.5 and center_dist * 1.1 < canvas_size / min(circles_per_row, circles_per_col):
         center_dist *= 1.1  # 增加圆心距
-        n, circles_per_row, circles_per_col = calculate_n(center_dist, canvas_size)
+        n, circles_per_row, circles_per_col = calculate_n(center_dist, canvas_size, k)
     
     # 根据圆心距计算圆的半径
     radius = center_dist * radius_ratio
 
     # 生成所有圆的坐标
-    positions = generate_grid_positions(circles_per_row, circles_per_col, center_dist)
+    positions = generate_grid_positions(circles_per_row, circles_per_col, center_dist, k)
 
     # 检查圆是否在画布内（考虑半径）
     valid_positions = []
@@ -98,8 +99,8 @@ def generate_points_sampling(k, radius_ratio=0.4, initial_center_dist=0.12, canv
     while k > n:
         center_dist *= 0.9  # 缩短圆心距
         radius = center_dist * radius_ratio
-        n, circles_per_row, circles_per_col = calculate_n(center_dist, canvas_size)
-        positions = generate_grid_positions(circles_per_row, circles_per_col, center_dist)
+        n, circles_per_row, circles_per_col = calculate_n(center_dist, canvas_size, k)
+        positions = generate_grid_positions(circles_per_row, circles_per_col, center_dist, k)
         valid_positions = []
         for pos in positions:
             x, y = pos
@@ -111,7 +112,7 @@ def generate_points_sampling(k, radius_ratio=0.4, initial_center_dist=0.12, canv
     selected_positions = random.sample(valid_positions, k)
 
     # 画出这些随机选择的圆
-    plot_points(selected_positions, radius)
+    # plot_points(selected_positions, radius)
 
     # print(f"最终圆心距: {center_dist}")
     # print(f"最终半径: {radius}")
@@ -121,5 +122,6 @@ def generate_points_sampling(k, radius_ratio=0.4, initial_center_dist=0.12, canv
     return selected_positions, radius
 
 # 调用函数，生成并绘制100个实心圆
-# selected_positions, raius = generate_points_sampling(k=30, radius_ratio=0.4, initial_center_dist=0.12, canvas_size=1.0)
-# print(selected_positions, radius)
+# selected_positions, radius = generate_points_sampling(k=1000, radius_ratio=0.08, initial_center_dist=0.4, canvas_size=1.0)
+# print(selected_positions)
+# print(radius)

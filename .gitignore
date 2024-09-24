@@ -158,3 +158,4 @@ exp2/*saves
 sample.ipynb
 *.pid
 simulation/examples/recommendation/*RecUserAgent_configs.json
+nohup/

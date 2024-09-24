@@ -92,6 +92,7 @@ class SeekerAgent(BaseAgent):
         self.job_ids_pool = job_ids_pool
         self.embedding = embedding
         self.env = env
+        self.gender = trait["Gender"]
 
         self.seeker = Seeker(name, cv, trait)
         self._update_profile()

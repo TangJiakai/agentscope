@@ -26,7 +26,7 @@ class ConnectionManager:
             self.agent_connections_history[agent_id] = []
         else:
             self.state_connection = websocket
-            await self.state_connection.send_text(json.dumps(self.all_agents_state))
+            await self.state_connection.send_json(self.all_agents_state)
 
     async def disconnect(self, websocket: WebSocket, agent_id: Optional[str] = None):
         if agent_id:
@@ -40,7 +40,7 @@ class ConnectionManager:
         if isinstance(state, StateUnit):
             self.all_agents_state[state.agent_id] = state.state
             # state = state.model_dump_json()
-        await self.state_connection.send_text(str(self.all_agents_state))
+        await self.state_connection.send_json({state.agent_id: state.state})
 
     async def send_to_agent(self, agent_id: str, msg: str):
         if agent_id not in self.agent_connections:
