@@ -99,10 +99,10 @@ class SeekerAgent(BaseAgent):
     def _update_profile(self):
         cv = self.seeker.cv
         cv_mdstr = ""
-        level = 1  # Start with level 1 for the first key
+        level = 4  # Start with level 1 for the first key
 
         for key, value in cv.items():
-            cv_mdstr += f"{'##' * level} {key}\n"  # Add the section title
+            cv_mdstr += f"{'#' * level} {key}\n"  # Add the section title
             level += 1  # Increase level for the next section
 
             if isinstance(value, list):
@@ -124,10 +124,10 @@ class SeekerAgent(BaseAgent):
         trait_mdstr = "\n".join([f"## {key}\n{value}" for key, value in trait.items()])
 
         self._profile = (
-            f"# Name \n{self.seeker.name}\n"
-            f"# CV \n{cv_mdstr}"
-            f"# Trait \n{trait_mdstr}\n"
-            f"# Working Condition \n{self.seeker.working_condition}"
+            f"### Name \n{self.seeker.name}\n"
+            f"### CV \n{cv_mdstr}"
+            f"### Trait \n{trait_mdstr}\n"
+            f"### Working Condition \n{self.seeker.working_condition}"
         )
 
     @property
