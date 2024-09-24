@@ -218,7 +218,7 @@ class Simulator:
         for agent in self.agents:
             results.append(agent.run())
         for res in results:
-            print(res.result())
+            logger.info(res.result())
 
     def run(self):
         play_event.set()
@@ -255,12 +255,15 @@ class Simulator:
             return dill.load(f)
 
     def save(self):
-        file_manager = FileManager.get_instance()
-        save_path = os.path.join(file_manager.run_dir, f"ROUND-{self.cur_round}.pkl")
-        self.cur_round += 1
-        with open(save_path, "wb") as f:
-            dill.dump(self, f)
-        logger.info(f"Saved simulator to {save_path}")
+        try:
+            file_manager = FileManager.get_instance()
+            save_path = os.path.join(file_manager.run_dir, f"ROUND-{self.cur_round}.pkl")
+            self.cur_round += 1
+            with open(save_path, "wb") as f:
+                dill.dump(self, f)
+            logger.info(f"Saved simulator to {save_path}")
+        except Exception as e:
+            logger.error(f"Failed to save simulator: {e}")
 
 
 if __name__ == "__main__":
