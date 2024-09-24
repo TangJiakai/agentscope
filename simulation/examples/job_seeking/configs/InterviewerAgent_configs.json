@@ -21,7 +21,7 @@
             "location": "Los Gatos, California, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15015
+            "port": 15035
         }
     },
     {
@@ -46,7 +46,7 @@
             "location": "San Francisco, California, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15016
+            "port": 15036
         }
     },
     {
@@ -71,7 +71,7 @@
             "location": "Seattle, Washington, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15017
+            "port": 15037
         }
     },
     {
@@ -96,7 +96,7 @@
             "location": "Dublin, Ireland",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15018
+            "port": 15038
         }
     },
     {
@@ -121,7 +121,7 @@
             "location": "Munich, Bavaria, Germany",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15019
+            "port": 15039
         }
     },
     {
@@ -146,7 +146,7 @@
             "location": "Paris, France",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15000
+            "port": 15040
         }
     },
     {
@@ -171,7 +171,7 @@
             "location": "Memphis, Tennessee, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15001
+            "port": 15041
         }
     },
     {
@@ -196,7 +196,7 @@
             "location": "Singapore",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15002
+            "port": 15042
         }
     },
     {
@@ -221,7 +221,7 @@
             "location": "Redmond, Washington, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15003
+            "port": 15043
         }
     },
     {
@@ -246,7 +246,7 @@
             "location": "London, England",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15004
+            "port": 15044
         }
     },
     {
@@ -271,7 +271,7 @@
             "location": "Austin, Texas, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15005
+            "port": 15045
         }
     },
     {
@@ -296,7 +296,7 @@
             "location": "Mountain View, CA, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15006
+            "port": 15046
         }
     },
     {
@@ -321,7 +321,7 @@
             "location": "London, UK",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15007
+            "port": 15047
         }
     },
     {
@@ -346,7 +346,7 @@
             "location": "Auburn Hills, Michigan, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15008
+            "port": 15048
         }
     },
     {
@@ -371,7 +371,7 @@
             "location": "Cincinnati, Ohio, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15009
+            "port": 15049
         }
     }
 ]
