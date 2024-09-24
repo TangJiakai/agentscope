@@ -3,7 +3,7 @@ import concurrent.futures
 from time import sleep
 import json
 import copy
-from prompt_template import GPT_evaluate_prompt, GPT_Evaluate_And_Improve_Prompt_choice, GPT_Evaluate_And_Improve_Prompt_text, score_response_format, choice_rewritten_format, text_rewirtten_format, choice_prompt, text_prompt, choice_format, text_format
+from backend.prompt_template import GPT_evaluate_prompt, GPT_Evaluate_And_Improve_Prompt_choice, GPT_Evaluate_And_Improve_Prompt_text, score_response_format, choice_rewritten_format, text_rewirtten_format, choice_prompt, text_prompt, choice_format, text_format
 
 
 def chatgpt(data_):

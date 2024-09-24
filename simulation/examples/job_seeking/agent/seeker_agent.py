@@ -103,16 +103,16 @@ class SeekerAgent(BaseAgent):
 
         for key, value in cv.items():
             cv_mdstr += f"{'##' * level} {key}\n"  # Add the section title
-            level += 2  # Increase level for the next section
+            level += 1  # Increase level for the next section
 
             if isinstance(value, list):
                 for item in value:
                     if isinstance(item, dict):  # For work experience
-                        cv_mdstr += f"{'#' * level} Company: {item['Company']}\n"
-                        cv_mdstr += f"{'#' * (level + 1)} Position: {item['Position']}\n"
-                        cv_mdstr += f"{'#' * (level + 1)} Time: {item['Time']}\n"
+                        cv_mdstr += f"- {'#' * (level + 1)} Company: {item['Company']}\n"
+                        cv_mdstr += f"\tPosition: {item['Position']}\n"
+                        cv_mdstr += f"\tTime: {item['Time']}\n"
                     else:  # For skills
-                        cv_mdstr += f"{'#' * level} - {item}\n"
+                        cv_mdstr += f"- {item}\n"
             else:
                 cv_mdstr += f"{value}\n"
 
@@ -123,16 +123,11 @@ class SeekerAgent(BaseAgent):
         trait = self.seeker.trait
         trait_mdstr = "\n".join([f"## {key}\n{value}" for key, value in trait.items()])
 
-        self._profile = """
-        # Name \n{name}
-        # CV {cv}
-        # Trait \n{trait}
-        # Working Condition \n{working_condition}
-        """.format(
-            name=self.seeker.name,
-            cv=cv_mdstr,
-            trait=trait_mdstr,
-            working_condition=self.seeker.working_condition,
+        self._profile = (
+            f"# Name \n{self.seeker.name}\n"
+            f"# CV \n{cv_mdstr}"
+            f"# Trait \n{trait_mdstr}\n"
+            f"# Working Condition \n{self.seeker.working_condition}"
         )
 
     @property

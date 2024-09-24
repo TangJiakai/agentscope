@@ -183,7 +183,7 @@ def ppo_train(tokenizer):
 
 
 def copy_saves():
-    os.system(f"cp -r {TMP_SAVE_DIR} {SAVE_DIR}")
+    os.system(f"cp -r {TMP_SAVE_DIR}/* {SAVE_DIR}/")
     os.system(f"rm -r {TMP_SAVE_DIR}")
     print(f"Copied the trained model to {SAVE_DIR}")
 
