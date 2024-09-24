@@ -121,7 +121,7 @@ class SeekerAgent(BaseAgent):
         cv_mdstr = cv_mdstr.strip()
 
         trait = self.seeker.trait
-        trait_mdstr = "\n".join(["## {key}\n{value}".format(x) for x in trait.items()])
+        trait_mdstr = "\n".join([f"## {key}\n{value}" for key, value in trait.items()])
 
         self._profile = """
         # Name \n{name}
