@@ -11,7 +11,7 @@ from fastapi import Request
 from vllm.config import ModelConfig
 from vllm.engine.protocol import AsyncEngineClient
 from vllm.entrypoints.chat_utils import (ConversationMessage,
-                                         apply_chat_template,
+                                         apply_hf_chat_template,
                                          load_chat_template,
                                          parse_chat_messages_futures)
 from vllm.entrypoints.logger import RequestLogger
@@ -41,8 +41,6 @@ import torch
 import math
 
 logger = init_logger(__name__)
-
-
 
 
 def create_logit_processor(i):
@@ -142,7 +140,7 @@ class OpenAIServingChat(OpenAIServing):
                 tool.model_dump() for tool in request.tools
             ]
 
-            prompt = apply_chat_template(
+            prompt = apply_hf_chat_template(
                 tokenizer,
                 conversation=conversation,
                 chat_template=request.chat_template or self.chat_template,
