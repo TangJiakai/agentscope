@@ -26,14 +26,12 @@ from utils.utils import check_load_adapter, check_dirs
 
 wandb.init(mode="disabled")
 tqdm.pandas()
-# os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 
 def parse_args() -> argparse.Namespace:
     """Parse arguments"""
     parser = argparse.ArgumentParser()
     parser.add_argument("--tuning_mode", type=str, help="sft or ppo", default="sft")
-    parser.add_argument("--gpu_id", type=int, help="GPU ID", default=3)
     return parser.parse_args()
 
 
@@ -43,9 +41,8 @@ def copy_saves():
     print(f"Copied the trained model to {SAVE_DIR}")
 
 class Tuner:
-    def __init__(self, tuning_mode, gpu_id):
+    def __init__(self, tuning_mode):
         self.tuning_mode = tuning_mode
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
         tokenizer = AutoTokenizer.from_pretrained(
             LLM_DIR_PATH,
             trust_remote_code=True,
@@ -219,7 +216,7 @@ class Tuner:
 
 
 def main(args):
-    tuner = Tuner(args.tuning_mode, args.gpu_id)
+    tuner = Tuner(args.tuning_mode)
     tuner.train_func()
 
 if __name__ == "__main__":

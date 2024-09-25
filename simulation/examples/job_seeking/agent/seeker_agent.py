@@ -125,7 +125,7 @@ class SeekerAgent(BaseAgent):
 
         self._profile = (
             f"### Name \n{self.seeker.name}\n"
-            f"### CV \n{cv_mdstr}"
+            f"### CV \n{cv_mdstr}\n"
             f"### Trait \n{trait_mdstr}\n"
             f"### Working Condition \n{self.seeker.working_condition}"
         )
