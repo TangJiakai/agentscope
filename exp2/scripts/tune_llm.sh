@@ -10,7 +10,7 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
-python "$PARENT_PARENT_DIR/code/tune_llm.py" --tuning_mode $1 2>> "${script_dir}/tune_error.log" & 
+python "$PARENT_PARENT_DIR/code/tune_llm.py" --tuning_mode $1 2>> "${script_dir}/tune_error.log" &
 
 echo $! >> "$(dirname "$0")/tune_llm.pid"
 

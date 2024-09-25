@@ -57,7 +57,7 @@ from simulation.memory import (
     ShortLongMemory,
     ShortLongReflectionMemory,
 )
-from backend.utils.utils import run_sh_async, run_sh_blocking
+from backend.utils.utils import run_sh_async, run_sh_blocking, run_sh_train_blocking
 from backend.utils.sample import generate_points_sampling
 from backend.chatgpt_api import rewritten_responses, rate_responses
 
@@ -83,6 +83,7 @@ favorite_agents = []
 transform: Transform = Transform()
 avatar_radius = 0.0001
 agent_info = {}
+train_progress = -1
 
 
 @asynccontextmanager
@@ -188,6 +189,38 @@ async def websocket_endpoint(websocket: WebSocket):
             await manager.disconnect(websocket)
 
 
+@app.websocket("/train")
+async def websocket_train_endpoint(websocket: WebSocket):
+    global train_progress
+    await websocket.accept()
+    cur_progress = train_progress
+    try:
+        await websocket.send_json({"train_progress": train_progress})
+        while True:
+            await asyncio.sleep(0.001)
+
+            try:
+                data = await asyncio.wait_for(websocket.receive_text(), timeout=0.001)
+                logger.info(f"Receive train message: {data}")
+                if data == "exit":
+                    cancel_tune_sh_path = os.path.join(proj_path, "exp2", "scripts", "cancel_tune.sh")
+                    run_sh_blocking(cancel_tune_sh_path)
+                train_progress = cur_progress = -1
+                await websocket.send_json({"train_progress": train_progress})
+                break
+            except asyncio.TimeoutError:
+                pass
+
+            if train_progress != cur_progress:
+                cur_progress = train_progress
+                await websocket.send_json({"train_progress": train_progress})
+    except WebSocketDisconnect:
+        logger.info("WebSocket /train disconnected")
+    finally:
+        if websocket.client_state == WebSocketState.CONNECTED:
+            await websocket.close()
+
+
 @app.websocket("/round")
 async def websocket_round_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -237,6 +270,11 @@ async def websocket_chat_endpoint(websocket: WebSocket, id: str):
     finally:
         if websocket.client_state == WebSocketState.CONNECTED:
             await manager.disconnect(websocket, id)
+
+
+@app.get("/current-scene")
+def get_current_scene():
+    return _scene
 
 
 @app.get("/scene", response_model=List[Scene])
@@ -818,7 +856,7 @@ def tune(mode: Literal["rewrite", "rate"]):
         tuning_mode = "sft"
     elif mode == "rate":
         tuning_mode = "ppo"
-    run_sh_blocking(tune_llm_sh_path, tuning_mode)
+    run_sh_train_blocking(tune_llm_sh_path, tuning_mode)
 
     # Launch LLM
     launch_llm_sh_path = os.path.join(
@@ -921,6 +959,7 @@ async def start():
                 str(simulation_config["server_num_per_host"]),
                 str(simulation_config["base_port"]),
             )
+            time.sleep(10 + 5 * retry_count)
 
             module_path = f"simulation.examples.{_scene}.simulator"
             Simulator = importlib.import_module(module_path).Simulator
@@ -1004,7 +1043,6 @@ async def start():
                 proj_path, "simulation", "examples", _scene, "kill_all_server.sh"
             )
             run_sh_blocking(kill_server_sh_path)
-            time.sleep(10)
 
             # 增加重试计数器
             retry_count += 1
@@ -1018,29 +1056,40 @@ async def start():
 
 
 @app.post("/pause")
-async def pause_and_resume():
-    if play_event.is_set():
-        message_manager.message_queue.put("Pause simulation.")
-        pause_success_event.clear()
-        play_event.clear()
-        logger.info("Pause simulation.")
-        if pause_success_event.is_set():
-            logger.info("Event is set.")
-        else:
-            logger.info("Event is not set.")
-        while not pause_success_event.is_set():
-            await asyncio.sleep(0.1)
-        # Distribute MsgID for messages
-        with lock:
-            for idx, msg in enumerate(message_manager.messages):
-                msg.msg_id = idx
+async def pause():
+    if simulator is None:
+        return HTMLResponse(content="Simulator is not running. Please start simulation first.", status_code=400)
+    if not play_event.is_set():
+        return HTMLResponse(content="Simulation is already paused.", status_code=409)
+    message_manager.message_queue.put("Pause simulation.")
+    pause_success_event.clear()
+    play_event.clear()
+    logger.info("Pause simulation.")
+    if pause_success_event.is_set():
+        logger.info("Event is set.")
     else:
-        global cur_msgs
-        cur_msgs = None
-        message_manager.clear()
-        message_manager.message_queue.put("Resume simulation.")
-        play_event.set()
-        pause_success_event.clear()
+        logger.info("Event is not set.")
+    while not pause_success_event.is_set():
+        await asyncio.sleep(0.1)
+    # Distribute MsgID for messages
+    with lock:
+        for idx, msg in enumerate(message_manager.messages):
+            msg.msg_id = idx
+    return HTMLResponse()
+
+
+@app.post("/resume")
+async def resume():
+    if simulator is None:
+        return HTMLResponse(content="Simulator is not running. Please start simulation first.", status_code=400)
+    if play_event.is_set():
+        return HTMLResponse(content="Simulation is already running.", status_code=409)
+    global cur_msgs
+    cur_msgs = None
+    message_manager.clear()
+    message_manager.message_queue.put("Resume simulation.")
+    play_event.set()
+    pause_success_event.clear()
     return HTMLResponse()
 
 
@@ -1058,11 +1107,12 @@ async def reset():
             proj_path, "simulation", "examples", _scene, "kill_all_server.sh"
         )
         run_sh_blocking(kill_server_sh_path)
-    global simulator, simulation_thread, cur_msgs, agent_coordinates, favorite_agents, transform, avatar_radius, agent_info
+    global simulator, simulation_thread, cur_msgs, agent_coordinates, favorite_agents, transform, avatar_radius, agent_info, train_progress
     manager.clear()
     agent_info = {}
     transform = Transform()
     avatar_radius = 0.0001
+    train_progress = -1
     simulator = None
     kill_event.set()
     play_event.set()
