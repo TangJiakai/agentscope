@@ -194,6 +194,7 @@ async def websocket_train_endpoint(websocket: WebSocket):
     global train_progress
     await websocket.accept()
     cur_progress = train_progress
+    train_thread = None
     try:
         await websocket.send_json({"train_progress": train_progress})
         while True:
@@ -205,17 +206,70 @@ async def websocket_train_endpoint(websocket: WebSocket):
                 if data == "exit":
                     cancel_tune_sh_path = os.path.join(proj_path, "exp2", "scripts", "cancel_tune.sh")
                     run_sh_blocking(cancel_tune_sh_path)
-                train_progress = cur_progress = -1
-                await websocket.send_json({"train_progress": train_progress})
-                break
+                    train_thread = None
+                    # Launch LLM
+                    launch_llm_sh_path = os.path.join(
+                        proj_path, "exp2", "scripts", "launch_llm.sh"
+                    )
+                    run_sh_async(launch_llm_sh_path, "8084", "2")
+                    train_progress = cur_progress = -1
+                    await websocket.send_json({"train_progress": train_progress})
+                elif data == "rewrite" or data == "rate":
+                    # Kill LLM
+                    kill_llm_sh_path = os.path.join(proj_path, "exp2", "scripts", "kill_llm.sh")
+                    run_sh_blocking(kill_llm_sh_path)
+                    train_progress = cur_progress = 0
+                    await websocket.send_json({"train_progress": train_progress})
+                    tune_llm_sh_path = os.path.join(proj_path, "exp2", "scripts", "tune_llm.sh")
+                    if data == "rewrite":
+                        train_thread = Thread(target=run_sh_train_blocking, args=(tune_llm_sh_path, "sft"))
+                    elif data == "rate":
+                        train_thread = Thread(target=run_sh_train_blocking, args=(tune_llm_sh_path, "ppo"))
+                    train_thread.start()
             except asyncio.TimeoutError:
                 pass
 
             if train_progress != cur_progress:
                 cur_progress = train_progress
                 await websocket.send_json({"train_progress": train_progress})
+            if train_thread is not None and not train_thread.is_alive():
+                # Launch LLM
+                launch_llm_sh_path = os.path.join(
+                    proj_path, "exp2", "scripts", "launch_llm.sh"
+                )
+                run_sh_async(launch_llm_sh_path, "8084", "2")
+                train_thread = None
+
+                # Reset agents' model.model_name
+                if simulator is not None:
+                    agents = simulator.agents
+                    results = []
+                    for agent in agents:
+                        results.append(agent.set_attr("model.model_name", "lora"))
+                    for res in results:
+                        res.result()
+                train_progress = cur_progress = -1
+                await websocket.send_json({"train_progress": train_progress})
     except WebSocketDisconnect:
         logger.info("WebSocket /train disconnected")
+        if train_thread is not None and not train_thread.is_alive():
+            # Launch LLM
+            launch_llm_sh_path = os.path.join(
+                proj_path, "exp2", "scripts", "launch_llm.sh"
+            )
+            run_sh_async(launch_llm_sh_path, "8084", "2")
+            train_thread = None
+
+            # Reset agents' model.model_name
+            if simulator is not None:
+                agents = simulator.agents
+                results = []
+                for agent in agents:
+                    results.append(agent.set_attr("model.model_name", "lora"))
+                for res in results:
+                    res.result()
+            train_progress = cur_progress = -1
+            await websocket.send_json({"train_progress": train_progress})
     finally:
         if websocket.client_state == WebSocketState.CONNECTED:
             await websocket.close()
@@ -758,6 +812,7 @@ def get_messages_with_filter(
     if cur_msgs is None:
         with lock:
             cur_msgs = message_manager.messages.copy()
+            cur_msgs = [msg for msg in cur_msgs if msg.msg_id]
     filter_condition = None
     msgs = filter_msgs_or_states(cur_msgs, filter_condition)
     return msgs[offset : offset + limit]
@@ -799,7 +854,9 @@ def random_selection_messages(num: int):
     global cur_msgs
     with lock:
         cur_msgs = message_manager.messages.copy()
-    cur_msgs = sorted(random.choices(cur_msgs, k=num), key=lambda x: x.msg_id)
+        cur_msgs = [msg for msg in cur_msgs if msg.msg_id]
+    if num != 0:
+        cur_msgs = sorted(random.choices(cur_msgs, k=num), key=lambda x: x.msg_id)
     return HTMLResponse()
 
 
@@ -808,6 +865,7 @@ def undo_random_selection():
     global cur_msgs
     with lock:
         cur_msgs = message_manager.messages.copy()
+        cur_msgs = [msg for msg in cur_msgs if msg.msg_id]
     return HTMLResponse()
 
 
@@ -875,7 +933,7 @@ def tune(mode: Literal["rewrite", "rate"]):
     return HTMLResponse()
 
 
-@app.post("/export/{mode}")
+@app.post("/export")
 def export_changed_messages(mode: Literal["rewrite", "rate"]):
     with lock:
         msgs = message_manager.messages.copy()
@@ -1059,6 +1117,12 @@ async def start():
 async def pause():
     if simulator is None:
         return HTMLResponse(content="Simulator is not running. Please start simulation first.", status_code=400)
+    if simulator.cur_round == -1:
+        # Distribute MsgID for messages
+        with lock:
+            for idx, msg in enumerate(message_manager.messages):
+                msg.msg_id = idx
+        return HTMLResponse()
     if not play_event.is_set():
         return HTMLResponse(content="Simulation is already paused.", status_code=409)
     message_manager.message_queue.put("Pause simulation.")
@@ -1082,6 +1146,8 @@ async def pause():
 async def resume():
     if simulator is None:
         return HTMLResponse(content="Simulator is not running. Please start simulation first.", status_code=400)
+    if simulator.cur_round == -1:
+        return HTMLResponse(content="Simulation has already finished.", status_code=409)
     if play_event.is_set():
         return HTMLResponse(content="Simulation is already running.", status_code=409)
     global cur_msgs
