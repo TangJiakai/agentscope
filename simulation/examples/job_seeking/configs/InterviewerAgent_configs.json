@@ -2,23 +2,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Colorist",
-            "jd": "Enhance the color and tone of film footage to create a visually striking final product.",
+            "name": "Automotive Product Designer",
+            "jd": "Create innovative designs for new vehicle models and features.",
             "jr": [
-                "Bachelor's degree in Film or related field",
-                "3+ years of experience in color grading",
-                "Proficient in software such as DaVinci Resolve and Adobe SpeedGrade",
-                "Strong eye for color and detail"
+                "Bachelor's degree in Industrial Design or related field",
+                "4+ years of experience in automotive design",
+                "Proficient in 3D modeling software",
+                "Strong portfolio showcasing design work"
             ],
-            "company": "Netflix",
-            "salary": "USD 75,000 - 95,000 annually",
+            "company": "Land Rover, a British luxury SUV manufacturer",
+            "salary": "USD 90,000 - 120,000 annually",
             "benefits": [
                 "Health insurance",
-                "Flexible work arrangements",
-                "Paid time off",
-                "Employee discounts"
+                "401(k) with company match",
+                "Paid vacation",
+                "Employee discounts on vehicles"
             ],
-            "location": "Los Gatos, California, USA",
+            "location": "Gaydon, England",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15035
@@ -27,23 +27,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Visual Effects Artist",
-            "jd": "Design and create visual effects for film to enhance storytelling through digital imagery.",
+            "name": "Freelance Legal Writer",
+            "jd": "Creates high-quality legal content for blogs, websites, and publications.",
             "jr": [
-                "Bachelor's degree in Animation or related field",
-                "4+ years of experience in VFX production",
-                "Proficient in software such as Maya and After Effects",
-                "Strong portfolio showcasing VFX work"
+                "Bachelor's degree in Law or related field",
+                "Strong writing and research skills",
+                "Experience in legal writing preferred",
+                "Ability to meet tight deadlines"
             ],
-            "company": "Industrial Light & Magic",
-            "salary": "USD 85,000 - 110,000 annually",
+            "company": "Various clients, including law firms and legal publications",
+            "salary": "USD 50,000 - 70,000 annually",
             "benefits": [
-                "Health insurance",
-                "Retirement plans",
-                "On-site gym",
-                "Employee discounts"
+                "Flexible work hours",
+                "Remote work options",
+                "Opportunity to work on diverse projects",
+                "Networking opportunities"
             ],
-            "location": "San Francisco, California, USA",
+            "location": "Remote",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15036
@@ -52,23 +52,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Real Estate Marketing Specialist",
-            "jd": "Develop and implement marketing strategies to promote properties and attract buyers.",
+            "name": "Financial Operations Manager",
+            "jd": "Oversee financial operations, ensuring efficiency and compliance with financial policies.",
             "jr": [
-                "Bachelor's degree in Marketing, Real Estate, or related field",
-                "Experience in real estate marketing",
-                "Strong communication and creative skills",
-                "Proficiency in social media and digital marketing"
+                "Bachelor's degree in Finance or Business Administration",
+                "5+ years of experience in financial operations or management",
+                "Strong leadership and communication skills",
+                "Experience with financial software"
             ],
-            "company": "Zillow Group, a leading online real estate marketplace",
-            "salary": "USD 55,000 - 85,000 annually",
+            "company": "Visa Inc., a global payments technology company",
+            "salary": "USD 120,000 - 150,000 annually",
             "benefits": [
-                "Health insurance",
-                "Flexible work hours",
+                "Comprehensive health coverage",
+                "401(k) matching",
                 "Paid time off",
-                "Continuing education reimbursement"
+                "Career development opportunities"
             ],
-            "location": "Seattle, Washington, USA",
+            "location": "Foster City, CA, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15037
@@ -77,23 +77,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "AI Ethics Consultant",
-            "jd": "Provide guidance on ethical implications of AI technologies and develop frameworks for responsible AI deployment.",
+            "name": "Marketing Manager",
+            "jd": "Develop and execute marketing strategies for film releases, including social media and promotional campaigns.",
             "jr": [
-                "PhD in Philosophy, Ethics, or related field",
-                "5+ years of experience in AI ethics or policy",
-                "Strong understanding of machine learning technologies and their societal impacts",
-                "Excellent communication and stakeholder engagement skills"
+                "Bachelor's degree in Marketing, Communications, or related field",
+                "4+ years of experience in film marketing",
+                "Strong analytical and creative skills",
+                "Experience with digital marketing tools"
             ],
-            "company": "Accenture, a global professional services company specializing in IT services and consulting.",
-            "salary": "USD 130,000 - 160,000 annually",
+            "company": "Paramount Pictures, a prominent film studio producing a wide array of films",
+            "salary": "USD 80,000 - 120,000 annually",
             "benefits": [
                 "Comprehensive health coverage",
-                "Flexible working hours",
-                "Professional development opportunities",
-                "Wellness programs"
+                "Paid vacation",
+                "Team-building activities",
+                "Flexible working arrangements"
             ],
-            "location": "Dublin, Ireland",
+            "location": "Hollywood, California, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15038
@@ -102,23 +102,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Vehicle Design Artist",
-            "jd": "Create innovative and aesthetically pleasing vehicle designs using sketching and 3D modeling.",
+            "name": "Diversity and Inclusion Officer",
+            "jd": "Develop and implement strategies to promote diversity and inclusion within the organization.",
             "jr": [
-                "Bachelor's degree in Industrial Design or Fine Arts",
-                "Portfolio showcasing vehicle design projects",
-                "Proficient in graphic design software like Adobe Creative Suite",
-                "Strong understanding of automotive trends and consumer preferences"
+                "Bachelor's degree in Human Resources, Sociology, or related field",
+                "3+ years of experience in diversity and inclusion initiatives",
+                "Strong communication and advocacy skills",
+                "Experience in employee engagement strategies"
             ],
-            "company": "BMW AG, a German luxury vehicle and motorcycle manufacturer",
-            "salary": "USD 80,000 - 110,000 annually",
+            "company": "Google, a multinational technology company",
+            "salary": "USD 100,000 - 120,000 annually",
             "benefits": [
-                "Health insurance",
-                "Company car",
-                "Paid sabbaticals",
-                "Creative work environment"
+                "Comprehensive health benefits",
+                "Paid time off",
+                "Employee development programs",
+                "Work-life balance initiatives"
             ],
-            "location": "Munich, Bavaria, Germany",
+            "location": "Mountain View, California, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15039
@@ -127,23 +127,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Fashion Designer",
-            "jd": "Design clothing, accessories, and footwear to meet consumer trends and brand identity.",
+            "name": "Sales Operations Manager",
+            "jd": "Oversee sales operations, ensuring processes are efficient and effective to support the sales team.",
             "jr": [
-                "Bachelor's degree in Fashion Design or related field",
-                "2+ years of experience in fashion design",
-                "Strong sketching and sewing skills",
-                "Knowledge of fashion trends and textiles"
+                "Bachelor's degree in Business or related field",
+                "5+ years of experience in sales operations",
+                "Strong analytical and organizational skills",
+                "Experience with data management tools"
             ],
-            "company": "Chanel S.A., a luxury fashion brand",
-            "salary": "USD 100,000 - 130,000 annually",
+            "company": "Adobe, a multinational software company",
+            "salary": "USD 90,000 - 110,000 annually",
             "benefits": [
-                "Health benefits",
-                "Employee discounts on products",
-                "Paid time off",
-                "Travel opportunities for fashion shows"
+                "Health insurance",
+                "Flexible schedule",
+                "Generous paid time off",
+                "Employee stock purchase plan"
             ],
-            "location": "Paris, France",
+            "location": "San Jose, California, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15040
@@ -152,23 +152,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Logistics Coordinator",
-            "jd": "Oversee and coordinate logistics operations to ensure timely delivery of goods.",
+            "name": "Risk Management Officer (Trading)",
+            "jd": "Identifies and mitigates risks associated with trading activities.",
             "jr": [
-                "Associate's degree or higher in Logistics or Business",
-                "1+ years of experience in logistics coordination",
-                "Strong communication and organizational skills",
-                "Experience with freight management systems"
+                "Master's degree in Finance or Risk Management",
+                "5+ years of experience in risk assessment for trading",
+                "Strong analytical and quantitative skills",
+                "Knowledge of regulatory frameworks"
             ],
-            "company": "FedEx, a multinational courier delivery services company",
-            "salary": "USD 50,000 - 65,000 annually",
+            "company": "Morgan Stanley, a global investment bank",
+            "salary": "USD 130,000 - 160,000 annually",
             "benefits": [
-                "Health insurance",
-                "Paid vacation and sick leave",
-                "Employee discounts",
-                "401(k) with company match"
+                "Comprehensive health plans",
+                "Annual bonuses",
+                "Paid time off",
+                "Professional development programs"
             ],
-            "location": "Memphis, Tennessee, USA",
+            "location": "New York, New York, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15041
@@ -177,23 +177,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Marketing Coordinator",
-            "jd": "Supports marketing initiatives and campaigns to promote hotel services and enhance brand visibility.",
+            "name": "AI Business Analyst",
+            "jd": "Analyze business requirements and translate them into AI solutions that drive operational efficiency.",
             "jr": [
-                "Bachelor's degree in Marketing or Communications",
-                "1-3 years of experience in marketing or hospitality",
-                "Strong writing and content creation skills",
-                "Proficiency in social media and digital marketing"
+                "Bachelor's degree in Business Administration or related field",
+                "3+ years of experience in business analysis",
+                "Understanding of AI technologies and their applications",
+                "Strong analytical and communication skills"
             ],
-            "company": "Accor Hotels, a leading hospitality group",
-            "salary": "USD 45,000 - 60,000 annually",
+            "company": "Salesforce, a cloud-based software company specializing in customer relationship management",
+            "salary": "USD 90,000 - 115,000 annually",
             "benefits": [
-                "Health and wellness benefits",
-                "Professional development training",
-                "Flexible work schedules",
-                "Discounted hotel stays"
+                "Health insurance",
+                "Paid time off",
+                "401(k) plan",
+                "Employee training programs"
             ],
-            "location": "Singapore",
+            "location": "San Francisco, California, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15042
@@ -202,23 +202,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Natural Language Processing Engineer",
-            "jd": "Design and build NLP models to enhance user interactions and data understanding.",
+            "name": "HR Project Manager",
+            "jd": "Manages HR projects from initiation to completion, ensuring that they align with organizational goals and strategies.",
             "jr": [
-                "Master's degree in Linguistics, Computer Science, or a related field",
-                "3+ years of experience in NLP or data science",
-                "Proficiency in Python and NLP libraries like NLTK or SpaCy",
-                "Knowledge of machine learning frameworks"
+                "Bachelor's degree in Human Resources or Project Management",
+                "5+ years of project management experience in HR",
+                "Strong leadership and communication skills",
+                "Ability to manage multiple projects simultaneously"
             ],
-            "company": "Microsoft Corporation, a technology company that develops, licenses, and supports a wide range of software products.",
-            "salary": "USD 110,000 - 135,000 annually",
+            "company": "Progressive HR Solutions, a consulting firm",
+            "salary": "USD 85,000 - 100,000 annually",
             "benefits": [
                 "Health insurance",
-                "Generous vacation policy",
-                "Retirement plans",
-                "Employee training programs"
+                "Work-from-home options",
+                "Annual bonuses",
+                "Professional development opportunities"
             ],
-            "location": "Redmond, Washington, USA",
+            "location": "Dallas, Texas, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15043
@@ -227,23 +227,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Food and Beverage Director",
-            "jd": "Oversee all food and beverage operations, manage staff, and ensure quality standards.",
+            "name": "Supplier Quality Assurance Manager",
+            "jd": "Ensures suppliers meet quality standards and specifications for goods delivered.",
             "jr": [
-                "Bachelor's degree in Culinary Arts or Hospitality Management",
-                "5+ years of experience in food and beverage management",
-                "Strong leadership skills",
-                "Knowledge of food safety regulations"
+                "Bachelor's degree in Engineering or Quality Assurance",
+                "4+ years of experience in quality control",
+                "Strong problem-solving skills",
+                "Experience with quality assurance methodologies"
             ],
-            "company": "Gourmet Bites, a culinary-focused hotel",
-            "salary": "USD 90,000 - 110,000 annually",
+            "company": "Boeing, a leading aerospace company",
+            "salary": "USD 100,000 - 130,000 annually",
             "benefits": [
-                "Health and dental insurance",
-                "Retirement plans",
-                "Paid time off",
-                "Employee meals"
+                "Health insurance with family coverage",
+                "401(k) with company match",
+                "Paid time off and holidays",
+                "Tuition reimbursement"
             ],
-            "location": "London, England",
+            "location": "Chicago, Illinois, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15044
@@ -252,23 +252,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Real Estate Agent",
-            "jd": "Assist clients in buying, selling, and renting properties, providing expert advice and negotiation skills.",
+            "name": "Data Product Manager",
+            "jd": "Guide the development of data-driven products and services that leverage analytics.",
             "jr": [
-                "Valid real estate license",
-                "Strong communication and interpersonal skills",
-                "Knowledge of local real estate market",
-                "Experience with CRM software"
+                "Bachelor's degree in Data Science, Business, or related field",
+                "4+ years of experience in data product management",
+                "Strong analytical skills and experience with data visualization tools",
+                "Ability to communicate complex concepts to non-technical stakeholders"
             ],
-            "company": "Keller Williams Realty, a global leader in residential real estate",
-            "salary": "USD 50,000 - 80,000 annually plus commissions",
+            "company": "Instagram, a photo and video-sharing social networking service",
+            "salary": "USD 130,000 - 160,000 annually",
             "benefits": [
-                "Flexible hours",
-                "Training and mentorship programs",
                 "Health insurance",
-                "Performance bonuses"
+                "Flexible work arrangements",
+                "Annual wellness stipend",
+                "Generous vacation policy"
             ],
-            "location": "Austin, Texas, USA",
+            "location": "Menlo Park, California, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15045
@@ -277,23 +277,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Tax Technology Consultant",
-            "jd": "Implement and manage tax technology solutions to improve efficiency and compliance.",
+            "name": "AI Research Engineer",
+            "jd": "Develops and implements cutting-edge AI algorithms to enhance product capabilities and efficiency.",
             "jr": [
-                "Bachelor's degree in IT, Accounting, or related field",
-                "3+ years of experience in tax technology or software implementation",
-                "Strong analytical and technical skills",
-                "Familiarity with tax software and systems"
+                "PhD in Artificial Intelligence or Machine Learning",
+                "5+ years of experience in AI research or development",
+                "Expert in TensorFlow and PyTorch",
+                "Strong publication record in top-tier journals"
             ],
-            "company": "Intuit, a financial software company",
-            "salary": "USD 90,000 - 110,000 annually",
+            "company": "OpenAI, a leading AI research organization",
+            "salary": "USD 150,000 - 180,000 annually",
             "benefits": [
-                "Health insurance",
-                "401(k) with matching",
-                "Paid sick leave",
-                "Flexible working conditions"
+                "Comprehensive health coverage",
+                "Flexible working hours",
+                "Professional development budget",
+                "Remote work opportunities"
             ],
-            "location": "Mountain View, CA, USA",
+            "location": "San Francisco, California, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15046
@@ -302,23 +302,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "M&A Analyst",
-            "jd": "Conduct research and analysis on potential mergers and acquisitions, and assist in deal execution.",
+            "name": "Freight Forwarder",
+            "jd": "Coordinate shipments and manage documentation for international logistics.",
             "jr": [
-                "Bachelor's degree in Finance, Economics, or Business",
-                "1-3 years of experience in mergers and acquisitions or investment banking",
-                "Strong analytical and quantitative skills",
-                "Ability to work in a fast-paced environment"
+                "Bachelor's degree in International Business or Logistics",
+                "2+ years of experience in freight forwarding",
+                "Strong understanding of customs regulations",
+                "Excellent communication skills"
             ],
-            "company": "Barclays, a British multinational investment bank and financial services company",
-            "salary": "USD 90,000 - 110,000 annually",
+            "company": "Kuehne + Nagel, a global logistics company",
+            "salary": "USD 60,000 - 80,000 annually",
             "benefits": [
-                "Health insurance",
-                "Flexible working hours",
+                "Health and dental insurance",
                 "Paid vacation",
-                "Professional training programs"
+                "401(k) plan",
+                "Annual performance bonuses"
             ],
-            "location": "London, UK",
+            "location": "Geneva, Switzerland",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15047
@@ -327,23 +327,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Automotive Production Supervisor",
-            "jd": "Supervise production lines and ensure quality standards are met in the manufacturing of vehicles.",
+            "name": "Labor Relations Specialist",
+            "jd": "Facilitates communication between management and employees to resolve disputes and negotiate labor contracts.",
             "jr": [
-                "Bachelor's degree in Engineering or Manufacturing Management",
-                "5+ years of experience in automotive production",
-                "Strong leadership and communication skills",
-                "Knowledge of lean manufacturing principles"
+                "Bachelor's degree in Labor Relations or related field",
+                "3+ years of experience in labor relations or conflict resolution",
+                "Strong negotiation skills",
+                "Knowledge of union regulations and practices"
             ],
-            "company": "Fiat Chrysler Automobiles, an American-Italian multinational corporation",
-            "salary": "USD 80,000 - 100,000 annually",
+            "company": "Union Strong, a nonprofit organization advocating for labor rights",
+            "salary": "USD 70,000 - 85,000 annually",
             "benefits": [
                 "Health insurance",
-                "Paid time off",
-                "Retirement plans",
-                "Employee wellness programs"
+                "401(k) matching",
+                "Paid family leave",
+                "Work-life balance initiatives"
             ],
-            "location": "Auburn Hills, Michigan, USA",
+            "location": "Chicago, Illinois, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15048
@@ -352,23 +352,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Territory Sales Manager",
-            "jd": "Oversee sales operations within a designated territory, driving revenue growth through strategic planning and execution.",
+            "name": "AI Research Scientist",
+            "jd": "Conduct cutting-edge research in artificial intelligence and publish findings in scientific journals.",
             "jr": [
-                "Bachelor's degree in Sales, Marketing, or related field",
-                "5+ years of experience in territory management",
-                "Strong analytical and planning skills",
-                "Ability to travel frequently"
+                "PhD in Computer Science, AI, or related field",
+                "3+ years of research experience in AI or machine learning",
+                "Expertise in neural networks and natural language processing",
+                "Strong programming skills in Python and C++"
             ],
-            "company": "Procter & Gamble, a multinational consumer goods corporation",
-            "salary": "USD 100,000 - 130,000 annually",
+            "company": "OpenAI, an AI research organization focused on ensuring that artificial general intelligence benefits all of humanity.",
+            "salary": "USD 140,000 - 180,000 annually",
             "benefits": [
-                "Comprehensive health benefits",
-                "Retirement savings plan",
-                "Paid time off and holidays",
-                "Employee wellness programs"
+                "Health insurance",
+                "Paid parental leave",
+                "Professional growth opportunities",
+                "Collaborative work environment"
             ],
-            "location": "Cincinnati, Ohio, USA",
+            "location": "San Francisco, California, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15049

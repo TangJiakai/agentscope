@@ -274,7 +274,7 @@ def put_transform(req: Transform):
 
 @app.get("/agents", response_model=List[AgentInfo])
 def get_agents(
-    type: Literal["name", "id"] = "name",
+    type: Optional[str] = None,
     query: Optional[str] = None,
     favorite: bool = False,
 ):
@@ -286,10 +286,16 @@ def get_agents(
         agents = simulator.agents
 
     if query:
-        if type == "name":
-            agents = [agent for agent in agents if query.lower() in agent.name.lower()]
-        elif type == "id":
-            agents = [agent for agent in agents if query == agent.agent_id]
+        agents = [
+            agent
+            for agent in agents
+            if (not type or agent_info[agent.agent_id]["cls"] == type)
+            and query.lower() in agent_info[agent.agent_id]["name"].lower()
+        ]
+    elif type:
+        agents = [
+            agent for agent in agents if agent_info[agent.agent_id]["cls"] == type
+        ]
 
     resp = []
     # tasks = []
@@ -334,57 +340,98 @@ def get_agents(
 #     return [try_serialize_dict(agent.__dict__) for agent in agents]
 
 
-@app.get("/agent/config", response_model=List[str])
-def get_agent_classes_config():
-    agent_module = importlib.import_module(f"simulation.examples.{_scene}.agent")
-    agent_classes = inspect.getmembers(agent_module, inspect.isclass)
-    resp = [agent_cls[0] for agent_cls in agent_classes]
-    # configs_path = Path(
-    #     os.path.join(proj_path, "simulation", "examples", _scene, "configs")
-    # )
-    # all_agent_configs = configs_path.glob("all_*_agent_configs.json")
-    # resp = []
-    # for agent_config in all_agent_configs:
-    #     with open(agent_config, "r") as f:
-    #         agent_config = json.load(f)
-    #         agent_cls = {
-    #             "class": agent_config[0]["class"],
-    #             "num_agents": len(agent_config),
-    #         }
-    #         print(agent_cls)
-    #         resp.append(AgentConfig(**agent_cls))
+@app.get("/agent/config", response_model=List[AgentConfig])
+def get_agent_config():
+    configs_path = Path(
+        os.path.join(proj_path, "simulation", "examples", _scene, "configs")
+    )
+    all_agent_configs = configs_path.glob("all_*_configs.json")
+    resp = []
+    for agent_config in all_agent_configs:
+        with open(agent_config, "r") as f:
+            agent_config = json.load(f)
+            agent_cls = {
+                "class": agent_config[0]["class"],
+                "num_agents": len(agent_config),
+            }
+            print(agent_cls)
+            resp.append(AgentConfig(**agent_cls))
     return resp
 
 
 @app.put("/agent/config")
-def put_agent_config(req: AgentConfig):
-    configs_path = os.path.join(proj_path, "simulation", "examples", _scene, "configs")
-    profile_path = os.path.join(configs_path, f"all_{req.cls}_configs.json")
-    with open(profile_path, "r") as f:
-        agent_configs = json.load(f)
-        agent_configs = random.choices(agent_configs, k=req.num_agents)
-        agent_configs_path = os.path.join(configs_path, f"{req.cls}_configs.json")
-        with open(agent_configs_path, "w") as agent_config_file:
-            json.dump(agent_configs, agent_config_file, ensure_ascii=False, indent=4)
+def put_agent_config(req: List[AgentConfig]):
+    req = {agent.cls: agent.num_agents for agent in req}
+    configs_path = Path(
+        os.path.join(proj_path, "simulation", "examples", _scene, "configs")
+    )
+    all_agent_configs = configs_path.glob("all_*_configs.json")
+    for all_agent_config in all_agent_configs:
+        with open(all_agent_config, "r") as f:
+            agent_configs = json.load(f)
+            agent_num = req[agent_configs[0]["class"]]
+            agent_configs = random.choices(agent_configs, k=agent_num)
+            agent_configs_path = os.path.join(
+                configs_path, all_agent_config.name.removeprefix("all_")
+            )
+            with open(agent_configs_path, "w") as agent_config_file:
+                json.dump(
+                    agent_configs, agent_config_file, ensure_ascii=False, indent=4
+                )
     return HTMLResponse()
 
 
-@app.post("/agent/profile/{cls}", response_model=AgentConfig)
-async def post_agent_profile(cls: str, profile: UploadFile):
-    profile_path = os.path.join(
-        proj_path,
-        "simulation",
-        "examples",
-        _scene,
-        "configs",
-        f"all_{cls}_configs.json",
-    )
-    async with aiofiles.open(profile_path, "wb") as f:
-        await f.write(await profile.read())
-    with open(profile_path, "r") as f:
-        agent_configs = json.load(f)
-        num_agents = len(agent_configs)
-    return AgentConfig(**{"class": cls, "num_agents": num_agents})
+# @app.get("/agent/config", response_model=List[str])
+# def get_agent_classes_config():
+#     agent_module = importlib.import_module(f"simulation.examples.{_scene}.agent")
+#     agent_classes = inspect.getmembers(agent_module, inspect.isclass)
+#     resp = [agent_cls[0] for agent_cls in agent_classes]
+#     # configs_path = Path(
+#     #     os.path.join(proj_path, "simulation", "examples", _scene, "configs")
+#     # )
+#     # all_agent_configs = configs_path.glob("all_*_agent_configs.json")
+#     # resp = []
+#     # for agent_config in all_agent_configs:
+#     #     with open(agent_config, "r") as f:
+#     #         agent_config = json.load(f)
+#     #         agent_cls = {
+#     #             "class": agent_config[0]["class"],
+#     #             "num_agents": len(agent_config),
+#     #         }
+#     #         print(agent_cls)
+#     #         resp.append(AgentConfig(**agent_cls))
+#     return resp
+
+
+# @app.put("/agent/config")
+# def put_agent_config(req: AgentConfig):
+#     configs_path = os.path.join(proj_path, "simulation", "examples", _scene, "configs")
+#     profile_path = os.path.join(configs_path, f"all_{req.cls}_configs.json")
+#     with open(profile_path, "r") as f:
+#         agent_configs = json.load(f)
+#         agent_configs = random.choices(agent_configs, k=req.num_agents)
+#         agent_configs_path = os.path.join(configs_path, f"{req.cls}_configs.json")
+#         with open(agent_configs_path, "w") as agent_config_file:
+#             json.dump(agent_configs, agent_config_file, ensure_ascii=False, indent=4)
+#     return HTMLResponse()
+
+
+# @app.post("/agent/profile/{cls}", response_model=AgentConfig)
+# async def post_agent_profile(cls: str, profile: UploadFile):
+#     profile_path = os.path.join(
+#         proj_path,
+#         "simulation",
+#         "examples",
+#         _scene,
+#         "configs",
+#         f"all_{cls}_configs.json",
+#     )
+#     async with aiofiles.open(profile_path, "wb") as f:
+#         await f.write(await profile.read())
+#     with open(profile_path, "r") as f:
+#         agent_configs = json.load(f)
+#         num_agents = len(agent_configs)
+#     return AgentConfig(**{"class": cls, "num_agents": num_agents})
 
 
 @app.get("/agent/favorite", response_model=List[AgentInfo])
@@ -678,7 +725,7 @@ def get_messages_with_filter(
     return msgs[offset : offset + limit]
 
 
-def change_msgs(mode: Literal["rewrite", "rate"], new_msgs: List[ChangedMsg]):
+def change_msgs(new_msgs: List[ChangedMsg], mode: Optional[Literal["rewrite", "rate"]] = None):
     with lock:
         for new_msg in new_msgs:
             if mode == "rewrite":
@@ -686,6 +733,11 @@ def change_msgs(mode: Literal["rewrite", "rate"], new_msgs: List[ChangedMsg]):
                     new_msg.rewritten_response
                 )
             elif mode == "rate":
+                message_manager.messages[new_msg.msg_id].rating = new_msg.rating
+            else:
+                message_manager.messages[new_msg.msg_id].rewritten_response = (
+                    new_msg.rewritten_response
+                )
                 message_manager.messages[new_msg.msg_id].rating = new_msg.rating
     global cur_msgs
     cur_msgs_ids = [msg.msg_id for msg in cur_msgs]
@@ -696,6 +748,11 @@ def change_msgs(mode: Literal["rewrite", "rate"], new_msgs: List[ChangedMsg]):
                     new_msg.rewritten_response
                 )
             elif mode == "rate":
+                cur_msgs[cur_msgs_ids.index(new_msg.msg_id)].rating = new_msg.rating
+            else:
+                cur_msgs[cur_msgs_ids.index(new_msg.msg_id)].rewritten_response = (
+                    new_msg.rewritten_response
+                )
                 cur_msgs[cur_msgs_ids.index(new_msg.msg_id)].rating = new_msg.rating
 
 
@@ -716,9 +773,9 @@ def undo_random_selection():
     return HTMLResponse()
 
 
-@app.put("/messages/{mode}")
-def save_changed_messages(mode: Literal["rewrite", "rate"], msgs: List[ChangedMsg]):
-    change_msgs(mode, msgs)
+@app.put("/messages")
+def save_changed_messages(msgs: List[ChangedMsg]):
+    change_msgs(msgs)
     return HTMLResponse()
 
 
@@ -726,24 +783,24 @@ def save_changed_messages(mode: Literal["rewrite", "rate"], msgs: List[ChangedMs
 def chatgpt(req: GPTReq):
     with lock:
         msgs = message_manager.messages.copy()
-    msgs = [msgs[id].model_dump(include={"prompt", "completion"}) for id in req.msg_ids]
+    msgs = [msgs[id].model_dump(include={"prompt", "completion", "selection_num"}) for id in req.msg_ids]
     if req.mode == "rewrite":
         resps = rewritten_responses(msgs)
         change_msgs(
-            "rewrite",
             [
                 ChangedMsg(msg_id=msg_id, rewritten_response=resps[idx])
                 for idx, msg_id in enumerate(req.msg_ids)
             ],
+            "rewrite",
         )
     elif req.mode == "rate":
         resps = rate_responses(msgs)
         change_msgs(
-            "rate",
             [
                 ChangedMsg(msg_id=msg_id, rating=resps[idx])
                 for idx, msg_id in enumerate(req.msg_ids)
             ],
+            "rate",
         )
     return HTMLResponse()
 
@@ -765,9 +822,9 @@ def tune(mode: Literal["rewrite", "rate"]):
 
     # Launch LLM
     launch_llm_sh_path = os.path.join(
-        proj_path, "exp2", "scripts", "launch_llm.sh", "8084", "2"
+        proj_path, "exp2", "scripts", "launch_llm.sh"
     )
-    run_sh_async(launch_llm_sh_path)
+    run_sh_async(launch_llm_sh_path, "8084", "2")
 
     # Reset agents' model.model_name
     agents = simulator.agents
@@ -797,7 +854,7 @@ def export_changed_messages(mode: Literal["rewrite", "rate"]):
             json.dump(msgs, f, ensure_ascii=False, indent=4)
     elif mode == "rate":
         msgs = [
-            {"prompt": msg.prompt, "completion": msg.completion, "rating": msg.rating}
+            {"prompt": msg.prompt, "completion": msg.completion, "reward": msg.rating}
             for msg in msgs
             if msg.rating
         ]
@@ -836,109 +893,141 @@ def get_avatar_radius():
 @app.post("/start")
 async def start():
     global simulator, simulation_thread, avatar_radius
-    if simulator is not None:
-        return HTMLResponse(
-            content="Simulator is already running. You should reset first.",
-            status_code=400,
-        )
-    # launch server
-    simulation_config_path = os.path.join(
-        proj_path, "simulation", "examples", _scene, "configs", "simulation_config.yml"
-    )
-    with open(simulation_config_path, "r") as f:
-        simulation_config = yaml.load(f)
-    launch_server_sh_path = os.path.join(
-        proj_path, "simulation", "examples", _scene, "launch_server.sh"
-    )
-    run_sh_blocking(
-        launch_server_sh_path,
-        str(simulation_config["server_num_per_host"]),
-        str(simulation_config["base_port"]),
-    )
 
-    module_path = f"simulation.examples.{_scene}.simulator"
-    Simulator = importlib.import_module(module_path).Simulator
-    simulator = Simulator()
-    agents = simulator.agents
-    results = []
-    for agent in agents:
-        results.append(agent.set_attr("backend_server_url", backend_server_url))
-    for res in results:
-        res.result()
+    # 用于控制循环重试的标志和重试次数
+    success = False
+    max_retries = 5  # 最大重试次数
+    retry_count = 0  # 当前重试次数
 
-    # Parameters
-    n_samples = len(agents)  # 需要生成的点数
-    canvas_size = 1.0  # 画布的尺寸，此时默认为1*1的
-    initial_center_dist = 0.08  # 初始默认圆心距
-    radius_ratio = 0.4  # 初始默认半径占圆心距的比例
+    # 开始循环，最多重试 max_retries 次
+    while not success and retry_count < max_retries:
+        try:
+            if simulator is not None:
+                return HTMLResponse(
+                    content="Simulator is already running. You should reset first.",
+                    status_code=400,
+                )
+            # launch server
+            simulation_config_path = os.path.join(
+                proj_path, "simulation", "examples", _scene, "configs", "simulation_config.yml"
+            )
+            with open(simulation_config_path, "r") as f:
+                simulation_config = yaml.load(f)
+            launch_server_sh_path = os.path.join(
+                proj_path, "simulation", "examples", _scene, "launch_server.sh"
+            )
+            run_sh_blocking(
+                launch_server_sh_path,
+                str(simulation_config["server_num_per_host"]),
+                str(simulation_config["base_port"]),
+            )
 
-    # Generate points using Poisson disk sampling
-    # points, final_radius = poisson_disk_sampling(width, height, n_samples, initial_radius)
-    points, final_radius = generate_points_sampling(
-        k=n_samples,
-        radius_ratio=radius_ratio,
-        initial_center_dist=initial_center_dist,
-        canvas_size=canvas_size,
-    )
-    avatar_radius = final_radius * 0.75
-    for idx, agent in enumerate(agents):
-        agent_coordinates[agent.agent_id] = list(points[idx])
-    manager.all_agents_state = {agent.agent_id: "idle" for agent in agents}
+            module_path = f"simulation.examples.{_scene}.simulator"
+            Simulator = importlib.import_module(module_path).Simulator
+            simulator = Simulator()
+            agents = simulator.agents
+            results = []
+            for agent in agents:
+                results.append(agent.set_attr("backend_server_url", backend_server_url))
+            for res in results:
+                res.result()
 
-    # AgentInfo(
-    #     name=agent.name,
-    #     id=agent.agent_id,
-    #     cls=agent._init_settings["class_name"],
-    #     state=agent.get_attr(attr="state"),
-    #     profile=agent.get_attr(attr="_profile"),
-    #     gender=gender,
-    #     coordinates=Coord(x=agent_coordinates[agent.agent_id][0], y=agent_coordinates[agent.agent_id][1]),
-    #     avatar=avatar_path,
-    # )
-    for agent in agents:
-        agent_info[agent.agent_id] = {
-            "cls": agent._init_settings["class_name"],
-        }
-    tasks = []
-    with futures.ThreadPoolExecutor() as executor:
-        for agent in agents:
-            tasks.append(executor.submit(agent.get_attr, "name"))
-        for idx, task in enumerate(tasks):
-            agent_info[agents[idx].agent_id]["name"] = task.result()
-    tasks = []
-    with futures.ThreadPoolExecutor() as executor:
-        for agent in agents:
-            tasks.append(executor.submit(agent.get_attr, "_profile"))
-        for idx, task in enumerate(tasks):
-            agent_info[agents[idx].agent_id]["profile"] = task.result()
-    tasks = []
-    with futures.ThreadPoolExecutor() as executor:
-        for agent in agents:
-            tasks.append(executor.submit(agent.get_attr, "gender"))
-        for idx, task in enumerate(tasks):
-            gender = task.result()
-            avatar_path = os.path.join("/assets", "avatar")
-            match = re.search(r"\d", agents[idx].agent_id)
-            num = match.group() if match else 0
-            if gender is None or gender.lower() not in ["female", "male"]:
-                gender = None
-                avatar_path = os.path.join(avatar_path, "none", f"{num}.png")
-            else:
-                gender = gender.lower()
-                avatar_path = os.path.join(avatar_path, gender, f"{num}.png")
-            agent_info[agents[idx].agent_id]["gender"] = gender
-            agent_info[agents[idx].agent_id]["avatar_path"] = avatar_path
+            # Parameters
+            n_samples = len(agents)  # 需要生成的点数
+            canvas_size = 1.0  # 画布的尺寸，此时默认为1*1的
+            initial_center_dist = 0.08  # 初始默认圆心距
+            radius_ratio = 0.4  # 初始默认半径占圆心距的比例
 
-    simulation_thread = Thread(target=simulator.run)
-    simulation_thread.start()
-    return HTMLResponse()
+            # Generate points using Poisson disk sampling
+            # points, final_radius = poisson_disk_sampling(width, height, n_samples, initial_radius)
+            points, final_radius = generate_points_sampling(
+                k=n_samples,
+                radius_ratio=radius_ratio,
+                initial_center_dist=initial_center_dist,
+                canvas_size=canvas_size,
+            )
+            avatar_radius = final_radius * 0.75
+            for idx, agent in enumerate(agents):
+                agent_coordinates[agent.agent_id] = list(points[idx])
+            manager.all_agents_state = {agent.agent_id: "idle" for agent in agents}
+
+            # AgentInfo(
+            #     name=agent.name,
+            #     id=agent.agent_id,
+            #     cls=agent._init_settings["class_name"],
+            #     state=agent.get_attr(attr="state"),
+            #     profile=agent.get_attr(attr="_profile"),
+            #     gender=gender,
+            #     coordinates=Coord(x=agent_coordinates[agent.agent_id][0], y=agent_coordinates[agent.agent_id][1]),
+            #     avatar=avatar_path,
+            # )
+            for agent in agents:
+                agent_info[agent.agent_id] = {
+                    "cls": agent._init_settings["class_name"],
+                }
+            tasks = []
+            with futures.ThreadPoolExecutor() as executor:
+                for agent in agents:
+                    tasks.append(executor.submit(agent.get_attr, "name"))
+                for idx, task in enumerate(tasks):
+                    agent_info[agents[idx].agent_id]["name"] = task.result()
+            tasks = []
+            with futures.ThreadPoolExecutor() as executor:
+                for agent in agents:
+                    tasks.append(executor.submit(agent.get_attr, "_profile"))
+                for idx, task in enumerate(tasks):
+                    agent_info[agents[idx].agent_id]["profile"] = task.result()
+            tasks = []
+            with futures.ThreadPoolExecutor() as executor:
+                for agent in agents:
+                    tasks.append(executor.submit(agent.get_attr, "gender"))
+                for idx, task in enumerate(tasks):
+                    gender = task.result()
+                    avatar_path = os.path.join("/assets", "avatar")
+                    match = re.search(r"\d", agents[idx].agent_id)
+                    num = match.group() if match else 0
+                    if gender is None or gender.lower() not in ["female", "male"]:
+                        gender = None
+                        avatar_path = os.path.join(avatar_path, "none", f"{num}.png")
+                    else:
+                        gender = gender.lower()
+                        avatar_path = os.path.join(avatar_path, gender, f"{num}.png")
+                    agent_info[agents[idx].agent_id]["gender"] = gender
+                    agent_info[agents[idx].agent_id]["avatar_path"] = avatar_path
+
+            simulation_thread = Thread(target=simulator.run)
+            simulation_thread.start()
+            success = True
+        except Exception as e:
+            logger.error(e)
+            kill_server_sh_path = os.path.join(
+                proj_path, "simulation", "examples", _scene, "kill_all_server.sh"
+            )
+            run_sh_blocking(kill_server_sh_path)
+            time.sleep(10)
+
+            # 增加重试计数器
+            retry_count += 1
+            logger.info(f"Retry attempt {retry_count} of {max_retries}")
+
+            # 如果达到最大重试次数，返回错误
+            if retry_count >= max_retries:
+                return HTMLResponse(content="Failed to start simulator after multiple attempts.", status_code=500)
+
+    return HTMLResponse(content="Simulator started successfully.", status_code=200)
 
 
 @app.post("/pause")
 async def pause_and_resume():
     if play_event.is_set():
         message_manager.message_queue.put("Pause simulation.")
+        pause_success_event.clear()
         play_event.clear()
+        logger.info("Pause simulation.")
+        if pause_success_event.is_set():
+            logger.info("Event is set.")
+        else:
+            logger.info("Event is not set.")
         while not pause_success_event.is_set():
             await asyncio.sleep(0.1)
         # Distribute MsgID for messages
@@ -979,6 +1068,7 @@ async def reset():
     play_event.set()
     if simulation_thread is not None:
         simulation_thread.join()
+        logger.info("Simulation thread is joined.")
     simulation_thread = None
     cur_msgs = None
     agent_coordinates = {}

@@ -377,6 +377,8 @@ class Simulator(BaseSimulator):
                 },
             )
 
+        
+        self.cur_round = -1
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 
