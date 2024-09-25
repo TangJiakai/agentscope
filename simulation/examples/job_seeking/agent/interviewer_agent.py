@@ -21,7 +21,7 @@ InterviewerAgentStates = [
     "screening cv",
     "making decision",
     "interviewing",
-    "receiving notification",
+    "receiving notif",
 ]
 
 
@@ -169,7 +169,7 @@ class InterviewerAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg).content)]
         return response
 
-    @set_state("receiving notification")
+    @set_state("receiving notif")
     def receive_notification(self, seeker_name: str, is_accept: bool, **kwargs):
         self.observe(
             get_assistant_msg(

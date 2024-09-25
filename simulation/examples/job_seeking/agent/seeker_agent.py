@@ -20,13 +20,13 @@ Template = env.get_template("seeker_prompts.j2").module
 
 SeekerAgentStates = [
     "idle",
-    "determining if seeking",
-    "determining search job number",
-    "determining search jobs",
-    "determining jobs to apply",
+    "whether to seek",
+    "search number",
+    "searching jobs",
+    "jobs to apply",
     "applying jobs",
     "interviewing",
-    "making final decision",
+    "making decision",
 ]
 
 
@@ -148,7 +148,7 @@ class SeekerAgent(BaseAgent):
         #     if resp.status_code != 200:
         #         logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
 
-    @set_state("determining if seeking")
+    @set_state("whether to seek")
     def _determine_if_seeking(self, **kwargs):
         instruction = Template.determine_if_seeking_instruction()
         guided_choice = ["no", "yes"]
@@ -160,7 +160,7 @@ class SeekerAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg).content)]
         return response
 
-    @set_state("determining search job number")
+    @set_state("search number")
     def _determine_search_job_number(self, **kwargs):
         """Set search job number."""
         SearchJobNumber = 5
@@ -175,7 +175,7 @@ class SeekerAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg).content)]
         return int(response)
 
-    @set_state("determining search jobs")
+    @set_state("searching jobs")
     def _determine_search_jobs(self, search_job_number: int, **kwargs):
         search_job_indices = random.sample(
             range(len(self.job_ids_pool)), search_job_number
@@ -188,7 +188,7 @@ class SeekerAgent(BaseAgent):
 
         return interviewer_agent_infos
 
-    @set_state("determining jobs to apply")
+    @set_state("jobs to apply")
     def _determine_apply_job(self, interviewer_agent_infos: dict, **kwargs):
         """Determine which jobs to apply."""
         instruction = Template.determine_apply_jobs_instruction()
@@ -262,7 +262,7 @@ class SeekerAgent(BaseAgent):
 
         return offer_interviewer_agent_infos
 
-    @set_state("making final decision")
+    @set_state("making decision")
     def _make_final_decision(self, offer_interviewer_agent_infos: dict, **kwargs):
         """Make decision."""
         if len(offer_interviewer_agent_infos) == 0:
