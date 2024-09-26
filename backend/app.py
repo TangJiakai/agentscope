@@ -232,7 +232,7 @@ async def websocket_train_endpoint(websocket: WebSocket):
             if train_progress != cur_progress:
                 cur_progress = train_progress
                 await websocket.send_json({"train_progress": train_progress})
-            if train_thread is not None and not train_thread.is_alive():
+            if train_progress == 1:
                 # Launch LLM
                 launch_llm_sh_path = os.path.join(
                     proj_path, "exp2", "scripts", "launch_llm.sh"
@@ -252,7 +252,7 @@ async def websocket_train_endpoint(websocket: WebSocket):
                 await websocket.send_json({"train_progress": train_progress})
     except WebSocketDisconnect:
         logger.info("WebSocket /train disconnected")
-        if train_thread is not None and not train_thread.is_alive():
+        if train_progress == 1:
             # Launch LLM
             launch_llm_sh_path = os.path.join(
                 proj_path, "exp2", "scripts", "launch_llm.sh"
@@ -594,7 +594,7 @@ def get_agent(id: str):
                     id=id,
                     cls=agent_info[agent.agent_id]["cls"],
                     state=agent.get_attr("state"),
-                    profile=agent_info[id]["profile"],
+                    profile=agent.get_attr("_profile"),
                     gender=agent_info[id]["gender"],
                     coordinates=Coord(
                         x=agent_coordinates[agent.agent_id][0],
@@ -1083,7 +1083,10 @@ async def start():
                     avatar_path = os.path.join("/assets", "avatar")
                     match = re.search(r"\d", agents[idx].agent_id)
                     num = match.group() if match else 0
-                    if gender is None or gender.lower() not in ["female", "male"]:
+                    if gender is None:
+                        gender = None
+                        avatar_path = os.path.join(avatar_path, "none", "hr.png")
+                    elif gender.lower() not in ["female", "male"]:
                         gender = None
                         avatar_path = os.path.join(avatar_path, "none", f"{num}.png")
                     else:

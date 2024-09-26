@@ -2,376 +2,251 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Automotive Product Designer",
-            "jd": "Create innovative designs for new vehicle models and features.",
+            "name": "Land Surveyor",
+            "jd": "Measures land and prepares site plans, ensuring accurate boundaries and compliance with regulations.",
             "jr": [
-                "Bachelor's degree in Industrial Design or related field",
-                "4+ years of experience in automotive design",
-                "Proficient in 3D modeling software",
-                "Strong portfolio showcasing design work"
+                "Bachelor's degree in Surveying or Geomatics",
+                "4+ years of experience in land surveying",
+                "Familiarity with surveying software and tools",
+                "Strong analytical and critical thinking skills"
             ],
-            "company": "Land Rover, a British luxury SUV manufacturer",
+            "company": "Landmark Surveyors, a leading surveying firm",
+            "salary": "USD 70,000 - 90,000 annually",
+            "benefits": [
+                "Health and dental insurance",
+                "Paid time off and holidays",
+                "401(k) with company match",
+                "Continuous training opportunities"
+            ],
+            "location": "Phoenix, Arizona, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15010
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Digital Design Engineer",
+            "jd": "Design and develop digital circuits and systems for a range of applications, focusing on optimization and performance.",
+            "jr": [
+                "Bachelor's degree in Electrical Engineering or related field",
+                "3+ years of experience in digital design",
+                "Proficient in VHDL and Verilog",
+                "Familiarity with FPGA and ASIC design"
+            ],
+            "company": "Microchip Technology, a provider of microcontroller and analog semiconductors",
+            "salary": "USD 95,000 - 125,000 annually",
+            "benefits": [
+                "Comprehensive health plans",
+                "401(k) with employer match",
+                "Employee wellness programs",
+                "Paid vacation and holidays"
+            ],
+            "location": "Chandler, Arizona, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15011
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Automotive Engineer",
+            "jd": "Design and develop automotive systems and components, ensuring compliance with safety and performance standards.",
+            "jr": [
+                "Bachelor's degree in Mechanical Engineering or Automotive Engineering",
+                "5+ years of experience in automotive design",
+                "Knowledge of CAD software and simulation tools",
+                "Familiarity with vehicle dynamics and performance testing"
+            ],
+            "company": "Ford Motor Company, a leading American multinational automaker",
             "salary": "USD 90,000 - 120,000 annually",
             "benefits": [
                 "Health insurance",
                 "401(k) with company match",
-                "Paid vacation",
+                "Paid parental leave",
                 "Employee discounts on vehicles"
             ],
-            "location": "Gaydon, England",
+            "location": "Dearborn, Michigan, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15035
+            "port": 15012
         }
     },
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Freelance Legal Writer",
-            "jd": "Creates high-quality legal content for blogs, websites, and publications.",
+            "name": "Digital Marketing Specialist",
+            "jd": "Develop and implement digital marketing strategies for lifestyle brands to enhance online presence.",
             "jr": [
-                "Bachelor's degree in Law or related field",
-                "Strong writing and research skills",
-                "Experience in legal writing preferred",
-                "Ability to meet tight deadlines"
+                "Degree in Marketing, Communications, or related field",
+                "2+ years of experience in digital marketing",
+                "Strong knowledge of social media platforms and trends",
+                "Excellent writing and content creation skills"
             ],
-            "company": "Various clients, including law firms and legal publications",
+            "company": "Lifestyle Media Group, a marketing agency focusing on lifestyle brands",
             "salary": "USD 50,000 - 70,000 annually",
             "benefits": [
-                "Flexible work hours",
-                "Remote work options",
-                "Opportunity to work on diverse projects",
-                "Networking opportunities"
-            ],
-            "location": "Remote",
-            "model_config_name": "Llama3",
-            "host": "localhost",
-            "port": 15036
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "Financial Operations Manager",
-            "jd": "Oversee financial operations, ensuring efficiency and compliance with financial policies.",
-            "jr": [
-                "Bachelor's degree in Finance or Business Administration",
-                "5+ years of experience in financial operations or management",
-                "Strong leadership and communication skills",
-                "Experience with financial software"
-            ],
-            "company": "Visa Inc., a global payments technology company",
-            "salary": "USD 120,000 - 150,000 annually",
-            "benefits": [
-                "Comprehensive health coverage",
-                "401(k) matching",
-                "Paid time off",
-                "Career development opportunities"
-            ],
-            "location": "Foster City, CA, USA",
-            "model_config_name": "Llama3",
-            "host": "localhost",
-            "port": 15037
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "Marketing Manager",
-            "jd": "Develop and execute marketing strategies for film releases, including social media and promotional campaigns.",
-            "jr": [
-                "Bachelor's degree in Marketing, Communications, or related field",
-                "4+ years of experience in film marketing",
-                "Strong analytical and creative skills",
-                "Experience with digital marketing tools"
-            ],
-            "company": "Paramount Pictures, a prominent film studio producing a wide array of films",
-            "salary": "USD 80,000 - 120,000 annually",
-            "benefits": [
-                "Comprehensive health coverage",
-                "Paid vacation",
-                "Team-building activities",
-                "Flexible working arrangements"
-            ],
-            "location": "Hollywood, California, USA",
-            "model_config_name": "Llama3",
-            "host": "localhost",
-            "port": 15038
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "Diversity and Inclusion Officer",
-            "jd": "Develop and implement strategies to promote diversity and inclusion within the organization.",
-            "jr": [
-                "Bachelor's degree in Human Resources, Sociology, or related field",
-                "3+ years of experience in diversity and inclusion initiatives",
-                "Strong communication and advocacy skills",
-                "Experience in employee engagement strategies"
-            ],
-            "company": "Google, a multinational technology company",
-            "salary": "USD 100,000 - 120,000 annually",
-            "benefits": [
-                "Comprehensive health benefits",
-                "Paid time off",
-                "Employee development programs",
-                "Work-life balance initiatives"
-            ],
-            "location": "Mountain View, California, USA",
-            "model_config_name": "Llama3",
-            "host": "localhost",
-            "port": 15039
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "Sales Operations Manager",
-            "jd": "Oversee sales operations, ensuring processes are efficient and effective to support the sales team.",
-            "jr": [
-                "Bachelor's degree in Business or related field",
-                "5+ years of experience in sales operations",
-                "Strong analytical and organizational skills",
-                "Experience with data management tools"
-            ],
-            "company": "Adobe, a multinational software company",
-            "salary": "USD 90,000 - 110,000 annually",
-            "benefits": [
-                "Health insurance",
-                "Flexible schedule",
-                "Generous paid time off",
-                "Employee stock purchase plan"
-            ],
-            "location": "San Jose, California, USA",
-            "model_config_name": "Llama3",
-            "host": "localhost",
-            "port": 15040
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "Risk Management Officer (Trading)",
-            "jd": "Identifies and mitigates risks associated with trading activities.",
-            "jr": [
-                "Master's degree in Finance or Risk Management",
-                "5+ years of experience in risk assessment for trading",
-                "Strong analytical and quantitative skills",
-                "Knowledge of regulatory frameworks"
-            ],
-            "company": "Morgan Stanley, a global investment bank",
-            "salary": "USD 130,000 - 160,000 annually",
-            "benefits": [
-                "Comprehensive health plans",
-                "Annual bonuses",
-                "Paid time off",
-                "Professional development programs"
-            ],
-            "location": "New York, New York, USA",
-            "model_config_name": "Llama3",
-            "host": "localhost",
-            "port": 15041
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "AI Business Analyst",
-            "jd": "Analyze business requirements and translate them into AI solutions that drive operational efficiency.",
-            "jr": [
-                "Bachelor's degree in Business Administration or related field",
-                "3+ years of experience in business analysis",
-                "Understanding of AI technologies and their applications",
-                "Strong analytical and communication skills"
-            ],
-            "company": "Salesforce, a cloud-based software company specializing in customer relationship management",
-            "salary": "USD 90,000 - 115,000 annually",
-            "benefits": [
-                "Health insurance",
-                "Paid time off",
-                "401(k) plan",
-                "Employee training programs"
-            ],
-            "location": "San Francisco, California, USA",
-            "model_config_name": "Llama3",
-            "host": "localhost",
-            "port": 15042
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "HR Project Manager",
-            "jd": "Manages HR projects from initiation to completion, ensuring that they align with organizational goals and strategies.",
-            "jr": [
-                "Bachelor's degree in Human Resources or Project Management",
-                "5+ years of project management experience in HR",
-                "Strong leadership and communication skills",
-                "Ability to manage multiple projects simultaneously"
-            ],
-            "company": "Progressive HR Solutions, a consulting firm",
-            "salary": "USD 85,000 - 100,000 annually",
-            "benefits": [
-                "Health insurance",
+                "Health benefits",
                 "Work-from-home options",
-                "Annual bonuses",
+                "Paid vacation",
                 "Professional development opportunities"
             ],
-            "location": "Dallas, Texas, USA",
+            "location": "Boston, Massachusetts, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15043
+            "port": 15013
         }
     },
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Supplier Quality Assurance Manager",
-            "jd": "Ensures suppliers meet quality standards and specifications for goods delivered.",
+            "name": "Product Development Engineer",
+            "jd": "Design and develop new products from concept through production.",
             "jr": [
-                "Bachelor's degree in Engineering or Quality Assurance",
-                "4+ years of experience in quality control",
-                "Strong problem-solving skills",
-                "Experience with quality assurance methodologies"
+                "Bachelor's degree in Engineering or related field",
+                "3+ years of experience in product development",
+                "Strong CAD skills and experience with prototyping",
+                "Ability to work collaboratively in a team"
             ],
-            "company": "Boeing, a leading aerospace company",
-            "salary": "USD 100,000 - 130,000 annually",
-            "benefits": [
-                "Health insurance with family coverage",
-                "401(k) with company match",
-                "Paid time off and holidays",
-                "Tuition reimbursement"
-            ],
-            "location": "Chicago, Illinois, USA",
-            "model_config_name": "Llama3",
-            "host": "localhost",
-            "port": 15044
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "Data Product Manager",
-            "jd": "Guide the development of data-driven products and services that leverage analytics.",
-            "jr": [
-                "Bachelor's degree in Data Science, Business, or related field",
-                "4+ years of experience in data product management",
-                "Strong analytical skills and experience with data visualization tools",
-                "Ability to communicate complex concepts to non-technical stakeholders"
-            ],
-            "company": "Instagram, a photo and video-sharing social networking service",
-            "salary": "USD 130,000 - 160,000 annually",
-            "benefits": [
-                "Health insurance",
-                "Flexible work arrangements",
-                "Annual wellness stipend",
-                "Generous vacation policy"
-            ],
-            "location": "Menlo Park, California, USA",
-            "model_config_name": "Llama3",
-            "host": "localhost",
-            "port": 15045
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "AI Research Engineer",
-            "jd": "Develops and implements cutting-edge AI algorithms to enhance product capabilities and efficiency.",
-            "jr": [
-                "PhD in Artificial Intelligence or Machine Learning",
-                "5+ years of experience in AI research or development",
-                "Expert in TensorFlow and PyTorch",
-                "Strong publication record in top-tier journals"
-            ],
-            "company": "OpenAI, a leading AI research organization",
-            "salary": "USD 150,000 - 180,000 annually",
-            "benefits": [
-                "Comprehensive health coverage",
-                "Flexible working hours",
-                "Professional development budget",
-                "Remote work opportunities"
-            ],
-            "location": "San Francisco, California, USA",
-            "model_config_name": "Llama3",
-            "host": "localhost",
-            "port": 15046
-        }
-    },
-    {
-        "class": "InterviewerAgent",
-        "args": {
-            "name": "Freight Forwarder",
-            "jd": "Coordinate shipments and manage documentation for international logistics.",
-            "jr": [
-                "Bachelor's degree in International Business or Logistics",
-                "2+ years of experience in freight forwarding",
-                "Strong understanding of customs regulations",
-                "Excellent communication skills"
-            ],
-            "company": "Kuehne + Nagel, a global logistics company",
-            "salary": "USD 60,000 - 80,000 annually",
+            "company": "Tesla, an electric vehicle and clean energy company",
+            "salary": "USD 110,000 - 140,000 annually",
             "benefits": [
                 "Health and dental insurance",
-                "Paid vacation",
-                "401(k) plan",
-                "Annual performance bonuses"
+                "Stock options",
+                "Employee discounts on vehicles",
+                "Flexible work environment"
             ],
-            "location": "Geneva, Switzerland",
+            "location": "Palo Alto, California, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15047
+            "port": 15014
         }
     },
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Labor Relations Specialist",
-            "jd": "Facilitates communication between management and employees to resolve disputes and negotiate labor contracts.",
+            "name": "Assembly Line Worker",
+            "jd": "Perform assembly tasks on a production line, ensuring quality and efficiency in manufacturing operations.",
             "jr": [
-                "Bachelor's degree in Labor Relations or related field",
-                "3+ years of experience in labor relations or conflict resolution",
+                "High school diploma or equivalent",
+                "1+ years of experience in manufacturing or assembly work",
+                "Ability to follow instructions and work in a team",
+                "Basic mechanical skills"
+            ],
+            "company": "Ford Motor Company, a multinational automaker",
+            "salary": "USD 40,000 - 55,000 annually",
+            "benefits": [
+                "Health and dental insurance",
+                "Paid overtime",
+                "Shift differentials",
+                "Employee assistance programs"
+            ],
+            "location": "Kansas City, Missouri, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15015
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Product Development Specialist",
+            "jd": "Research and develop new products based on market trends and customer feedback.",
+            "jr": [
+                "Bachelor's degree in Product Design or related field",
+                "3+ years of experience in product development",
+                "Strong creative and technical skills",
+                "Ability to collaborate effectively with cross-functional teams"
+            ],
+            "company": "Nike, a leading sportswear brand",
+            "salary": "USD 80,000 - 100,000 annually",
+            "benefits": [
+                "Health insurance",
+                "Employee discounts",
+                "Paid time off",
+                "401(k) retirement plan"
+            ],
+            "location": "Beaverton, Oregon, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15016
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Revenue Manager",
+            "jd": "Analyze market trends and set pricing strategies to maximize revenue for the hotel.",
+            "jr": [
+                "Bachelor's degree in Finance or Hospitality Management",
+                "4+ years of experience in revenue management",
+                "Strong analytical and mathematical skills",
+                "Experience with revenue management systems"
+            ],
+            "company": "Maximize Revenue Group, a consulting firm specializing in hospitality",
+            "salary": "USD 80,000 - 100,000 annually",
+            "benefits": [
+                "Health insurance",
+                "Retirement plans",
+                "Paid vacation days",
+                "Professional development training"
+            ],
+            "location": "Austin, Texas, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15017
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Materials Manager",
+            "jd": "Oversee the procurement and inventory management of materials needed for production.",
+            "jr": [
+                "Bachelor's degree in Supply Chain Management or related field",
+                "5+ years of experience in materials management",
                 "Strong negotiation skills",
-                "Knowledge of union regulations and practices"
+                "Experience with inventory management software"
             ],
-            "company": "Union Strong, a nonprofit organization advocating for labor rights",
-            "salary": "USD 70,000 - 85,000 annually",
+            "company": "Johnson & Johnson, a global healthcare company",
+            "salary": "USD 90,000 - 110,000 annually",
             "benefits": [
-                "Health insurance",
-                "401(k) matching",
-                "Paid family leave",
-                "Work-life balance initiatives"
+                "Comprehensive health and dental insurance",
+                "401(k) retirement plan",
+                "Generous paid time off",
+                "Employee discounts"
             ],
-            "location": "Chicago, Illinois, USA",
+            "location": "New Brunswick, New Jersey, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15048
+            "port": 15018
         }
     },
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "AI Research Scientist",
-            "jd": "Conduct cutting-edge research in artificial intelligence and publish findings in scientific journals.",
+            "name": "Concierge",
+            "jd": "Provide personalized services to guests, including booking reservations and offering local recommendations.",
             "jr": [
-                "PhD in Computer Science, AI, or related field",
-                "3+ years of research experience in AI or machine learning",
-                "Expertise in neural networks and natural language processing",
-                "Strong programming skills in Python and C++"
+                "High school diploma or equivalent",
+                "1+ years of experience in customer service",
+                "Strong communication skills",
+                "Knowledge of local attractions and services"
             ],
-            "company": "OpenAI, an AI research organization focused on ensuring that artificial general intelligence benefits all of humanity.",
-            "salary": "USD 140,000 - 180,000 annually",
+            "company": "The Luxe Hotel, a boutique hotel known for its personalized service",
+            "salary": "USD 35,000 - 50,000 annually",
             "benefits": [
-                "Health insurance",
-                "Paid parental leave",
-                "Professional growth opportunities",
-                "Collaborative work environment"
+                "Health benefits",
+                "Employee discounts",
+                "Flexible working hours",
+                "Networking opportunities"
             ],
-            "location": "San Francisco, California, USA",
+            "location": "Paris, France",
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15049
+            "port": 15019
         }
     }
 ]
