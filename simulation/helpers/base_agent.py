@@ -23,6 +23,7 @@ class BaseAgent(AgentBase):
             name=name,
             model_config_name=model_config_name,
         )
+        self.model_config_name = model_config_name
         self._profile = ""
         self.get_tokennum_func = partial(
             get_token_num, 
@@ -52,26 +53,39 @@ class BaseAgent(AgentBase):
     @property
     def profile(self):
         return self._profile
+    
+    # @async_func
+    # def load(self, data, **kwargs):
+    #     state = dill.loads(data)
+    #     self.__setstate__(state)
+    #     return "success"
 
-    def __getstate__(self) -> object:
-        state = self.__dict__.copy()
-        state.pop("model", None)
-        if hasattr(self, "memory"):
-            memory_state = self.memory.__dict__.copy()
-            memory_state["model"] = None
-            state["memory"] = memory_state
-        return state
+    # @async_func
+    # def save(self):
+    #     state = self.__getstate__()
+    #     return dill.dumps(state)
 
-    def __setstate__(self, state: object) -> None:
-        self.__dict__.update(state)
-        if hasattr(self, "memory_config"):
-            self.memory = setup_memory(self.memory_config)
-            self.memory.__dict__.update(state["memory"])
-        if hasattr(self, "model_config_name"):
-            self.model = ModelManager.get_instance().get_model_by_config_name(
-                self.model_config_name
-            )
-            self.memory.model = self.model
+    # def __getstate__(self) -> object:
+    #     logger.info(f"Getting state for {self.name}")
+    #     state = self.__dict__.copy()
+    #     state.pop("model", None)
+    #     if hasattr(self, "memory"):
+    #         memory_state = self.memory.__dict__.copy()
+    #         memory_state["model"] = None
+    #         state["memory"] = memory_state
+    #     return state
+
+    # def __setstate__(self, state: object) -> None:
+    #     logger.info(f"Setting state for {self.name}")
+    #     self.__dict__.update(state)
+    #     if hasattr(self, "memory_config"):
+    #         self.memory = setup_memory(self.memory_config)
+    #         self.memory.__dict__.update(state["memory"])
+    #     if hasattr(self, "model_config_name"):
+    #         self.model = ModelManager.get_instance().get_model_by_config_name(
+    #             self.model_config_name
+    #         )
+    #         self.memory.model = self.model
 
     @async_func
     def set_attr(self, attr: str, value: Any, **kwargs):

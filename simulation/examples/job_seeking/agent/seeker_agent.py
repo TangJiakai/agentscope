@@ -99,7 +99,7 @@ class SeekerAgent(BaseAgent):
     def _update_profile(self):
         cv = self.seeker.cv
         cv_mdstr = ""
-        level = 4  # Start with level 1 for the first key
+        level = 4  
 
         for key, value in cv.items():
             cv_mdstr += f"{'#' * level} {key}\n"  # Add the section title
@@ -121,7 +121,7 @@ class SeekerAgent(BaseAgent):
         cv_mdstr = cv_mdstr.strip()
 
         trait = self.seeker.trait
-        trait_mdstr = "\n".join([f"## {key}\n{value}" for key, value in trait.items()])
+        trait_mdstr = "\n".join([f"#### {key}\n{value}" for key, value in trait.items()])
 
         self._profile = (
             f"### Name \n{self.seeker.name}\n"

@@ -48,12 +48,41 @@ class Simulator:
         self._init_agentscope()
 
         if self.config["load_simulator_path"] is not None:
+            logger.info(f"Load simulator from {self.config['load_simulator_path']}")
             loaded_simulator = Simulator.load(self.config["load_simulator_path"])
             self.__dict__.update(loaded_simulator.__dict__)
+            seeker_agents, interviewer_agents, envs = self._create_agents_envs()
+
+            self.agents = seeker_agents + interviewer_agents
+
+            results = []
+            for agent_state, agent in zip(self.agent_save_state, self.agents):
+                results.append(agent.load(data=agent_state))
+            for agent, res in zip(self.agents, results):
+                res.result()
+
+            results = []
+            self.envs = envs
+            for env_state, env in zip(self.env_save_state, self.envs):
+                results.append(env.load(data=env_state))
+            for env, res in zip(self.envs, results):
+                res.result()
+            self._set_env4agents()            
+            logger.info("Load agents and envs successfully")
         else:
             self._init_agents()
 
         save_configs(self.config)
+
+    def _set_env4agents(self):
+        logger.info("Set all_agents for envs")
+        agent_dict = {agent.agent_id: agent for agent in self.agents}
+        results = []
+        for env in self.envs:
+            results.append(env.set_attr(attr="all_agents", value=agent_dict))
+        for res in results:
+            res.result()
+        env = self.envs[0]
 
     def _init_agentscope(self):
         agentscope.init(
@@ -71,21 +100,23 @@ class Simulator:
             ),
         )
 
-    def _init_agents(self):
-        # Load configs
-        logger.info("Load configs")
-        model_configs = load_json(
-            os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
-        )
-        seeker_configs = load_json(
-            os.path.join(scene_path, CONFIG_DIR, self.config['seeker_agent_configs_path'])
-        )
-        interviewer_configs = load_json(
-            os.path.join(scene_path, CONFIG_DIR, self.config['interviewer_agent_configs_path'])
-        )
-        memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
-        memory_config["args"]["embedding_size"] = get_embedding_dimension(self.config["embedding_api"])
-        
+    def _create_agents_envs(self, model_configs=None, seeker_configs=None, interviewer_configs=None, memory_config=None):
+        if model_configs is None:
+            model_configs = load_json(
+                os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
+            )
+        if seeker_configs is None:
+            seeker_configs = load_json(
+                os.path.join(scene_path, CONFIG_DIR, self.config['seeker_agent_configs_path'])
+            )
+        if interviewer_configs is None:
+            interviewer_configs = load_json(
+                os.path.join(scene_path, CONFIG_DIR, self.config['interviewer_agent_configs_path'])
+            )
+        if memory_config is None:
+            memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
+            memory_config["args"]["embedding_size"] = get_embedding_dimension(self.config["embedding_api"])
+
         llm_num = len(model_configs)
         agent_num = len(seeker_configs) + len(interviewer_configs)
         agent_num_per_llm = math.ceil(agent_num / llm_num)
@@ -177,6 +208,7 @@ class Simulator:
                 interviewer_agents.append(task.result())
 
         logger.info("searching for job_ids_pool")
+
         index = faiss.IndexFlatL2(get_embedding_dimension(self.config["embedding_api"]))
         index.add(
             np.array([config["args"]["embedding"] for config in interviewer_configs])
@@ -201,17 +233,29 @@ class Simulator:
         for res in results:
             res.result()
 
-        logger.info("Set all_agents for envs")
-        agent_dict = {agent.agent_id: agent for agent in seeker_agents + interviewer_agents}
-        results = []
-        for env in envs:
-            results.append(env.set_attr(attr="all_agents", value=agent_dict))
-        for res in results:
-            res.result()
+        return seeker_agents, interviewer_agents, envs
+
+    def _init_agents(self):
+        # Load configs
+        logger.info("Load configs")
+        model_configs = load_json(
+            os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
+        )
+        seeker_configs = load_json(
+            os.path.join(scene_path, CONFIG_DIR, self.config['seeker_agent_configs_path'])
+        )
+        interviewer_configs = load_json(
+            os.path.join(scene_path, CONFIG_DIR, self.config['interviewer_agent_configs_path'])
+        )
+        memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
+        memory_config["args"]["embedding_size"] = get_embedding_dimension(self.config["embedding_api"])
+        
+        seeker_agents, interviewer_agents, envs = self._create_agents_envs(model_configs, seeker_configs, interviewer_configs, memory_config)
 
         self.agents = seeker_agents + interviewer_agents
         self.envs = envs
-        self.env = envs[0]
+        
+        self._set_env4agents()
 
     def _one_round(self):
         results = []
@@ -239,25 +283,45 @@ class Simulator:
             if kill_event.is_set():
                 logger.info(f"Kill simulation by user at round {r}.")
                 return
+            
+            # message_save_path = "/data/tangjiakai/general_simulation/"
+            # resp = requests.post(
+            #     "http://localhost:9111/store_message",
+            #     json={
+            #         "save_data_path": os.path.join(message_save_path, f"Round-{r}.json"),
+            #     }
+            # )
+
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 
-        # message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
-        # resp = requests.post(
-        #     "http://localhost:9111/store_message",
-        #     json={
-        #         "save_data_path": message_save_path,
-        #     }
-        # )
 
     def load(file_path):
         with open(file_path, "rb") as f:
             return dill.load(f)
 
+    def get_save_state(self):
+        results = []
+        for agent in self.agents:
+            results.append(agent.save())
+        agent_save_state = []
+        for result in results:
+            agent_save_state.append(result.result())
+        
+        results = []
+        for env in self.envs:
+            results.append(env.save())
+        env_save_state = []
+        for result in results:
+            env_save_state.append(result.result())
+
+        return agent_save_state, env_save_state
+
     def save(self):
         try:
             file_manager = FileManager.get_instance()
             save_path = os.path.join(file_manager.run_dir, f"ROUND-{self.cur_round}.pkl")
+            # self.agent_save_state, self.env_save_state = self.get_save_state()
             self.cur_round += 1
             with open(save_path, "wb") as f:
                 dill.dump(self, f)

@@ -14,8 +14,9 @@ echo "GPU ID: $CUDA_VISIBLE_DEVICES"
 echo "Port: $port"
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PARENT_PARENT_DIR="$(realpath "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")"
 
-if [ -f "exp2/saves/adapter_config.json" ]; then
+if [ -f "${PARENT_PARENT_DIR}/exp2/saves/adapter_config.json" ]; then
     python -m vllm.entrypoints.openai.api_server \
         --model /data/pretrain_dir/Meta-Llama-3-8B-Instruct \
         --trust-remote-code \
@@ -25,11 +26,11 @@ if [ -f "exp2/saves/adapter_config.json" ]; then
         --enforce-eager \
         --enable-prefix-caching \
         --enable-lora \
-        --lora-modules lora=exp2/saves \
+        --lora-modules lora="${script_dir}/exp2/saves" \
         --disable-frontend-multiprocessing \
         --guided-decoding-backend=lm-format-enforcer \
         --gpu-memory-utilization 0.55 \
-        2>> "${script_dir}/error.log" &
+        >> "${script_dir}/llm.log" 2>> "${script_dir}/llm_error.log" &
 else
     python -m vllm.entrypoints.openai.api_server \
         --model /data/pretrain_dir/Meta-Llama-3-8B-Instruct \
@@ -43,7 +44,7 @@ else
         --disable-frontend-multiprocessing \
         --guided-decoding-backend=lm-format-enforcer \
         --gpu-memory-utilization 0.7 \
-        2>> "${script_dir}/llm_error.log" &
+        >> "${script_dir}/llm.log" >> "${script_dir}/llm_error.log" &
 fi
 
 echo $! >> "$(dirname "$0")/launch_llm.pid"
