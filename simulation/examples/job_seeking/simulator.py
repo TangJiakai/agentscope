@@ -300,7 +300,6 @@ class Simulator:
 
             logger.info("====================================")
             logger.info(f"Round {r} finished")
-            logger.info(f"Total 100 seeker agents")
             logger.info(f"No Seeking Job: {no_seeking_cnt}")
             logger.info(f"No Job: {no_job_cnt}")
             logger.info(f"Get Job: {get_job_cnt}")
