@@ -302,9 +302,9 @@ class SeekerAgent(BaseAgent):
 
     @async_func
     def run(self, **kwargs):
-        if self.seeker.working_condition != "unemployed":
-            if "no" in self._determine_if_seeking():
-                return "Done"
+        if "no" in self._determine_if_seeking():
+            logger.info("No seeking job.")
+            return "No Seeking Job."
 
         search_job_number = self._determine_search_job_number()
         logger.info(f"Search job number: {search_job_number}")

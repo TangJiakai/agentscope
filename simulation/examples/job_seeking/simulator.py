@@ -261,8 +261,9 @@ class Simulator:
         results = []
         for agent in self.agents:
             results.append(agent.run())
-        for res in results:
-            logger.info(res.result())
+        for i in range(len(results)):
+            results[i] = results[i].result()
+        return results
 
     def run(self):
         play_event.set()
@@ -270,7 +271,7 @@ class Simulator:
         message_manager.message_queue.put("Start simulation.")
         for r in range(self.cur_round, self.config["round_n"] + 1):
             logger.info(f"Round {r} started")
-            self._one_round()
+            results = self._one_round()
             self.save()
             if stop_event.is_set():
                 message_manager.message_queue.put(
@@ -283,6 +284,27 @@ class Simulator:
             if kill_event.is_set():
                 logger.info(f"Kill simulation by user at round {r}.")
                 return
+            
+            no_seeking_cnt = 0
+            no_job_cnt = 0
+            get_job_cnt = 0
+            for result in results:
+                if result == "No Seeking Job.":
+                    no_seeking_cnt += 1
+                elif result == -1:
+                    no_job_cnt += 1
+                elif result == "Done":
+                    pass
+                else:
+                    get_job_cnt += 1
+
+            logger.info("====================================")
+            logger.info(f"Round {r} finished")
+            logger.info(f"Total 100 seeker agents")
+            logger.info(f"No Seeking Job: {no_seeking_cnt}")
+            logger.info(f"No Job: {no_job_cnt}")
+            logger.info(f"Get Job: {get_job_cnt}")
+            logger.info("====================================")
             
             # message_save_path = "/data/tangjiakai/general_simulation/"
             # resp = requests.post(
