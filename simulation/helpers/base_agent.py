@@ -31,6 +31,7 @@ class BaseAgent(AgentBase):
             model=self.model.model_name,
             api_key=self.model.api_key,
         )
+        self.global_intervention = None
         # self.backend_server_url = "http://localhost:9111"
 
     def _send_message(self, prompt, response, selection_num=None):
@@ -168,6 +169,7 @@ class BaseAgent(AgentBase):
         observation = ""
         prompt_content = []
         memory_query = ""
+        intervention = ""
         if x and hasattr(x, "instruction"):
             instruction = x.instruction
             memory_query += instruction
@@ -175,6 +177,10 @@ class BaseAgent(AgentBase):
             prompt_content.append(format_instruction)
 
         prompt_content.append(format_profile)
+
+        if not self.global_intervention:
+            intervention = INTERVENTION_BEGIN + self.global_intervention + INTERVENTION_END
+            prompt_content.append(intervention)
 
         if x and hasattr(x, "observation"):
             observation = x.observation

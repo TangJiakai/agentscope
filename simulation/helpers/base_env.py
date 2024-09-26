@@ -26,8 +26,11 @@ class BaseEnv(BasicEnv):
 
     def broadcast(self, content: str) -> None:
         # TODO: currently wait for each agent to finish processing the message (slow & unreasonable)
+        results = []
         for agent in self.all_agents.values():
-            agent.observe(get_assistant_msg(content))
+            results.append(agent.set_attr("global_intervention", content))
+        for reuslt in results:
+            reuslt.result()
 
     def intervention(self, agent_id: str, key, value) -> None:
         if agent_id in self.all_agents:
