@@ -611,7 +611,9 @@ class OpenAIServingChat(OpenAIServing):
                     output.text=token_mapping[output.text]
                         
                 for i in range(len(output.token_ids)):
-                    output.token_ids[i]+=15
+                    token_ids = list(output.token_ids)
+                    token_ids[i]+=15
+                    output.token_ids = tuple(token_ids)
             token_ids = output.token_ids
             out_logprobs = output.logprobs
 

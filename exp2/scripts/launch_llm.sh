@@ -8,7 +8,7 @@ fi
 port=$1
 gpuid=${2:-0}
 export CUDA_VISIBLE_DEVICES="$gpuid"
-# export VLLM_ATTENTION_BACKEND=XFORMERS
+export VLLM_ATTENTION_BACKEND=XFORMERS
 
 echo "GPU ID: $CUDA_VISIBLE_DEVICES"
 echo "Port: $port"

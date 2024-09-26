@@ -178,7 +178,7 @@ class BaseAgent(AgentBase):
 
         prompt_content.append(format_profile)
 
-        if not self.global_intervention:
+        if self.global_intervention:
             intervention = INTERVENTION_BEGIN + self.global_intervention + INTERVENTION_END
             prompt_content.append(intervention)
 
