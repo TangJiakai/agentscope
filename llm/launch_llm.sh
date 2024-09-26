@@ -10,8 +10,8 @@ gpuid=${2:-0}
 export CUDA_VISIBLE_DEVICES="$gpuid"
 # export VLLM_ATTENTION_BACKEND=XFORMERS
 
-echo "GPU ID: $CUDA_VISIBLE_DEVICES"
 echo "Port: $port"
+echo "GPU ID: $CUDA_VISIBLE_DEVICES"
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
