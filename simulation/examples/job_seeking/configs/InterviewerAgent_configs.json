@@ -2,23 +2,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Land Surveyor",
-            "jd": "Measures land and prepares site plans, ensuring accurate boundaries and compliance with regulations.",
+            "name": "AI Ethics Consultant",
+            "jd": "Provide guidance on ethical implications of AI technologies and develop frameworks for responsible AI deployment.",
             "jr": [
-                "Bachelor's degree in Surveying or Geomatics",
-                "4+ years of experience in land surveying",
-                "Familiarity with surveying software and tools",
-                "Strong analytical and critical thinking skills"
+                "PhD in Philosophy, Ethics, or related field",
+                "5+ years of experience in AI ethics or policy",
+                "Strong understanding of machine learning technologies and their societal impacts",
+                "Excellent communication and stakeholder engagement skills"
             ],
-            "company": "Landmark Surveyors, a leading surveying firm",
-            "salary": "USD 70,000 - 90,000 annually",
+            "company": "Accenture, a global professional services company specializing in IT services and consulting.",
+            "salary": "USD 130,000 - 160,000 annually",
             "benefits": [
-                "Health and dental insurance",
-                "Paid time off and holidays",
-                "401(k) with company match",
-                "Continuous training opportunities"
+                "Comprehensive health coverage",
+                "Flexible working hours",
+                "Professional development opportunities",
+                "Wellness programs"
             ],
-            "location": "Phoenix, Arizona, USA",
+            "location": "Dublin, Ireland",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15010
@@ -27,23 +27,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Digital Design Engineer",
-            "jd": "Design and develop digital circuits and systems for a range of applications, focusing on optimization and performance.",
+            "name": "Machine Learning Engineer",
+            "jd": "Design and implement machine learning models to improve product features and user engagement.",
             "jr": [
-                "Bachelor's degree in Electrical Engineering or related field",
-                "3+ years of experience in digital design",
-                "Proficient in VHDL and Verilog",
-                "Familiarity with FPGA and ASIC design"
+                "Bachelor's or Master's degree in Computer Science or Engineering",
+                "2+ years of experience in machine learning and software development",
+                "Proficient in Python, TensorFlow, and scikit-learn",
+                "Experience with cloud services like AWS or Azure"
             ],
-            "company": "Microchip Technology, a provider of microcontroller and analog semiconductors",
-            "salary": "USD 95,000 - 125,000 annually",
+            "company": "Google, a multinational technology company specializing in Internet-related services and products.",
+            "salary": "USD 110,000 - 140,000 annually",
             "benefits": [
-                "Comprehensive health plans",
-                "401(k) with employer match",
-                "Employee wellness programs",
-                "Paid vacation and holidays"
+                "Generous paid time off",
+                "Health and wellness programs",
+                "Tuition reimbursement",
+                "On-site fitness centers"
             ],
-            "location": "Chandler, Arizona, USA",
+            "location": "Mountain View, California, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15011
@@ -52,23 +52,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Automotive Engineer",
-            "jd": "Design and develop automotive systems and components, ensuring compliance with safety and performance standards.",
+            "name": "AI Product Manager",
+            "jd": "Lead the development and launch of AI-driven products, collaborating with engineering and design teams.",
             "jr": [
-                "Bachelor's degree in Mechanical Engineering or Automotive Engineering",
-                "5+ years of experience in automotive design",
-                "Knowledge of CAD software and simulation tools",
-                "Familiarity with vehicle dynamics and performance testing"
+                "Bachelor's degree in Business, Computer Science, or related field",
+                "4+ years of experience in product management, preferably in AI or tech",
+                "Strong analytical and problem-solving skills",
+                "Experience with Agile methodologies"
             ],
-            "company": "Ford Motor Company, a leading American multinational automaker",
-            "salary": "USD 90,000 - 120,000 annually",
+            "company": "Microsoft, a leading global technology company known for its software products and services.",
+            "salary": "USD 120,000 - 150,000 annually",
             "benefits": [
+                "Stock options",
                 "Health insurance",
-                "401(k) with company match",
-                "Paid parental leave",
-                "Employee discounts on vehicles"
+                "Flexible work arrangements",
+                "Employee discounts"
             ],
-            "location": "Dearborn, Michigan, USA",
+            "location": "Redmond, Washington, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15012
@@ -77,23 +77,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Digital Marketing Specialist",
-            "jd": "Develop and implement digital marketing strategies for lifestyle brands to enhance online presence.",
+            "name": "AI Research Scientist",
+            "jd": "Conduct cutting-edge research in artificial intelligence and publish findings in scientific journals.",
             "jr": [
-                "Degree in Marketing, Communications, or related field",
-                "2+ years of experience in digital marketing",
-                "Strong knowledge of social media platforms and trends",
-                "Excellent writing and content creation skills"
+                "PhD in Computer Science, AI, or related field",
+                "3+ years of research experience in AI or machine learning",
+                "Expertise in neural networks and natural language processing",
+                "Strong programming skills in Python and C++"
             ],
-            "company": "Lifestyle Media Group, a marketing agency focusing on lifestyle brands",
-            "salary": "USD 50,000 - 70,000 annually",
+            "company": "OpenAI, an AI research organization focused on ensuring that artificial general intelligence benefits all of humanity.",
+            "salary": "USD 140,000 - 180,000 annually",
             "benefits": [
-                "Health benefits",
-                "Work-from-home options",
-                "Paid vacation",
-                "Professional development opportunities"
+                "Health insurance",
+                "Paid parental leave",
+                "Professional growth opportunities",
+                "Collaborative work environment"
             ],
-            "location": "Boston, Massachusetts, USA",
+            "location": "San Francisco, California, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15013
@@ -102,23 +102,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Product Development Engineer",
-            "jd": "Design and develop new products from concept through production.",
+            "name": "Data Privacy Officer",
+            "jd": "Ensure compliance with data protection regulations and develop strategies for data privacy in AI systems.",
             "jr": [
-                "Bachelor's degree in Engineering or related field",
-                "3+ years of experience in product development",
-                "Strong CAD skills and experience with prototyping",
-                "Ability to work collaboratively in a team"
+                "Degree in Law, Information Technology, or related field",
+                "5+ years of experience in data privacy or compliance roles",
+                "In-depth knowledge of GDPR and other privacy regulations",
+                "Strong analytical and risk assessment skills"
             ],
-            "company": "Tesla, an electric vehicle and clean energy company",
-            "salary": "USD 110,000 - 140,000 annually",
+            "company": "IBM, a multinational technology company offering cloud platforms, cognitive computing, and AI solutions.",
+            "salary": "USD 120,000 - 150,000 annually",
             "benefits": [
-                "Health and dental insurance",
-                "Stock options",
-                "Employee discounts on vehicles",
-                "Flexible work environment"
+                "Comprehensive health benefits",
+                "Retirement savings plans",
+                "Work-life balance initiatives",
+                "Employee assistance programs"
             ],
-            "location": "Palo Alto, California, USA",
+            "location": "Armonk, New York, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15014
@@ -127,23 +127,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Assembly Line Worker",
-            "jd": "Perform assembly tasks on a production line, ensuring quality and efficiency in manufacturing operations.",
+            "name": "Machine Learning Engineer",
+            "jd": "Design and implement machine learning models to enhance product capabilities.",
             "jr": [
-                "High school diploma or equivalent",
-                "1+ years of experience in manufacturing or assembly work",
-                "Ability to follow instructions and work in a team",
-                "Basic mechanical skills"
+                "Bachelor's degree in Computer Science, Engineering, or equivalent",
+                "2+ years of experience in machine learning or software development",
+                "Strong programming skills in Python and Java",
+                "Experience with TensorFlow or PyTorch"
             ],
-            "company": "Ford Motor Company, a multinational automaker",
-            "salary": "USD 40,000 - 55,000 annually",
+            "company": "NVIDIA Corporation, a global leader in visual computing technologies.",
+            "salary": "USD 110,000 - 140,000 annually",
             "benefits": [
-                "Health and dental insurance",
-                "Paid overtime",
-                "Shift differentials",
-                "Employee assistance programs"
+                "Comprehensive health coverage",
+                "Flexible work hours",
+                "Paid parental leave",
+                "Career development programs"
             ],
-            "location": "Kansas City, Missouri, USA",
+            "location": "Santa Clara, California, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15015
@@ -152,23 +152,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Product Development Specialist",
-            "jd": "Research and develop new products based on market trends and customer feedback.",
+            "name": "AI Research Scientist",
+            "jd": "Conduct innovative research in artificial intelligence and publish findings in top-tier journals.",
             "jr": [
-                "Bachelor's degree in Product Design or related field",
-                "3+ years of experience in product development",
-                "Strong creative and technical skills",
-                "Ability to collaborate effectively with cross-functional teams"
+                "PhD in AI, Machine Learning, or related field",
+                "Published papers in reputable conferences",
+                "Strong analytical and mathematical skills",
+                "Proficiency in programming languages like Python and C++"
             ],
-            "company": "Nike, a leading sportswear brand",
-            "salary": "USD 80,000 - 100,000 annually",
+            "company": "DeepMind Technologies, a subsidiary of Alphabet Inc. focused on AI research.",
+            "salary": "USD 130,000 - 160,000 annually",
             "benefits": [
-                "Health insurance",
-                "Employee discounts",
-                "Paid time off",
-                "401(k) retirement plan"
+                "Health and wellness programs",
+                "Generous vacation policy",
+                "On-site fitness center",
+                "Relocation assistance"
             ],
-            "location": "Beaverton, Oregon, USA",
+            "location": "London, United Kingdom",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15016
@@ -177,23 +177,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Revenue Manager",
-            "jd": "Analyze market trends and set pricing strategies to maximize revenue for the hotel.",
+            "name": "Data Analyst",
+            "jd": "Analyze data trends and provide actionable insights to improve business performance.",
             "jr": [
-                "Bachelor's degree in Finance or Hospitality Management",
-                "4+ years of experience in revenue management",
-                "Strong analytical and mathematical skills",
-                "Experience with revenue management systems"
+                "Bachelor's degree in Statistics, Mathematics, or a related field",
+                "1+ years of experience in data analysis",
+                "Familiarity with SQL and data visualization tools like Tableau or Power BI",
+                "Strong communication skills"
             ],
-            "company": "Maximize Revenue Group, a consulting firm specializing in hospitality",
+            "company": "Spotify Technology S.A., a digital music service that gives you access to millions of songs.",
             "salary": "USD 80,000 - 100,000 annually",
             "benefits": [
                 "Health insurance",
-                "Retirement plans",
-                "Paid vacation days",
-                "Professional development training"
+                "Free music subscription",
+                "Flexible working schedule",
+                "Employee discounts"
             ],
-            "location": "Austin, Texas, USA",
+            "location": "Stockholm, Sweden",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15017
@@ -202,23 +202,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Materials Manager",
-            "jd": "Oversee the procurement and inventory management of materials needed for production.",
+            "name": "AI Product Manager",
+            "jd": "Lead the development and launch of AI-driven products, ensuring alignment with user needs.",
             "jr": [
-                "Bachelor's degree in Supply Chain Management or related field",
-                "5+ years of experience in materials management",
-                "Strong negotiation skills",
-                "Experience with inventory management software"
+                "Bachelor's degree in Business, Engineering, or related field",
+                "3+ years of experience in product management",
+                "Understanding of AI technologies and market trends",
+                "Strong project management skills"
             ],
-            "company": "Johnson & Johnson, a global healthcare company",
-            "salary": "USD 90,000 - 110,000 annually",
+            "company": "Salesforce, a global leader in customer relationship management software.",
+            "salary": "USD 120,000 - 150,000 annually",
             "benefits": [
-                "Comprehensive health and dental insurance",
-                "401(k) retirement plan",
-                "Generous paid time off",
-                "Employee discounts"
+                "Comprehensive health care",
+                "Stock options",
+                "Paid time off",
+                "Training and development programs"
             ],
-            "location": "New Brunswick, New Jersey, USA",
+            "location": "San Francisco, California, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15018
@@ -227,23 +227,23 @@
     {
         "class": "InterviewerAgent",
         "args": {
-            "name": "Concierge",
-            "jd": "Provide personalized services to guests, including booking reservations and offering local recommendations.",
+            "name": "AI Ethics Specialist",
+            "jd": "Evaluate and develop ethical guidelines for AI technologies and implementations.",
             "jr": [
-                "High school diploma or equivalent",
-                "1+ years of experience in customer service",
-                "Strong communication skills",
-                "Knowledge of local attractions and services"
+                "Master's degree in Philosophy, Ethics, or a related field",
+                "Experience in technology policy or ethics",
+                "Strong research and writing skills",
+                "Ability to communicate complex ideas clearly"
             ],
-            "company": "The Luxe Hotel, a boutique hotel known for its personalized service",
-            "salary": "USD 35,000 - 50,000 annually",
+            "company": "OpenAI, an AI research lab focusing on ensuring that artificial general intelligence benefits all of humanity.",
+            "salary": "USD 100,000 - 130,000 annually",
             "benefits": [
                 "Health benefits",
-                "Employee discounts",
-                "Flexible working hours",
-                "Networking opportunities"
+                "Flexible work arrangements",
+                "Generous paid leave",
+                "Professional development opportunities"
             ],
-            "location": "Paris, France",
+            "location": "San Francisco, California, USA",
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15019
