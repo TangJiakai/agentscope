@@ -24,22 +24,22 @@ pip install vllm
 
 
 ### 1. Launch Embedding Model
-1. [optional] Run 
-```python
-python simulation/tools/launch_emb_model.py
+1. Run 
+```bash
+bash simulation/tools/launch_multi_emb_models.sh
 ```
-to launch the embedding model server.
+to launch the embedding model services.
 
 2. Get the `embedding_api` (for example, [http://localhost:8003/](http://localhost:8003/)), and fill that URL into `simulation/examples/job_seeking/configs/simulation_config.yml`.
 
 ### 2. Launch LLM Model
-1. [optional] Run 
+1. Run 
 ```bash
-bash llm/launch_llm.sh
+bash llm/launch_all_llm.sh
 ```
 to launch the LLM model server.
 
-2. Get the `base_url` (for example, [http://localhost:8000/](http://localhost:8083/v1)), and fill that URL into `simulation/examples/job_seeking/configs/model_configs.json`. You can set multiply LLM models.
+2. Get the `base_url` (for example, [http://localhost:8083/](http://localhost:8083/v1)), and fill that URL into `simulation/examples/job_seeking/configs/model_configs.json`. You can set multiply LLM models.
 
 ### 3. Config
 Configure the following files in the configs directory of the specific scenario (e.g., `examples/job_seeking`):

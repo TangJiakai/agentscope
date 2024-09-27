@@ -156,3 +156,4 @@ exp2/datasets/ori_data
 exp2/*saves
 sample.ipynb
 *.pid
+simulation/examples/recommendation/
