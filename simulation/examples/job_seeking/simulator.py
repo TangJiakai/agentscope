@@ -4,6 +4,8 @@ import os
 import random
 import sys
 
+from tqdm import tqdm
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 import dill
 import time
@@ -100,6 +102,33 @@ class Simulator:
             ),
         )
 
+    def generate_embedding(self, seeker_configs, interviewer_configs):
+        def fetch_seeker_embedding(config):
+            cv = str(config["args"]["cv"])
+            config["args"]["embedding"] = get_embedding(
+                cv, config["args"]["embedding_api"]
+            )
+            return config
+        
+        def fetch_interviewer_embedding(config):
+            name, jd, jr = (
+                config["args"]["name"],
+                config["args"]["jd"],
+                config["args"]["jr"],
+            )
+            config["args"]["embedding"] = get_embedding(
+                f"{name} {jd} {' '.join(jr)}", config["args"]["embedding_api"]
+            )
+            return config
+        
+        with futures.ThreadPoolExecutor() as executor:
+            seeker_futures = {executor.submit(fetch_seeker_embedding, config): config for config in seeker_configs}
+            for future in tqdm(futures.as_completed(seeker_futures), total=len(seeker_futures), desc="Fetching seeker embedding"):
+                future.result()
+            interviewer_futures = {executor.submit(fetch_interviewer_embedding, config): config for config in interviewer_configs}
+            for future in tqdm(futures.as_completed(interviewer_futures), total=len(interviewer_futures), desc="Fetching interviewer embedding"):
+                future.result()
+
     def _create_agents_envs(self, model_configs=None, seeker_configs=None, interviewer_configs=None, memory_config=None):
         if model_configs is None:
             model_configs = load_json(
@@ -115,11 +144,14 @@ class Simulator:
             )
         if memory_config is None:
             memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
-            memory_config["args"]["embedding_size"] = get_embedding_dimension(self.config["embedding_api"])
+            memory_config["args"]["embedding_size"] = get_embedding_dimension(self.config["embedding_api"][0])
 
         llm_num = len(model_configs)
         agent_num = len(seeker_configs) + len(interviewer_configs)
         agent_num_per_llm = math.ceil(agent_num / llm_num)
+        embedding_api_num = len(self.config["embedding_api"])
+        print("embedding_api_num", embedding_api_num)
+        print("embedding api", self.config["embedding_api"])
 
         # Prepare agent args
         logger.info("Prepare agent args")
@@ -129,23 +161,11 @@ class Simulator:
             model_config = model_configs[shuffled_idx//agent_num_per_llm]
             config["args"]["model_config_name"] = model_config["config_name"]
             config["args"]["memory_config"] = memory_config
-            config["args"]["embedding_api"] = self.config["embedding_api"]
+            config["args"]["embedding_api"] = self.config["embedding_api"][shuffled_idx % embedding_api_num]
         
-        for config in seeker_configs:
-            cv = str(config["args"]["cv"])
-            config["args"]["embedding"] = get_embedding(
-                cv, self.config["embedding_api"]
-            )
-
-        for config in interviewer_configs:
-            name, jd, jr = (
-                config["args"]["name"],
-                config["args"]["jd"],
-                config["args"]["jr"],
-            )
-            config["args"]["embedding"] = get_embedding(
-                f"{name} {jd} {' '.join(jr)}", self.config["embedding_api"]
-            )
+        # Generate embedding
+        logger.info("Generate embedding for agents")
+        self.generate_embedding(seeker_configs, interviewer_configs)
 
         # Init env
         logger.info("Init environment")
@@ -167,7 +187,7 @@ class Simulator:
                         ),
                     ),
                 )
-            for task in tasks:
+            for task in tqdm(futures.as_completed(tasks), total=len(tasks), desc="Init environments"):
                 envs.append(task.result())
 
         # Init agents
@@ -186,7 +206,7 @@ class Simulator:
                         ),
                     ),
                 )
-            for task in tasks:
+            for task in tqdm(futures.as_completed(tasks), total=len(tasks), desc="Init seeker agents"):
                 seeker_agents.append(task.result())
         
         logger.info(f"Init {len(interviewer_configs)} interviewer agents")
@@ -204,12 +224,11 @@ class Simulator:
                         ),
                     ),
                 )
-            for task in tasks:
+            for task in tqdm(futures.as_completed(tasks), total=len(tasks), desc="Init interviewer agents"):
                 interviewer_agents.append(task.result())
 
         logger.info("searching for job_ids_pool")
-
-        index = faiss.IndexFlatL2(get_embedding_dimension(self.config["embedding_api"]))
+        index = faiss.IndexFlatL2(get_embedding_dimension(self.config["embedding_api"][0]))
         index.add(
             np.array([config["args"]["embedding"] for config in interviewer_configs])
         )
@@ -230,7 +249,7 @@ class Simulator:
         results = []
         for agent, config in zip(seeker_agents, seeker_configs):
             results.append(agent.set_attr(attr="job_ids_pool", value=config["args"]["job_ids_pool"]))
-        for res in results:
+        for res in tqdm(results, total=len(results), desc="Set job_ids_pool for seeker agents"):
             res.result()
 
         return seeker_agents, interviewer_agents, envs
@@ -248,7 +267,7 @@ class Simulator:
             os.path.join(scene_path, CONFIG_DIR, self.config['interviewer_agent_configs_path'])
         )
         memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
-        memory_config["args"]["embedding_size"] = get_embedding_dimension(self.config["embedding_api"])
+        memory_config["args"]["embedding_size"] = get_embedding_dimension(self.config["embedding_api"][0])
         
         seeker_agents, interviewer_agents, envs = self._create_agents_envs(model_configs, seeker_configs, interviewer_configs, memory_config)
 

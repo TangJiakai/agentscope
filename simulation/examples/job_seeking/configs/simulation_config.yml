@@ -1,12 +1,20 @@
 # general settings
 model_configs_path: model_configs.json
 project_name: job_seeking
-round_n: 2
+round_n: 1
 save_dir:
-embedding_api: http://localhost:8777/
-load_simulator_path:
+embedding_api: [
+  http://localhost:8666, 
+  http://localhost:8667,
+  http://localhost:8668,
+  http://localhost:8669,
+  http://localhost:8670,
+  http://localhost:8671,
+  http://localhost:8672,
+  http://localhost:8673,]
+load_simulator_path: 
 host: localhost
-base_port: 14000
+base_port: 13000
 server_num_per_host: 200
 
 # custom settings
