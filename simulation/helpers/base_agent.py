@@ -2,6 +2,7 @@ from functools import partial
 from typing import Any, Optional, Union, Sequence
 from loguru import logger
 import requests
+import dill
 
 from agentscope.agents import AgentBase
 from agentscope.message import Msg
@@ -55,38 +56,41 @@ class BaseAgent(AgentBase):
     def profile(self):
         return self._profile
     
-    # @async_func
-    # def load(self, data, **kwargs):
-    #     state = dill.loads(data)
-    #     self.__setstate__(state)
-    #     return "success"
+    @async_func
+    def load(self, data, **kwargs):
+        state = dill.loads(data)
+        self.__setstate__(state)
+        return "success"
 
-    # @async_func
-    # def save(self):
-    #     state = self.__getstate__()
-    #     return dill.dumps(state)
+    @async_func
+    def save(self):
+        state = self.__getstate__()
+        return dill.dumps(state)
 
-    # def __getstate__(self) -> object:
-    #     logger.info(f"Getting state for {self.name}")
-    #     state = self.__dict__.copy()
-    #     state.pop("model", None)
-    #     if hasattr(self, "memory"):
-    #         memory_state = self.memory.__dict__.copy()
-    #         memory_state["model"] = None
-    #         state["memory"] = memory_state
-    #     return state
+    def __getstate__(self) -> object:
+        state = self.__dict__.copy()
+        state.pop("model", None)
+        state.pop("env", None)
+        if hasattr(self, "memory"):
+            memory_state = self.memory.__dict__.copy()
+            memory_state["model"] = None
+            memory_state.pop("get_tokennum_func")
+            memory_state.pop("_send_message")
+            state["memory"] = memory_state
+        return state
 
-    # def __setstate__(self, state: object) -> None:
-    #     logger.info(f"Setting state for {self.name}")
-    #     self.__dict__.update(state)
-    #     if hasattr(self, "memory_config"):
-    #         self.memory = setup_memory(self.memory_config)
-    #         self.memory.__dict__.update(state["memory"])
-    #     if hasattr(self, "model_config_name"):
-    #         self.model = ModelManager.get_instance().get_model_by_config_name(
-    #             self.model_config_name
-    #         )
-    #         self.memory.model = self.model
+    def __setstate__(self, state: object) -> None:
+        self.__dict__.update(state)
+        if hasattr(self, "memory_config"):
+            self.memory = setup_memory(self.memory_config)
+            self.memory.__dict__.update(state["memory"])
+            self.memory.get_tokennum_func = self.get_tokennum_func
+            self.memory._send_message = self._send_message
+        if hasattr(self, "model_config_name"):
+            self.model = ModelManager.get_instance().get_model_by_config_name(
+                self.model_config_name
+            )
+            self.memory.model = self.model
 
     @async_func
     def set_attr(self, attr: str, value: Any, **kwargs):

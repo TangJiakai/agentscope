@@ -60,15 +60,10 @@ class Simulator:
             results = []
             for agent_state, agent in zip(self.agent_save_state, self.agents):
                 results.append(agent.load(data=agent_state))
-            for agent, res in zip(self.agents, results):
+            for res in results:
                 res.result()
 
-            results = []
             self.envs = envs
-            for env_state, env in zip(self.env_save_state, self.envs):
-                results.append(env.load(data=env_state))
-            for env, res in zip(self.envs, results):
-                res.result()
             self._set_env4agents()            
             logger.info("Load agents and envs successfully")
         else:
@@ -85,6 +80,7 @@ class Simulator:
         for res in results:
             res.result()
         env = self.envs[0]
+        self.env = env
 
     def _init_agentscope(self):
         agentscope.init(
@@ -348,20 +344,13 @@ class Simulator:
         for result in results:
             agent_save_state.append(result.result())
         
-        results = []
-        for env in self.envs:
-            results.append(env.save())
-        env_save_state = []
-        for result in results:
-            env_save_state.append(result.result())
-
-        return agent_save_state, env_save_state
+        return agent_save_state
 
     def save(self):
         try:
             file_manager = FileManager.get_instance()
             save_path = os.path.join(file_manager.run_dir, f"ROUND-{self.cur_round}.pkl")
-            # self.agent_save_state, self.env_save_state = self.get_save_state()
+            self.agent_save_state = self.get_save_state()
             self.cur_round += 1
             with open(save_path, "wb") as f:
                 dill.dump(self, f)
