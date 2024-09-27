@@ -77,7 +77,7 @@ class Simulator:
         results = []
         for env in self.envs:
             results.append(env.set_attr(attr="all_agents", value=agent_dict))
-        for res in results:
+        for res in tqdm(results, total=len(self.envs), desc="Set all_agents for envs"):
             res.result()
         env = self.envs[0]
         self.env = env
