@@ -1,4 +1,8 @@
 import os
+
+os.environ['AGENTSCOPE_USE_CPP_SERVER'] = 'YES'
+os.environ['AGENTSCOPE_NUM_WORKERS'] = '90'
+
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 import argparse
@@ -18,7 +22,7 @@ def parse_args() -> argparse.Namespace:
     """Parse arguments"""
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="localhost")
-    parser.add_argument("--base_port", type=int, default=12010)
+    parser.add_argument("--base_port", type=int, default=13000)
     return parser.parse_args()
 
 
@@ -37,7 +41,7 @@ def setup_participant_agent_server(host: str, port: int) -> None:
     assistant_server_launcher = RpcAgentServerLauncher(
         host=host,
         port=port,
-        # pool_type="redis",
+        pool_type="redis",
         max_pool_size=8192000000,
         max_expire_time=7200000,
     )

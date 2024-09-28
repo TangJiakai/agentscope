@@ -125,6 +125,56 @@ class Simulator:
             for future in tqdm(futures.as_completed(interviewer_futures), total=len(interviewer_futures), desc="Fetching interviewer embedding"):
                 future.result()
 
+    def search_for_job_ids_pool(self, seeker_configs, interviewer_configs, interviewer_agents):
+        d = get_embedding_dimension(self.config["embedding_api"][0])
+        res = faiss.StandardGpuResources()
+        nlist = 100
+        quantizer = faiss.IndexFlatL2(d)
+        gpu_index = faiss.index_cpu_to_gpu(res, 0, quantizer)
+        index = faiss.IndexIVFFlat(quantizer, d, nlist, faiss.METRIC_L2)
+
+        interviewer_embeddings = np.array([config["args"]["embedding"] for config in interviewer_configs])
+        gpu_index.train(interviewer_embeddings)
+
+        batch_size = 10000 
+        num_batches = (len(interviewer_embeddings) + batch_size - 1) // batch_size
+
+        for i in tqdm(num_batches, total=num_batches, desc="Adding interviewer embeddings"):
+            start_idx = i * batch_size
+            end_idx = min((i + 1) * batch_size, len(interviewer_embeddings))
+            gpu_index.add(interviewer_embeddings[start_idx:end_idx])
+
+        seeker_embeddings = np.array([config["args"]["embedding"] for config in seeker_configs])
+        _, job_index = [], []
+
+        for i in tqdm(num_batches, total=num_batches, desc="Searching for job_ids_pool"):
+            start_idx = i * batch_size
+            end_idx = min((i + 1) * batch_size, len(seeker_embeddings))
+            _, batch_job_index = gpu_index.search(seeker_embeddings[start_idx:end_idx], self.config["pool_size"])
+            job_index.extend(batch_job_index)
+
+        for config, idx in zip(seeker_configs, job_index):
+            config["args"]["job_ids_pool"] = [
+                interviewer_agents[i].agent_id for i in list(idx)
+            ]
+
+        # index = faiss.IndexFlatL2(get_embedding_dimension(self.config["embedding_api"][0]))
+        # index.add(
+        #     np.array([config["args"]["embedding"] for config in interviewer_configs])
+        # )
+        # embeddings = np.array([config["args"]["embedding"] for config in seeker_configs])
+        # _, job_index = index.search(embeddings, self.config["pool_size"])
+        # for config, index in zip(seeker_configs, job_index):
+        #     config["args"]["job_ids_pool"] = [
+        #         interviewer_agents[i].agent_id for i in list(index)
+        #     ]
+
+        # Just for test
+        # for config in seeker_configs:
+        #     config["args"]["job_ids_pool"] = [
+        #         interviewer_agents[i].agent_id for i in random.sample(range(len(interviewer_agents)), k=self.config["pool_size"])
+        #     ]
+
     def _create_agents_envs(self, model_configs=None, seeker_configs=None, interviewer_configs=None, memory_config=None):
         if model_configs is None:
             model_configs = load_json(
@@ -168,18 +218,17 @@ class Simulator:
         seeker_num_per_env = 200
         env_num = math.ceil(len(seeker_configs) / seeker_num_per_env)
         env_names = [f"environment-{str(i)}" for i in range(env_num)]
-        env_ports = [i % self.config["server_num_per_host"] + self.config["base_port"] for i in range(env_num)]
 
         envs = []
         tasks = []
         with futures.ThreadPoolExecutor() as executor:
-            for name, port in zip(env_names, env_ports):
+            for name in zip(env_names):
                 tasks.append(
                     executor.submit(
                         BaseEnv,
                         name=name,
                         to_dist=DistConf(
-                            host=config["args"]["host"], port=port
+                            host=self.config["host"], port=self.config['port']
                         ),
                     ),
                 )
@@ -198,7 +247,7 @@ class Simulator:
                         env=envs[i // seeker_num_per_env],
                         **config["args"],
                         to_dist=DistConf(
-                            host=config["args"]["host"], port=config["args"]["port"]
+                            host=self.config["host"], port=self.config['port']
                         ),
                     ),
                 )
@@ -216,30 +265,15 @@ class Simulator:
                         env=None,
                         **config["args"],
                         to_dist=DistConf(
-                            host=config["args"]["host"], port=config["args"]["port"]
+                            host=self.config["host"], port=self.config['port']
                         ),
                     ),
                 )
             for task in tqdm(futures.as_completed(tasks), total=len(tasks), desc="Init interviewer agents"):
                 interviewer_agents.append(task.result())
 
-        logger.info("searching for job_ids_pool")
-        index = faiss.IndexFlatL2(get_embedding_dimension(self.config["embedding_api"][0]))
-        index.add(
-            np.array([config["args"]["embedding"] for config in interviewer_configs])
-        )
-        embeddings = np.array([config["args"]["embedding"] for config in seeker_configs])
-        _, job_index = index.search(embeddings, self.config["pool_size"])
-        for config, index in zip(seeker_configs, job_index):
-            config["args"]["job_ids_pool"] = [
-                interviewer_agents[i].agent_id for i in list(index)
-            ]
-
-        # Just for test
-        # for config in seeker_configs:
-        #     config["args"]["job_ids_pool"] = [
-        #         interviewer_agents[i].agent_id for i in random.sample(range(len(interviewer_agents)), k=self.config["pool_size"])
-        #     ]
+        logger.info("Search for job_ids_pool")
+        self.search_for_job_ids_pool(seeker_configs, interviewer_configs, interviewer_agents)
 
         logger.info("Set job_ids_pool for seeker agents")
         results = []
