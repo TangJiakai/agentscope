@@ -158,6 +158,18 @@ class Simulator:
                 interviewer_agents[i].agent_id for i in list(idx)
             ]
 
+        # cpu version
+        # index = faiss.IndexFlatL2(get_embedding_dimension(self.config["embedding_api"][0]))
+        # index.add(
+        #     np.array([config["args"]["embedding"] for config in interviewer_configs])
+        # )
+        # embeddings = np.array([config["args"]["embedding"] for config in seeker_configs])
+        # _, job_index = index.search(embeddings, self.config["pool_size"])
+        # for config, index in zip(seeker_configs, job_index):
+        #     config["args"]["job_ids_pool"] = [
+        #         interviewer_agents[i].agent_id for i in list(index)
+        #     ]
+
     def _create_agents_envs(self, model_configs=None, seeker_configs=None, interviewer_configs=None, memory_config=None):
         if model_configs is None:
             model_configs = load_json(
@@ -180,7 +192,6 @@ class Simulator:
         agent_num_per_llm = math.ceil(agent_num / llm_num)
         embedding_api_num = len(self.config["embedding_api"])
         print("embedding_api_num", embedding_api_num)
-        print("embedding api", self.config["embedding_api"])
 
         # Prepare agent args
         logger.info("Prepare agent args")
@@ -257,17 +268,7 @@ class Simulator:
                 interviewer_agents.append(task.result())
 
         logger.info("searching for job_ids_pool")
-        index = faiss.IndexFlatL2(get_embedding_dimension(self.config["embedding_api"][0]))
-        index.add(
-            np.array([config["args"]["embedding"] for config in interviewer_configs])
-        )
-        embeddings = np.array([config["args"]["embedding"] for config in seeker_configs])
-        _, job_index = index.search(embeddings, self.config["pool_size"])
-        for config, index in zip(seeker_configs, job_index):
-            config["args"]["job_ids_pool"] = [
-                interviewer_agents[i].agent_id for i in list(index)
-            ]
-
+        self.search_for_job_ids_pool(seeker_configs, interviewer_configs, interviewer_agents)
         # Just for test
         # for config in seeker_configs:
         #     config["args"]["job_ids_pool"] = [
@@ -320,7 +321,7 @@ class Simulator:
         for r in range(self.cur_round, self.config["round_n"] + 1):
             logger.info(f"Round {r} started")
             results = self._one_round()
-            self.save()
+            # self.save()
             if stop_event.is_set():
                 message_manager.message_queue.put(
                     f"Stop simulation by user at round {r}."
