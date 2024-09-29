@@ -127,27 +127,27 @@ class Simulator:
 
     def search_for_job_ids_pool(self, seeker_configs, interviewer_configs, interviewer_agents):
         d = get_embedding_dimension(self.config["embedding_api"][0])
-        res = faiss.StandardGpuResources()
         nlist = 100
+        gpu_res = faiss.StandardGpuResources()
+        batch_size = 10000 
         quantizer = faiss.IndexFlatL2(d)
-        gpu_index = faiss.index_cpu_to_gpu(res, 0, quantizer)
         index = faiss.IndexIVFFlat(quantizer, d, nlist, faiss.METRIC_L2)
+        gpu_index = faiss.index_cpu_to_gpu(gpu_res, self.config['gpu_id'], index)
 
         interviewer_embeddings = np.array([config["args"]["embedding"] for config in interviewer_configs])
         gpu_index.train(interviewer_embeddings)
 
-        batch_size = 10000 
-        num_batches = (len(interviewer_embeddings) + batch_size - 1) // batch_size
+        num_interviewer_batches = (len(interviewer_embeddings) + batch_size - 1) // batch_size
 
-        for i in tqdm(num_batches, total=num_batches, desc="Adding interviewer embeddings"):
+        for i in tqdm(range(num_interviewer_batches), total=num_interviewer_batches, desc="Adding interviewer embeddings"):
             start_idx = i * batch_size
             end_idx = min((i + 1) * batch_size, len(interviewer_embeddings))
             gpu_index.add(interviewer_embeddings[start_idx:end_idx])
 
         seeker_embeddings = np.array([config["args"]["embedding"] for config in seeker_configs])
         _, job_index = [], []
-
-        for i in tqdm(num_batches, total=num_batches, desc="Searching for job_ids_pool"):
+        num_seeker_batches = (len(seeker_embeddings) + batch_size - 1) // batch_size
+        for i in tqdm(range(num_seeker_batches), total=num_seeker_batches, desc="Searching for job_ids_pool"):
             start_idx = i * batch_size
             end_idx = min((i + 1) * batch_size, len(seeker_embeddings))
             _, batch_job_index = gpu_index.search(seeker_embeddings[start_idx:end_idx], self.config["pool_size"])
@@ -157,23 +157,6 @@ class Simulator:
             config["args"]["job_ids_pool"] = [
                 interviewer_agents[i].agent_id for i in list(idx)
             ]
-
-        # index = faiss.IndexFlatL2(get_embedding_dimension(self.config["embedding_api"][0]))
-        # index.add(
-        #     np.array([config["args"]["embedding"] for config in interviewer_configs])
-        # )
-        # embeddings = np.array([config["args"]["embedding"] for config in seeker_configs])
-        # _, job_index = index.search(embeddings, self.config["pool_size"])
-        # for config, index in zip(seeker_configs, job_index):
-        #     config["args"]["job_ids_pool"] = [
-        #         interviewer_agents[i].agent_id for i in list(index)
-        #     ]
-
-        # Just for test
-        # for config in seeker_configs:
-        #     config["args"]["job_ids_pool"] = [
-        #         interviewer_agents[i].agent_id for i in random.sample(range(len(interviewer_agents)), k=self.config["pool_size"])
-        #     ]
 
     def _create_agents_envs(self, model_configs=None, seeker_configs=None, interviewer_configs=None, memory_config=None):
         if model_configs is None:

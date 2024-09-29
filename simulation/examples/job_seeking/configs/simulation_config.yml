@@ -12,6 +12,7 @@ embedding_api: [
 load_simulator_path: 
 host: localhost
 port: 13000
+gpu_id: 5
 
 # custom settings
 seeker_agent_configs_path: SeekerAgent_configs.json

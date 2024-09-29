@@ -26,7 +26,7 @@ python -m vllm.entrypoints.openai.api_server \
     --enable-lora \
     --disable-frontend-multiprocessing \
     --guided-decoding-backend=lm-format-enforcer \
-    --gpu-memory-utilization 0.7 \
+    --gpu-memory-utilization 0.8 \
     2>> "${script_dir}/error.log" &
 
 echo $! >> "$(dirname "$0")/launch_llm.pid"
