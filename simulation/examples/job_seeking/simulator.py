@@ -125,6 +125,39 @@ class Simulator:
             for future in tqdm(futures.as_completed(interviewer_futures), total=len(interviewer_futures), desc="Fetching interviewer embedding"):
                 future.result()
 
+    def search_for_job_ids_pool(self, seeker_configs, interviewer_configs, interviewer_agents):
+        d = get_embedding_dimension(self.config["embedding_api"][0])
+        nlist = 100
+        gpu_res = faiss.StandardGpuResources()
+        batch_size = 10000 
+        quantizer = faiss.IndexFlatL2(d)
+        index = faiss.IndexIVFFlat(quantizer, d, nlist, faiss.METRIC_L2)
+        gpu_index = faiss.index_cpu_to_gpu(gpu_res, self.config['gpu_id'], index)
+
+        interviewer_embeddings = np.array([config["args"]["embedding"] for config in interviewer_configs])
+        gpu_index.train(interviewer_embeddings)
+
+        num_interviewer_batches = (len(interviewer_embeddings) + batch_size - 1) // batch_size
+
+        for i in tqdm(range(num_interviewer_batches), total=num_interviewer_batches, desc="Adding interviewer embeddings"):
+            start_idx = i * batch_size
+            end_idx = min((i + 1) * batch_size, len(interviewer_embeddings))
+            gpu_index.add(interviewer_embeddings[start_idx:end_idx])
+
+        seeker_embeddings = np.array([config["args"]["embedding"] for config in seeker_configs])
+        _, job_index = [], []
+        num_seeker_batches = (len(seeker_embeddings) + batch_size - 1) // batch_size
+        for i in tqdm(range(num_seeker_batches), total=num_seeker_batches, desc="Searching for job_ids_pool"):
+            start_idx = i * batch_size
+            end_idx = min((i + 1) * batch_size, len(seeker_embeddings))
+            _, batch_job_index = gpu_index.search(seeker_embeddings[start_idx:end_idx], self.config["pool_size"])
+            job_index.extend(batch_job_index)
+
+        for config, idx in zip(seeker_configs, job_index):
+            config["args"]["job_ids_pool"] = [
+                interviewer_agents[i].agent_id for i in list(idx)
+            ]
+
     def _create_agents_envs(self, model_configs=None, seeker_configs=None, interviewer_configs=None, memory_config=None):
         if model_configs is None:
             model_configs = load_json(

@@ -157,3 +157,4 @@ exp2/*saves
 sample.ipynb
 *.pid
 simulation/examples/recommendation/
+*.rdb
