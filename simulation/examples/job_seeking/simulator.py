@@ -125,7 +125,7 @@ class Simulator:
             for future in tqdm(futures.as_completed(interviewer_futures), total=len(interviewer_futures), desc="Fetching interviewer embedding"):
                 future.result()
 
-    def search_for_job_ids_pool(self, seeker_configs, interviewer_configs, interviewer_agents):
+    def search_for_job_ids_pool_gpu(self, seeker_configs, interviewer_configs, interviewer_agents):
         d = get_embedding_dimension(self.config["embedding_api"][0])
         nlist = 100
         gpu_res = faiss.StandardGpuResources()
@@ -158,17 +158,18 @@ class Simulator:
                 interviewer_agents[i].agent_id for i in list(idx)
             ]
 
-        # cpu version
-        # index = faiss.IndexFlatL2(get_embedding_dimension(self.config["embedding_api"][0]))
-        # index.add(
-        #     np.array([config["args"]["embedding"] for config in interviewer_configs])
-        # )
-        # embeddings = np.array([config["args"]["embedding"] for config in seeker_configs])
-        # _, job_index = index.search(embeddings, self.config["pool_size"])
-        # for config, index in zip(seeker_configs, job_index):
-        #     config["args"]["job_ids_pool"] = [
-        #         interviewer_agents[i].agent_id for i in list(index)
-        #     ]
+    
+    def search_for_job_ids_pool_cpu(self, seeker_configs, interviewer_configs, interviewer_agents):
+        index = faiss.IndexFlatL2(get_embedding_dimension(self.config["embedding_api"][0]))
+        index.add(
+            np.array([config["args"]["embedding"] for config in interviewer_configs])
+        )
+        embeddings = np.array([config["args"]["embedding"] for config in seeker_configs])
+        _, job_index = index.search(embeddings, self.config["pool_size"])
+        for config, index in zip(seeker_configs, job_index):
+            config["args"]["job_ids_pool"] = [
+                interviewer_agents[i].agent_id for i in list(index)
+            ]
 
     def _create_agents_envs(self, model_configs=None, seeker_configs=None, interviewer_configs=None, memory_config=None):
         if model_configs is None:
@@ -268,7 +269,7 @@ class Simulator:
                 interviewer_agents.append(task.result())
 
         logger.info("searching for job_ids_pool")
-        self.search_for_job_ids_pool(seeker_configs, interviewer_configs, interviewer_agents)
+        self.search_for_job_ids_pool_cpu(seeker_configs, interviewer_configs, interviewer_agents)
         # Just for test
         # for config in seeker_configs:
         #     config["args"]["job_ids_pool"] = [
