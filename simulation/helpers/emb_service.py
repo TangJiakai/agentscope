@@ -5,7 +5,7 @@ import time
 from loguru import logger
 
 
-MAX_TIMEOUT_DELAY = 30
+MAX_TIMEOUT_DELAY = 60
 session = requests.Session()
 
 def get_embedding(sentence, api, delay=5):
@@ -14,7 +14,7 @@ def get_embedding(sentence, api, delay=5):
     while True:
         attempt += 1
         try:
-            response = session.post(url, json={"sentence": sentence}, timeout=10)
+            response = session.post(url, json={"sentence": sentence}, timeout=60)
             response.raise_for_status()
             embedding = response.json().get("embedding")
             return embedding
@@ -33,7 +33,7 @@ def get_embedding_dimension(api, delay=5):
     while True:
         attempt += 1
         try:
-            response = session.get(url, timeout=10)
+            response = session.get(url, timeout=60)
             response.raise_for_status()
             embedding_dimension = response.json().get("embedding_dimension")
             return embedding_dimension

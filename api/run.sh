@@ -9,7 +9,7 @@ fi
 port=$1
 gpuid=${2:-0}
 export CUDA_VISIBLE_DEVICES="$gpuid"
-export VLLM_ATTENTION_BACKEND=XFORMERS
+# export VLLM_ATTENTION_BACKEND=XFORMERS
 
 echo "Port: $port"
 echo "GPU ID: $CUDA_VISIBLE_DEVICES"
@@ -17,7 +17,7 @@ echo "GPU ID: $CUDA_VISIBLE_DEVICES"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 nohup python $script_dir/api_server.py \
-  --model /data/Download/Meta-Llama-3-8B-Instruct \
+  --model /data/pretrain_dir/Meta-Llama-3-8B-Instruct \
   --trust-remote-code \
   --port $port \
   --dtype auto \
@@ -26,8 +26,8 @@ nohup python $script_dir/api_server.py \
   --enable-prefix-caching \
   --disable-frontend-multiprocessing \
   --guided-decoding-backend=lm-format-enforcer \
-  --gpu-memory-utilization 0.9 \
-  --prompt-dir  /data/coding/unisim/simulation/examples/job_seeking/prompts \
+  --gpu-memory-utilization 0.8 \
+  --prompt-dir /data/tangjiakai/general_simulation/simulation/examples/job_seeking/prompts \
   --use-index \
   2> "$script_dir/api_server_$port.log" &
 

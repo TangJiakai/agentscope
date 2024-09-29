@@ -2,6 +2,7 @@
 from datetime import datetime
 import re
 import os
+import threading
 from typing import Optional, Sequence, Union
 from jinja2 import Environment, FileSystemLoader
 from typing import Optional
@@ -44,6 +45,17 @@ class ShortLongMemory(ShortMemory):
         self.model, self.embedding_api = None, None
         self.get_tokennum_func = None
 
+        self.ltm_lock = threading.Lock()
+
+    def __getstate__(self):
+        state = super().__getstate__()
+        state.pop('ltm_lock', None) 
+        return state
+    
+    def __setstate__(self, state):
+        super().__setstate__(state)
+        self.ltm_lock = threading.Lock()
+
     def _score_memory_importance(self, memory_content: str) -> float:
         msg = Msg("assistant", Template.score_importance_prompt(memory_content), role="assistant")
         prompt = self.model.format(msg)
@@ -69,10 +81,12 @@ class ShortLongMemory(ShortMemory):
     def add_ltm_memory(self, ltm_memory_unit: Msg):
         memory_content = ltm_memory_unit.content
         ltm_memory_unit.importance_score = self._score_memory_importance(memory_content)
-        self.ltm_memory.append(ltm_memory_unit)
-        self.retriever.add(
-            np.atleast_2d(get_embedding(memory_content, self.embedding_api))
-        )
+        
+        with self.ltm_lock:
+            self.ltm_memory.append(ltm_memory_unit)
+            self.retriever.add(
+                np.atleast_2d(get_embedding(memory_content, self.embedding_api))
+            )
 
     def get_salient_docs(self, query: Msg, k=3):
         def relevance_score_fn(score: float) -> float:

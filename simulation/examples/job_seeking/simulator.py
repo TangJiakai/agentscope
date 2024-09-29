@@ -341,7 +341,7 @@ class Simulator:
         for agent in self.agents:
             results.append(agent.save())
         agent_save_state = []
-        for result in results:
+        for result in tqdm(results, total=len(results), desc="Get agent save state"):
             agent_save_state.append(result.result())
         
         return agent_save_state
