@@ -151,10 +151,11 @@ national-brain/
 test.py
 nohup.out
 *_all_*.json
+simulation/examples/recommendation/configs/all_RecUserAgent_configs.json
 exp1/
 exp2/datasets/ori_data
 exp2/*saves
 sample.ipynb
 *.pid
-simulation/examples/recommendation/
+simulation/examples/recommendation/*RecUserAgent_configs.json
 *.rdb

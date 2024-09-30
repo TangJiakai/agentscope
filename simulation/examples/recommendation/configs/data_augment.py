@@ -5,6 +5,8 @@ import sys
 import random
 from copy import deepcopy
 
+from tqdm import tqdm
+
 directory = "simulation/examples/recommendation/configs"
 meta_data_path = "all_RecUserAgent_configs.json"
 
@@ -27,7 +29,7 @@ def main():
     for v in scale_map.values():
         new_data_sz = math.floor(v * origin_data_sz)
         new_data_part = deepcopy(data[:new_data_sz])
-        for i, d in enumerate(new_data_part):
+        for i, d in tqdm(enumerate(new_data_part), total=len(new_data_part), desc=f"Generating {new_data_sz} data"):
             d['args']['relationship'] = random.sample(
                 list(range(i)) + list(range(i + 1, new_data_sz)),
                 5

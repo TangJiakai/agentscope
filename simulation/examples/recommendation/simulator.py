@@ -3,6 +3,9 @@ import math
 import os
 import random
 import sys
+import faiss
+import numpy as np
+from tqdm import tqdm
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 import dill
@@ -69,19 +72,33 @@ class Simulator:
             ),
         )
 
-    def _init_agents(self):
-        # Load configs
-        logger.info("Load configs")
-        model_configs = load_json(
-            os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
-        )
-        agent_configs = load_json(os.path.join(scene_path, CONFIG_DIR, self.config["recuser_agent_configs_path"]))
-        memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
-        item_infos = load_json(os.path.join(scene_path, CONFIG_DIR, self.config['item_infos_path']))
-
+    def _create_agents_envs(self, model_configs=None, agent_configs=None, memory_config=None, item_infos=None):
+        if model_configs is None:
+            model_configs = load_json(
+                os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
+            )
+        if agent_configs is None:
+            agent_configs = load_json(
+                os.path.join(scene_path, CONFIG_DIR, self.config["recuser_agent_configs_path"])
+            )
+        if memory_config is None:
+            memory_config = load_json(
+                os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG)
+            )
+        if item_infos is None:
+            item_infos = load_json(
+                os.path.join(scene_path, CONFIG_DIR, self.config['item_infos_path'])
+            )
+        
         llm_num = len(model_configs)
         agent_num = len(agent_configs)
         agent_num_per_llm = math.ceil(agent_num / llm_num)
+        embedding_api_num = len(self.config["embedding_api"])
+        print(
+            f"llm_num: {llm_num}\n"
+            f"agent_num: {agent_num}\n"
+            f"embedding_api_num: {embedding_api_num}\n"
+        )
 
         # Prepare agent args
         logger.info("Prepare agent args")
@@ -92,10 +109,10 @@ class Simulator:
             model_config = model_configs[shuffled_idx//agent_num_per_llm]
             config["args"]["model_config_name"] = model_config["config_name"]
             memory_config["args"]["embedding_size"] = get_embedding_dimension(
-                self.config["embedding_api"]
+                self.config["embedding_api"][0]
             )
             config["args"]["memory_config"] = memory_config
-            config["args"]["embedding_api"] = self.config["embedding_api"]
+            config["args"]["embedding_api"] = self.config["embedding_api"][shuffled_idx % embedding_api_num]
             agent_relationships.append(config["args"].pop("relationship"))
 
         # Init env
@@ -105,22 +122,42 @@ class Simulator:
         env_names = [f"environment-{str(i)}" for i in range(env_num)]
         env_ports = [i % self.config["server_num_per_host"] + self.config["base_port"] for i in range(env_num)]
 
+        # Init Index
+        logger.info("Init Index")
+        item_embs = []
+        tasks = []
+        with futures.ThreadPoolExecutor() as executor:
+            for item_info in item_infos:
+                tasks.append(
+                    executor.submit(
+                        get_embedding,
+                        item_info["title"] + item_info["genres"],
+                        self.config["embedding_api"][0],
+                    ),
+                )
+            for task in tqdm(futures.as_completed(tasks), total=len(tasks), desc="Init Index"):
+                item_embs.append(task.result())
+
+        index = faiss.IndexFlatL2(get_embedding_dimension(self.config["embedding_api"][0]))
+        index.add(np.array(item_embs))
+
         envs = []
         tasks = []
         with futures.ThreadPoolExecutor() as executor:
-            for name, port in zip(env_names, env_ports):
+            for i, name, port in zip(range(len(env_names)), env_names, env_ports):
                 tasks.append(
                     executor.submit(
                         RecommendationEnv,
                         name=name,
                         item_infos=item_infos,
-                        embedding_api=self.config["embedding_api"],
+                        embedding_api=self.config["embedding_api"][i % embedding_api_num],
+                        index=faiss.serialize_index(index),
                         to_dist=DistConf(
                             host=config["args"]["host"], port=port
                         ),
                     ),
                 )
-            for task in tasks:
+            for task in tqdm(futures.as_completed(tasks), total=len(tasks), desc="Init environments"):
                 envs.append(task.result())
 
         # Init agents
@@ -139,7 +176,7 @@ class Simulator:
                         ),
                     ),
                 )
-            for task in tasks:
+            for task in tqdm(futures.as_completed(tasks), total=len(tasks), desc="Init agents"):
                 agents.append(task.result())
 
         logger.info("Set relationship to agents")
@@ -149,19 +186,36 @@ class Simulator:
                 "relationship",
                 {agents[j].agent_id: agents[j] for j in agent_relationships[i]},
             ))
-        for res in results:
+        for res in tqdm(results, total=len(results), desc="Set relationship to agents"):
             res.result()
+
+        return agents, envs
+
+    def _init_agents(self):
+        # Load configs
+        logger.info("Load configs")
+        model_configs = load_json(
+            os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
+        )
+        agent_configs = load_json(os.path.join(scene_path, CONFIG_DIR, self.config["recuser_agent_configs_path"]))
+        memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
+        item_infos = load_json(os.path.join(scene_path, CONFIG_DIR, self.config['item_infos_path']))
+
+        self.agents, self.envs = self._create_agents_envs(
+            model_configs=model_configs,
+            agent_configs=agent_configs,
+            memory_config=memory_config,
+            item_infos=item_infos,
+        )
 
         logger.info("Set all agents to envs")  
         results = []
-        for env in envs:
-            results.append(env.set_attr(attr="all_agents", value={agent.agent_id: agent for agent in agents}))
-        for res in results:
+        for env in self.envs:
+            results.append(env.set_attr(attr="all_agents", value={agent.agent_id: agent for agent in self.agents}))
+        for res in tqdm(results, total=len(results), desc="Set all agents to envs"):
             res.result()
 
-        self.agents = agents
-        self.envs = envs
-        self.env = envs[0]
+        self.env = self.envs[0]
 
     def _one_round(self):
         results = []
@@ -189,16 +243,17 @@ class Simulator:
             if kill_event.is_set():
                 logger.info(f"Kill simulation by user at round {r}.")
                 return
+            
+            # message_save_path = "/data/tangjiakai/general_simulation/"
+            # resp = requests.post(
+            #     "http://localhost:9111/store_message",
+            #     json={
+            #         "save_data_path": os.path.join(message_save_path, f"Round-{r}.json"),
+            #     }
+            # )
+
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
-
-        # message_save_path = "/data/tangjiakai/general_simulation/tmp_message.json"
-        # resp = requests.post(
-        #     "http://localhost:9111/store_message",
-        #     json={
-        #         "save_data_path": message_save_path,
-        #     }
-        # )
 
     def load(file_path):
         with open(file_path, "rb") as f:
