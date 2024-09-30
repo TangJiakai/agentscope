@@ -362,14 +362,14 @@ class Simulator(BaseSimulator):
             logger.info(f"No Job: {no_job_cnt}")
             logger.info(f"Get Job: {get_job_cnt}")
             logger.info("====================================")
-
-            # message_save_path = "/data/tangjiakai/general_simulation/"
-            # resp = requests.post(
-            #     "http://localhost:9111/store_message",
-            #     json={
-            #         "save_data_path": os.path.join(message_save_path, f"Round-{r}.json"),
-            #     }
-            # )
+            
+            message_save_path = "/data/tangjiakai/general_simulation/"
+            resp = requests.post(
+                "http://localhost:9111/store_message",
+                json={
+                    "save_data_path": os.path.join(message_save_path, f"Round-{r}.json"),
+                }
+            )
 
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")

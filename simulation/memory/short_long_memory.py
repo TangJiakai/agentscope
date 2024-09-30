@@ -9,7 +9,6 @@ from typing import Optional
 import math
 import faiss
 import numpy as np
-from loguru import logger
 
 from agentscope.models import ModelResponse
 from agentscope.message import Msg
