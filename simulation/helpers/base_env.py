@@ -1,4 +1,5 @@
 from typing import Dict, List
+import dill
 
 from agentscope.environment import BasicEnv
 from agentscope.rpc import async_func
@@ -12,6 +13,24 @@ class BaseEnv(BasicEnv):
         self.all_agents: Dict = dict()
 
     @async_func
+    def load(self, data, **kwargs):
+        state = dill.loads(data)
+        self.__setstate__(state)
+        return "success"
+
+    @async_func
+    def save(self):
+        state = dill.dumps(self.__getstate__())
+        return state
+
+    def __getstate__(self) -> dict:
+        state = self.__dict__.copy()
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        self.__dict__.update(state)
+
+    @async_func
     def set_attr(self, attr: str, value, **kwargs) -> str:
         attrs = attr.split(".")
         obj = self
@@ -19,7 +38,7 @@ class BaseEnv(BasicEnv):
             obj = getattr(obj, attr)
         setattr(obj, attrs[-1], value)
         return "success"
-    
+
     def get_agents_by_ids(self, agent_ids: List[str]):
         agents = {agent_id: self.all_agents[agent_id] for agent_id in agent_ids}
         return agents

@@ -1,7 +1,8 @@
 import os
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 import argparse
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
 import agentscope
 from agentscope.server import RpcAgentServerLauncher
@@ -31,7 +32,9 @@ def setup_participant_agent_server(host: str, port: int) -> None:
         runtime_id=str(port),
         save_code=False,
         save_api_invoke=False,
-        model_configs=os.path.join(scene_path, CONFIG_DIR, config["model_configs_path"]),
+        model_configs=os.path.join(
+            scene_path, CONFIG_DIR, MODEL_CONFIG
+        ),
         use_monitor=False,
     )
     assistant_server_launcher = RpcAgentServerLauncher(
@@ -39,7 +42,7 @@ def setup_participant_agent_server(host: str, port: int) -> None:
         port=port,
         pool_type="redis",
         max_pool_size=8192000000,
-        max_expire_time=7200000
+        max_expire_time=7200000,
     )
     assistant_server_launcher.launch(in_subprocess=False)
     assistant_server_launcher.wait_until_terminate()

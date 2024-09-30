@@ -10,16 +10,18 @@ from agentscope.manager import ModelManager
 from agentscope.rpc import async_func
 
 from simulation.helpers.constants import *
-from simulation.helpers.utils import get_memory_until_limit, get_assistant_msg, setup_memory, get_token_num
+from simulation.helpers.utils import (
+    get_memory_until_limit,
+    get_assistant_msg,
+    setup_memory,
+    get_token_num,
+)
 
 
 class BaseAgent(AgentBase):
     """Base agent."""
 
-    def __init__(self, 
-                name: str, 
-                model_config_name: str=None, 
-                **kwargs) -> None:
+    def __init__(self, name: str, model_config_name: str = None, **kwargs) -> None:
         super().__init__(
             name=name,
             model_config_name=model_config_name,
@@ -27,7 +29,7 @@ class BaseAgent(AgentBase):
         self.model_config_name = model_config_name
         self._profile = ""
         self.get_tokennum_func = partial(
-            get_token_num, 
+            get_token_num,
             url=self.model.client_args["base_url"].rsplit("/", 1)[0] + "/tokenize",
             model=self.model.model_name,
             api_key=self.model.api_key,
@@ -55,9 +57,10 @@ class BaseAgent(AgentBase):
     @property
     def profile(self):
         return self._profile
-    
+
     @async_func
     def load(self, data, **kwargs):
+        logger.info(f"Loading agent {self.name}")
         state = dill.loads(data)
         self.__setstate__(state)
         return "success"
@@ -72,7 +75,7 @@ class BaseAgent(AgentBase):
         state.pop("model", None)
         state.pop("env", None)
         if hasattr(self, "memory"):
-            memory_state = self.memory.__dict__.copy()
+            memory_state = self.memory.__getstate__()
             memory_state["model"] = None
             memory_state.pop("get_tokennum_func")
             memory_state.pop("_send_message")
@@ -83,7 +86,7 @@ class BaseAgent(AgentBase):
         self.__dict__.update(state)
         if hasattr(self, "memory_config"):
             self.memory = setup_memory(self.memory_config)
-            self.memory.__dict__.update(state["memory"])
+            self.memory.__setstate__(state["memory"])
             self.memory.get_tokennum_func = self.get_tokennum_func
             self.memory._send_message = self._send_message
         if hasattr(self, "model_config_name"):
@@ -144,28 +147,34 @@ class BaseAgent(AgentBase):
         memory = ""
         for p in participants:
             memory_msgs = get_memory_until_limit(
-                memory, 
+                memory,
                 self.get_tokennum_func,
-                format_instruction + format_profile + memory + observation)
+                format_instruction + format_profile + memory + observation,
+            )
             memory_content = "-\n".join([m.content for m in memory_msgs])
             memory += "\n" + p.name + ": " + memory_content
         format_memory = MEMORY_BEGIN + memory + MEMORY_END
 
-        response = self.model(self.model.format(get_assistant_msg(
-            format_instruction + format_profile + format_memory + observation)))
+        response = self.model(
+            self.model.format(
+                get_assistant_msg(
+                    format_instruction + format_profile + format_memory + observation
+                )
+            )
+        )
         return response.text
-    
+
     def chat(self, announcement, participants, mode="session", **kwargs):
         if mode == "session":
             return self.session_chat(announcement, participants, **kwargs)
         elif mode == "script":
             return self.script_chat(announcement, participants, **kwargs)
-        
+
     def post(self, content, participants, **kwargs):
         for p in participants:
             p.observe(get_assistant_msg(f"{self.name} posted: {content}"))
         return content
-    
+
     def reply(self, x: Optional[Union[Msg, Sequence[Msg]]] = None) -> Msg:
         instruction = ""
         format_instruction = ""
@@ -183,7 +192,9 @@ class BaseAgent(AgentBase):
         prompt_content.append(format_profile)
 
         if self.global_intervention:
-            intervention = INTERVENTION_BEGIN + self.global_intervention + INTERVENTION_END
+            intervention = (
+                INTERVENTION_BEGIN + self.global_intervention + INTERVENTION_END
+            )
             prompt_content.append(intervention)
 
         if x and hasattr(x, "observation"):
@@ -199,23 +210,21 @@ class BaseAgent(AgentBase):
         if memory is not None and len(memory) > 0:
             insert_index = -2 if len(prompt_content) > 1 else -1
             memory_msgs = get_memory_until_limit(
-                memory, 
-                self.get_tokennum_func, 
-                "\n".join(prompt_content)
+                memory, self.get_tokennum_func, "\n".join(prompt_content)
             )
             memory_content = "-\n".join([m.content for m in memory_msgs])
-            prompt_content.insert(insert_index, MEMORY_BEGIN + memory_content + MEMORY_END)
+            prompt_content.insert(
+                insert_index, MEMORY_BEGIN + memory_content + MEMORY_END
+            )
 
         prompt_content = "\n".join(prompt_content)
 
-        prompt_msg = self.model.format(Msg(
-            "user", 
-            prompt_content, 
-            role="user"
-        ))
+        prompt_msg = self.model.format(Msg("user", prompt_content, role="user"))
 
         if hasattr(x, "guided_choice"):
-            response = self.model(prompt_msg, extra_body={"guided_choice": x.guided_choice})
+            response = self.model(
+                prompt_msg, extra_body={"guided_choice": x.guided_choice}
+            )
             if not hasattr(x, "external_interview"):
                 self._send_message(prompt_msg, response, len(x.guided_choice))
         else:
@@ -223,7 +232,9 @@ class BaseAgent(AgentBase):
             if not hasattr(x, "external_interview"):
                 self._send_message(prompt_msg, response)
 
-        add_memory_msg = Msg("user", instruction + observation + response.text, role="user")
+        add_memory_msg = Msg(
+            "user", instruction + observation + response.text, role="user"
+        )
         if not hasattr(x, "no_memory"):
             self.observe(add_memory_msg)
         return get_assistant_msg(response.text)

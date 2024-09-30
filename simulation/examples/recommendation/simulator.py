@@ -14,7 +14,6 @@ from concurrent import futures
 from loguru import logger
 
 import agentscope
-from agentscope.manager import FileManager
 from agentscope.agents.agent import DistConf
 
 from simulation.helpers.events import (
@@ -31,30 +30,16 @@ from simulation.examples.recommendation.agent import *
 from simulation.examples.recommendation.environment.env import RecommendationEnv
 from simulation.helpers.emb_service import *
 from simulation.helpers.utils import *
+from simulation.helpers.base_simulator import BaseSimulator
 
 CUR_ROUND = 1
 
 scene_path = os.path.dirname(os.path.abspath(__file__))
 
 
-class Simulator:
+class Simulator(BaseSimulator):
     def __init__(self):
-        super().__init__()
-        self.config = load_yaml(os.path.join(scene_path, CONFIG_DIR, SIMULATION_CONFIG))
-
-        self.cur_round = 1
-        self._from_scratch()
-
-    def _from_scratch(self):
-        self._init_agentscope()
-
-        if self.config["load_simulator_path"] is not None:
-            loaded_simulator = Simulator.load(self.config["load_simulator_path"])
-            self.__dict__.update(loaded_simulator.__dict__)
-        else:
-            self._init_agents()
-
-        save_configs(self.config)
+        super().__init__(scene_path=scene_path)
 
     def _init_agentscope(self):
         agentscope.init(
@@ -65,164 +50,179 @@ class Simulator:
                 scene_path, CONFIG_DIR, self.config["model_configs_path"]
             ),
             use_monitor=False,
-            save_dir=(
-                self.config["save_dir"]
-                if self.config["save_dir"]
-                else _DEFAULT_SAVE_DIR
-            ),
+            save_dir=os.path.join(_DEFAULT_SAVE_DIR, self.config["project_name"]),
+            runtime_id=self.config["runtime_id"],
         )
 
-    def _create_agents_envs(self, model_configs=None, agent_configs=None, memory_config=None, item_infos=None):
-        if model_configs is None:
-            model_configs = load_json(
-                os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
+    def _prepare_agents_args(self):
+        logger.info("Load configs")
+        memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
+        model_configs = load_json(os.path.join(scene_path, CONFIG_DIR, MODEL_CONFIG))
+        agent_configs = load_json(
+            os.path.join(
+                scene_path, CONFIG_DIR, self.config["recuser_agent_configs_path"]
             )
-        if agent_configs is None:
-            agent_configs = load_json(
-                os.path.join(scene_path, CONFIG_DIR, self.config["recuser_agent_configs_path"])
-            )
-        if memory_config is None:
-            memory_config = load_json(
-                os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG)
-            )
-        if item_infos is None:
-            item_infos = load_json(
-                os.path.join(scene_path, CONFIG_DIR, self.config['item_infos_path'])
-            )
-        
+        )
+
+        logger.info("Prepare agents args")
         llm_num = len(model_configs)
         agent_num = len(agent_configs)
         agent_num_per_llm = math.ceil(agent_num / llm_num)
         embedding_api_num = len(self.config["embedding_api"])
-        print(
-            f"llm_num: {llm_num}\n"
-            f"agent_num: {agent_num}\n"
-            f"embedding_api_num: {embedding_api_num}\n"
+        logger.info(f"llm_num: {llm_num}")
+        logger.info(f"agent_num: {agent_num}")
+        logger.info(f"agent_num_per_llm: {agent_num_per_llm}")
+        logger.info(f"embedding_api_num: {embedding_api_num}")
+        memory_config["args"]["embedding_size"] = get_embedding_dimension(
+            self.config["embedding_api"][0]
         )
 
-        # Prepare agent args
-        logger.info("Prepare agent args")
         index_ls = list(range(agent_num))
         agent_relationships = []
         random.shuffle(index_ls)
         for config, shuffled_idx in zip(agent_configs, index_ls):
-            model_config = model_configs[shuffled_idx//agent_num_per_llm]
+            model_config = model_configs[shuffled_idx // agent_num_per_llm]
             config["args"]["model_config_name"] = model_config["config_name"]
             memory_config["args"]["embedding_size"] = get_embedding_dimension(
                 self.config["embedding_api"][0]
             )
-            config["args"]["memory_config"] = memory_config
-            config["args"]["embedding_api"] = self.config["embedding_api"][shuffled_idx % embedding_api_num]
+            config["args"]["memory_config"] = None if self.resume else memory_config
+            config["args"]["embedding_api"] = self.config["embedding_api"][
+                shuffled_idx % embedding_api_num
+            ]
             agent_relationships.append(config["args"].pop("relationship"))
 
-        # Init env
-        logger.info("Init environment")
-        user_num_per_env = 200
-        env_num = math.ceil(len(agent_configs) / user_num_per_env)
-        env_names = [f"environment-{str(i)}" for i in range(env_num)]
-        env_ports = [i % self.config["server_num_per_host"] + self.config["base_port"] for i in range(env_num)]
+        return agent_configs, agent_relationships
+
+    def _create_envs(self, agent_num):
+        # Load Item Infos
+        logger.info("Load Item Infos")
+        item_infos = load_json(
+            os.path.join(scene_path, CONFIG_DIR, self.config["item_infos_path"])
+        )
 
         # Init Index
-        logger.info("Init Index")
-        item_embs = []
-        tasks = []
-        with futures.ThreadPoolExecutor() as executor:
-            for item_info in item_infos:
-                tasks.append(
-                    executor.submit(
-                        get_embedding,
-                        item_info["title"] + item_info["genres"],
-                        self.config["embedding_api"][0],
-                    ),
-                )
-            for task in tqdm(futures.as_completed(tasks), total=len(tasks), desc="Init Index"):
-                item_embs.append(task.result())
+        index = None
+        if not self.resume:
+            logger.info("Init Index")
+            item_embs = []
+            with futures.ThreadPoolExecutor() as executor:
+                args = [
+                    {
+                        "sentence": item_info["title"] + item_info["genres"],
+                        "api": self.config["embedding_api"][0],
+                    }
+                    for item_info in item_infos
+                ]
+                for item_emb in tqdm(
+                    executor.map(lambda arg: get_embedding(**arg), args),
+                    total=len(item_infos),
+                    desc="Init Index",
+                ):
+                    item_embs.append(item_emb)
 
-        index = faiss.IndexFlatL2(get_embedding_dimension(self.config["embedding_api"][0]))
-        index.add(np.array(item_embs))
+            index = faiss.IndexFlatL2(
+                get_embedding_dimension(self.config["embedding_api"][0])
+            )
+            index.add(np.array(item_embs))
 
+        logger.info("Init environment")
+        embedding_api_num = len(self.config["embedding_api"])
+        env_num = math.ceil(agent_num / AGENT_PER_ENV)
+        env_names = [f"environment-{str(i)}" for i in range(env_num)]
+        env_ports = [
+            i % self.config["server_num_per_host"] + self.config["base_port"]
+            for i in range(env_num)
+        ]
         envs = []
-        tasks = []
         with futures.ThreadPoolExecutor() as executor:
-            for i, name, port in zip(range(len(env_names)), env_names, env_ports):
-                tasks.append(
-                    executor.submit(
-                        RecommendationEnv,
-                        name=name,
-                        item_infos=item_infos,
-                        embedding_api=self.config["embedding_api"][i % embedding_api_num],
-                        index=faiss.serialize_index(index),
-                        to_dist=DistConf(
-                            host=config["args"]["host"], port=port
-                        ),
-                    ),
-                )
-            for task in tqdm(futures.as_completed(tasks), total=len(tasks), desc="Init environments"):
-                envs.append(task.result())
+            args = [
+                {
+                    "name": name,
+                    "embedding_api": self.config["embedding_api"][
+                        i % embedding_api_num
+                    ],
+                    "item_infos": item_infos,
+                    "index": faiss.serialize_index(index) if not self.resume else None,
+                    "to_dist": DistConf(host=self.config["host"], port=port),
+                }
+                for i, name, port in zip(range(len(env_names)), env_names, env_ports)
+            ]
+            for env in tqdm(
+                executor.map(lambda arg: RecommendationEnv(**arg), args),
+                total=len(env_names),
+                desc="Init environments",
+            ):
+                envs.append(env)
 
-        # Init agents
+        self.envs = envs
+        self.env = envs[0]
+
+    def _create_agents(self, agent_configs, agent_relationships):
         logger.info(f"Init {len(agent_configs)} recuser agents")
+        env_num = len(self.envs)
         agents = []
-        tasks = []
         with futures.ThreadPoolExecutor() as executor:
-            for i, config in enumerate(agent_configs):
-                tasks.append(
-                    executor.submit(
-                        RecUserAgent,
-                        env=envs[i // agent_num_per_llm],
-                        **config["args"],
-                        to_dist=DistConf(
-                            host=config["args"]["host"], port=config["args"]["port"]
-                        ),
+            args = [
+                {
+                    "env": self.envs[i % env_num],
+                    **config["args"],
+                    "to_dist": DistConf(
+                        host=config["args"]["host"], port=config["args"]["port"]
                     ),
-                )
-            for task in tqdm(futures.as_completed(tasks), total=len(tasks), desc="Init agents"):
-                agents.append(task.result())
+                }
+                for i, config in enumerate(agent_configs)
+            ]
+            for agent in tqdm(
+                executor.map(lambda arg: RecUserAgent(**arg), args),
+                total=len(agent_configs),
+                desc="Init agents",
+            ):
+                agents.append(agent)
 
         logger.info("Set relationship to agents")
         results = []
         for i, agent in enumerate(agents):
-            results.append(agent.set_attr(
-                "relationship",
-                {agents[j].agent_id: agents[j] for j in agent_relationships[i]},
-            ))
+            results.append(
+                agent.set_attr(
+                    "relationship",
+                    {agents[j].agent_id: agents[j] for j in agent_relationships[i]},
+                )
+            )
         for res in tqdm(results, total=len(results), desc="Set relationship to agents"):
             res.result()
+        self.agents = agents
+        return agents
 
-        return agents, envs
+    def _init_agents_envs(self):
+        # Prepare agents args
+        agent_configs, agent_relationships = self._prepare_agents_args()
+        # Init envs
+        self._create_envs(len(agent_configs))
+        # Resume envs
+        if self.resume:
+            logger.info("Resume envs...")
+            results = []
+            for env, state in zip(self.envs, self.env_save_state):
+                results.append(env.load(state))
+                env.agent_id = dill.loads(state)["_oid"]
+            for res in tqdm(results, total=len(results), desc="Resume envs"):
+                res.result()
 
-    def _init_agents(self):
-        # Load configs
-        logger.info("Load configs")
-        model_configs = load_json(
-            os.path.join(scene_path, CONFIG_DIR, self.config["model_configs_path"])
-        )
-        agent_configs = load_json(os.path.join(scene_path, CONFIG_DIR, self.config["recuser_agent_configs_path"]))
-        memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
-        item_infos = load_json(os.path.join(scene_path, CONFIG_DIR, self.config['item_infos_path']))
+        # Init agents
+        agents = self._create_agents(agent_configs, agent_relationships)
+        # Resume agents
+        if self.resume:
+            logger.info("Resume agents...")
+            results = []
+            for agent, state in zip(agents, self.agent_save_state):
+                results.append(agent.load(state))
+                agent.agent_id = dill.loads(state)["_oid"]
+            for res in tqdm(results, total=len(results), desc="Resume agents"):
+                res.result()
 
-        self.agents, self.envs = self._create_agents_envs(
-            model_configs=model_configs,
-            agent_configs=agent_configs,
-            memory_config=memory_config,
-            item_infos=item_infos,
-        )
-
-        logger.info("Set all agents to envs")  
-        results = []
-        for env in self.envs:
-            results.append(env.set_attr(attr="all_agents", value={agent.agent_id: agent for agent in self.agents}))
-        for res in tqdm(results, total=len(results), desc="Set all agents to envs"):
-            res.result()
-
-        self.env = self.envs[0]
-
-    def _one_round(self):
-        results = []
-        for agent in self.agents:
-            results.append(agent.run())
-        for res in results:
-            logger.info(res.result())
+        # Set all_agents for envs
+        self._set_env4agents()
 
     def run(self):
         play_event.set()
@@ -243,7 +243,7 @@ class Simulator:
             if kill_event.is_set():
                 logger.info(f"Kill simulation by user at round {r}.")
                 return
-            
+
             # message_save_path = "/data/tangjiakai/general_simulation/"
             # resp = requests.post(
             #     "http://localhost:9111/store_message",
@@ -259,16 +259,22 @@ class Simulator:
         with open(file_path, "rb") as f:
             return dill.load(f)
 
-    def save(self):
-        try:
-            file_manager = FileManager.get_instance()
-            save_path = os.path.join(file_manager.run_dir, f"ROUND-{self.cur_round}.pkl")
-            self.cur_round += 1
-            with open(save_path, "wb") as f:
-                dill.dump(self, f)
-            logger.info(f"Saved simulator to {save_path}")
-        except Exception as e:
-            logger.error(f"Failed to save simulator: {e}")
+    def get_save_state(self):
+        results = []
+        for agent in self.agents:
+            results.append(agent.save())
+        agent_save_state = []
+        for res in tqdm(results, total=len(results), desc="Get agent save state"):
+            agent_save_state.append(res.result())
+
+        results = []
+        for env in self.envs:
+            results.append(env.save())
+        env_save_state = []
+        for res in tqdm(results, total=len(results), desc="Get env save state"):
+            env_save_state.append(res.result())
+
+        return agent_save_state, env_save_state
 
 
 if __name__ == "__main__":

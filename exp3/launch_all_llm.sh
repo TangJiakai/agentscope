@@ -8,7 +8,7 @@ script_dir=$(cd `dirname $0`; pwd)
 for i in "${!port_list[@]}"; do
     port=${port_list[$i]}
     gpu_id=${gpu_list[$i]}
-    bash $script_dir/launch_llm.sh $port $gpu_id &
+    bash $script_dir/run.sh $port $gpu_id &
 done
 
 wait

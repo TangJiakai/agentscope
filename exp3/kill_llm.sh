@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PID_FILE="$(realpath "$(dirname "${BASH_SOURCE[0]}")")/launch_llm.pid"
+PID_FILE="$(cd `dirname $0`; pwd)/.pid"
 
 if [ -f "$PID_FILE" ]; then
     while IFS= read -r PID; do

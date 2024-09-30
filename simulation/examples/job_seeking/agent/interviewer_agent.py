@@ -79,16 +79,16 @@ class InterviewerAgent(BaseAgent):
         self,
         name: str,
         model_config_name: str,
-        memory_config: dict,
-        embedding_api: str,
         jd: str,
         jr: list,
         company: str,
         salary: str,
         benefits: List[str],
         location: str,
-        embedding: list,
         env: BaseEnv,
+        embedding_api: str = None,
+        embedding: list = None,
+        memory_config: dict = None,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -98,13 +98,13 @@ class InterviewerAgent(BaseAgent):
         self.model_config_name = model_config_name
         self.memory_config = memory_config
         self.embedding_api = embedding_api
-        self.memory = setup_memory(memory_config)
-        self.memory.model = self.model
-        self.memory.embedding_api = embedding_api
-        self.memory._send_message = self._send_message
-
-        self.memory.get_tokennum_func = self.get_tokennum_func
-
+        self.memory = None
+        if memory_config:
+            self.memory = setup_memory(memory_config)
+            self.memory.model = self.model
+            self.memory.embedding_api = embedding_api
+            self.memory._send_message = self._send_message
+            self.memory.get_tokennum_func = self.get_tokennum_func
         self.job = Job(name=name, jd=jd, jr=jr, company=company, salary=salary, benefits=benefits, location=location)
         self.embedding = embedding
         self.env = env
@@ -134,15 +134,16 @@ class InterviewerAgent(BaseAgent):
         #         logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
 
     def get_attr(self, attr):
+        logger.info(self.job)
         if attr == "job":
             job = {
-                "Position Name": self.job.name,
-                "Job Description": self.job.jd,
-                "Job Requirements": self.job.jr,
-                "Company": self.job.company,
-                "Salary": self.job.salary,
-                "Benefits": self.job.benefits,
-                "Location": self.job.location,
+                "Position Name": self.job['name'],
+                "Job Description": self.job['jd'],
+                "Job Requirements": self.job['jr'],
+                "Company": self.job['company'],
+                "Salary": self.job['salary'],
+                "Benefits": self.job['benefits'],
+                "Location": self.job['location'],
             }
             return job
         return super().get_attr(attr)

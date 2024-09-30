@@ -19,7 +19,7 @@ class RecommendationEnv(BaseEnv):
         super().__init__(name=name)
         self.item_infos = item_infos
         self.embedding_api = embedding_api
-        self.index = faiss.deserialize_index(index)
+        self.index = faiss.deserialize_index(index) if index is not None else None
         self.all_agents = None
 
     def __getstate__(self) -> object:

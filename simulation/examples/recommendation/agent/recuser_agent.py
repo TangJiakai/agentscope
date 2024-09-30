@@ -4,12 +4,14 @@ import requests
 import jinja2
 from loguru import logger
 
-from agentscope.message import Msg
 from agentscope.rpc import async_func
 
 from simulation.examples.recommendation.environment.env import RecommendationEnv
 from simulation.helpers.base_agent import BaseAgent
-from simulation.helpers.utils import setup_memory, get_memory_until_limit, get_assistant_msg
+from simulation.helpers.utils import (
+    setup_memory,
+    get_assistant_msg,
+)
 from simulation.helpers.constants import *
 
 
@@ -26,6 +28,7 @@ RecUserAgentStates = [
     "posting",
 ]
 
+
 def set_state(flag: str):
     def decorator(func):
         def wrapper(self, *args, **kwargs):
@@ -37,6 +40,7 @@ def set_state(flag: str):
                 self.state = init_state
 
         return wrapper
+
     return decorator
 
 
@@ -47,11 +51,11 @@ class RecUserAgent(BaseAgent):
         self,
         name: str,
         model_config_name: str,
-        memory_config: dict,
-        embedding_api: str,
-        profile: str, 
+        profile: str,
         env: RecommendationEnv,
-        relationship = {},
+        embedding_api: str = None,
+        memory_config: dict = None,
+        relationship: dict = None,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -60,15 +64,22 @@ class RecUserAgent(BaseAgent):
         )
         self.memory_config = memory_config
         self.embedding_api = embedding_api
-        self.memory = setup_memory(memory_config)
-        self.memory.embedding_api = embedding_api
-        self.memory.model = self.model
-        self.memory._send_message = self._send_message
+        if memory_config is not None:
+            self.memory = setup_memory(memory_config)
+            self.memory.embedding_api = embedding_api
+            self.memory.model = self.model
+            self.memory.get_tokennum_func = self.get_tokennum_func
+            self.memory._send_message = self._send_message
         self.env = env
         self._profile = f"- Name: {self.name} - Profile: {profile}"
         self.relationship = relationship
 
         self._state = "idle"
+
+    def __getstate__(self) -> object:
+        state = super().__getstate__()
+        state.pop("relationship", None)
+        return state
 
     @property
     def state(self):
@@ -94,7 +105,7 @@ class RecUserAgent(BaseAgent):
         msg.instruction = instruction
         msg.observation = observation
         feeling = self(msg).content
-        
+
         logger.info(f"[{self.name}] feels {feeling}")
         return feeling
 
@@ -110,7 +121,7 @@ class RecUserAgent(BaseAgent):
             "Rating 3.5",
             "Rating 4.0",
             "Rating 4.5",
-            "Rating 5.0"
+            "Rating 5.0",
         ]
         observation = Template.rating_item_observation(movie, guided_choice)
         msg = get_assistant_msg()
@@ -126,8 +137,11 @@ class RecUserAgent(BaseAgent):
 
     @set_state("watching")
     def recommend(self):
-        user_info = self.profile + \
-            "\nMemory:" + "\n- ".join([m.content for m in self.memory.get_memory()])
+        user_info = (
+            self.profile
+            + "\nMemory:"
+            + "\n- ".join([m.content for m in self.memory.get_memory()])
+        )
         guided_choice = self.env.recommend4user(user_info)
         instruction = Template.recommend_instruction()
         observation = Template.make_choice_observation(guided_choice)
@@ -135,7 +149,7 @@ class RecUserAgent(BaseAgent):
         msg.instruction = instruction
         msg.observation = observation
         msg.guided_choice = list(map(str, range(len(guided_choice))))
-        response = guided_choice[int(self.reply(msg).content)]['title']
+        response = guided_choice[int(self.reply(msg).content)]["title"]
 
         logger.info(f"[{self.name}] selected movie {response}")
 
@@ -152,10 +166,12 @@ class RecUserAgent(BaseAgent):
         self.observe(get_assistant_msg(announcement + dialog_observation))
         friend_agent.observe(get_assistant_msg(announcement + dialog_observation))
 
-        logger.info(f"[{self.name}] had a conversation with {friend_agent_id}: {dialog_observation}")
+        logger.info(
+            f"[{self.name}] had a conversation with {friend_agent_id}: {dialog_observation}"
+        )
 
         return dialog_observation
-    
+
     @set_state("posting")
     def post(self):
         instruction = Template.post_instruction()
@@ -163,7 +179,7 @@ class RecUserAgent(BaseAgent):
         msg.instruction = instruction
         msg.observation = "Please give your post content."
         response = self(msg).content
-        
+
         for agent in self.relationship.values():
             agent.observe(get_assistant_msg(f"{self.name} posted: {response}"))
 
@@ -177,7 +193,7 @@ class RecUserAgent(BaseAgent):
         guided_choice = [
             "Recommend: Request the website to recommend a batch of movies to watch.",
             "Conversation: Start a conversation with a good friend about a movie you've recently heard about or watched.",
-            "Post: Post in your social circle expressing your recent thoughts on movie-related topics."
+            "Post: Post in your social circle expressing your recent thoughts on movie-related topics.",
         ]
         observation = Template.make_choice_observation(guided_choice)
         msg = get_assistant_msg()
@@ -191,5 +207,5 @@ class RecUserAgent(BaseAgent):
         getattr(self, action)()
 
         logger.info("Finished running recuser agent.")
-        
+
         return "Done"

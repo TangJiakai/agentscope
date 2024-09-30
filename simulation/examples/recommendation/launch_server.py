@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 import argparse
 
@@ -31,7 +32,7 @@ def setup_participant_agent_server(host: str, port: int) -> None:
         runtime_id=str(port),
         save_code=False,
         save_api_invoke=False,
-        model_configs=os.path.join(scene_path, CONFIG_DIR, config["model_configs_path"]),
+        model_configs=os.path.join(scene_path, CONFIG_DIR, MODEL_CONFIG),
         use_monitor=False,
     )
     assistant_server_launcher = RpcAgentServerLauncher(

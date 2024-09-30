@@ -27,6 +27,7 @@ from vllm.engine.protocol import AsyncEngineClient
 from vllm.entrypoints.launcher import serve_http
 from vllm.entrypoints.logger import RequestLogger
 from vllm.entrypoints.openai.cli_args import make_arg_parser
+
 # yapf conflicts with isort for this block
 # yapf: disable
 from vllm.entrypoints.openai.protocol import (ChatCompletionRequest,
@@ -42,11 +43,11 @@ from vllm.entrypoints.openai.protocol import (ChatCompletionRequest,
 # yapf: enable
 from vllm.entrypoints.openai.rpc.client import AsyncEngineRPCClient
 from vllm.entrypoints.openai.rpc.server import run_rpc_server
-#from vllm.entrypoints.openai.serving_chat import OpenAIServingChat
+
+# from vllm.entrypoints.openai.serving_chat import OpenAIServingChat
 from vllm.entrypoints.openai.serving_completion import OpenAIServingCompletion
 from vllm.entrypoints.openai.serving_embedding import OpenAIServingEmbedding
-from vllm.entrypoints.openai.serving_tokenization import (
-    OpenAIServingTokenization)
+from vllm.entrypoints.openai.serving_tokenization import OpenAIServingTokenization
 from vllm.logger import init_logger
 from vllm.usage.usage_lib import UsageContext
 from vllm.utils import FlexibleArgumentParser, get_open_zmq_ipc_path
@@ -68,27 +69,42 @@ openai_serving_tokenization: OpenAIServingTokenization
 prometheus_multiproc_dir: tempfile.TemporaryDirectory
 
 # Cannot use __name__ (https://github.com/vllm-project/vllm/pull/4765)
-logger = init_logger('vllm.entrypoints.openai.api_server')
+logger = init_logger("vllm.entrypoints.openai.api_server")
 
 _running_tasks: Set[asyncio.Task] = set()
 
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "6"
-os.environ['VLLM_WORKER_MULTIPROC_METHOD'] = 'spawn'
+os.environ["VLLM_WORKER_MULTIPROC_METHOD"] = "spawn"
 # Register the custom model
 ModelRegistry.register_model("LlamaForCausalLM", LlamaForJudge)
-token_mapping={'!': '0', '"': '1', '#': '2', '$': '3', '%': '4', '&': '5', "'": '6', '(': '7', ')': '8', '*': '9'}
-use_index=False
+token_mapping = {
+    "!": "0",
+    '"': "1",
+    "#": "2",
+    "$": "3",
+    "%": "4",
+    "&": "5",
+    "'": "6",
+    "(": "7",
+    ")": "8",
+    "*": "9",
+}
+use_index = False
 
-def model_is_embedding(model_name: str, trust_remote_code: bool,
-                       quantization: Optional[str]) -> bool:
-    return ModelConfig(model=model_name,
-                       tokenizer=model_name,
-                       tokenizer_mode="auto",
-                       trust_remote_code=trust_remote_code,
-                       quantization=quantization,
-                       seed=0,
-                       dtype="auto").embedding_mode
+
+def model_is_embedding(
+    model_name: str, trust_remote_code: bool, quantization: Optional[str]
+) -> bool:
+    return ModelConfig(
+        model=model_name,
+        tokenizer=model_name,
+        tokenizer_mode="auto",
+        trust_remote_code=trust_remote_code,
+        quantization=quantization,
+        seed=0,
+        dtype="auto",
+    ).embedding_mode
 
 
 @asynccontextmanager
@@ -109,7 +125,8 @@ async def lifespan(app: FastAPI):
 
 @asynccontextmanager
 async def build_async_engine_client(
-        args: Namespace) -> AsyncIterator[Optional[AsyncEngineClient]]:
+    args: Namespace,
+) -> AsyncIterator[Optional[AsyncEngineClient]]:
 
     # Context manager to handle async_engine_client lifecycle
     # Ensures everything is shutdown and cleaned up on error/exit
@@ -120,7 +137,8 @@ async def build_async_engine_client(
     global async_engine_client
 
     async with build_async_engine_client_from_engine_args(
-            engine_args, args.disable_frontend_multiprocessing) as engine:
+        engine_args, args.disable_frontend_multiprocessing
+    ) as engine:
 
         async_engine_client = engine  # type: ignore[assignment]
         yield engine
@@ -141,11 +159,15 @@ async def build_async_engine_client_from_engine_args(
 
     # If manually triggered or embedding model, use AsyncLLMEngine in process.
     # TODO: support embedding model via RPC.
-    if (model_is_embedding(engine_args.model, engine_args.trust_remote_code,
-                           engine_args.quantization)
-            or disable_frontend_multiprocessing):
+    if (
+        model_is_embedding(
+            engine_args.model, engine_args.trust_remote_code, engine_args.quantization
+        )
+        or disable_frontend_multiprocessing
+    ):
         engine_client = AsyncLLMEngine.from_engine_args(
-            engine_args, usage_context=UsageContext.OPENAI_API_SERVER)
+            engine_args, usage_context=UsageContext.OPENAI_API_SERVER
+        )
         try:
             yield engine_client
         finally:
@@ -160,19 +182,18 @@ async def build_async_engine_client_from_engine_args(
             #   cleaned up upon exit.
             global prometheus_multiproc_dir
             prometheus_multiproc_dir = tempfile.TemporaryDirectory()
-            os.environ[
-                "PROMETHEUS_MULTIPROC_DIR"] = prometheus_multiproc_dir.name
+            os.environ["PROMETHEUS_MULTIPROC_DIR"] = prometheus_multiproc_dir.name
         else:
             logger.warning(
                 "Found PROMETHEUS_MULTIPROC_DIR was set by user. "
                 "This directory must be wiped between vLLM runs or "
                 "you will find inaccurate metrics. Unset the variable "
-                "and vLLM will properly handle cleanup.")
+                "and vLLM will properly handle cleanup."
+            )
 
         # Select random path for IPC.
         rpc_path = get_open_zmq_ipc_path()
-        logger.info("Multiprocessing frontend to use %s for RPC Path.",
-                    rpc_path)
+        logger.info("Multiprocessing frontend to use %s for RPC Path.", rpc_path)
 
         # Build RPCClient, which conforms to AsyncEngineClient Protocol.
         # NOTE: Actually, this is not true yet. We still need to support
@@ -185,10 +206,10 @@ async def build_async_engine_client_from_engine_args(
         # so we need to spawn a new process
         rpc_server_process = context.Process(
             target=run_rpc_server,
-            args=(engine_args, UsageContext.OPENAI_API_SERVER, rpc_path))
+            args=(engine_args, UsageContext.OPENAI_API_SERVER, rpc_path),
+        )
         rpc_server_process.start()
-        logger.info("Started engine process with PID %d",
-                    rpc_server_process.pid)
+        logger.info("Started engine process with PID %d", rpc_server_process.pid)
 
         try:
             while True:
@@ -199,7 +220,8 @@ async def build_async_engine_client_from_engine_args(
                     if not rpc_server_process.is_alive():
                         logger.error(
                             "RPCServer process died before responding "
-                            "to readiness probe")
+                            "to readiness probe"
+                        )
                         yield None
                         return
 
@@ -219,6 +241,7 @@ async def build_async_engine_client_from_engine_args(
             # before prometheus_client is imported.
             # See https://prometheus.github.io/client_python/multiprocess/
             from prometheus_client import multiprocess
+
             multiprocess.mark_process_dead(rpc_server_process.pid)
 
 
@@ -230,13 +253,13 @@ def mount_metrics(app: FastAPI):
     # We need to set PROMETHEUS_MULTIPROC_DIR environment variable
     # before prometheus_client is imported.
     # See https://prometheus.github.io/client_python/multiprocess/
-    from prometheus_client import (CollectorRegistry, make_asgi_app,
-                                   multiprocess)
+    from prometheus_client import CollectorRegistry, make_asgi_app, multiprocess
 
     prometheus_multiproc_dir_path = os.getenv("PROMETHEUS_MULTIPROC_DIR", None)
     if prometheus_multiproc_dir_path is not None:
-        logger.info("vLLM to use %s as PROMETHEUS_MULTIPROC_DIR",
-                    prometheus_multiproc_dir_path)
+        logger.info(
+            "vLLM to use %s as PROMETHEUS_MULTIPROC_DIR", prometheus_multiproc_dir_path
+        )
         registry = CollectorRegistry()
         multiprocess.MultiProcessCollector(registry)
 
@@ -262,8 +285,7 @@ async def health() -> Response:
 async def tokenize(request: TokenizeRequest):
     generator = await openai_serving_tokenization.create_tokenize(request)
     if isinstance(generator, ErrorResponse):
-        return JSONResponse(content=generator.model_dump(),
-                            status_code=generator.code)
+        return JSONResponse(content=generator.model_dump(), status_code=generator.code)
     elif isinstance(generator, TokenizeResponse):
         return JSONResponse(content=generator.model_dump())
 
@@ -274,8 +296,7 @@ async def tokenize(request: TokenizeRequest):
 async def detokenize(request: DetokenizeRequest):
     generator = await openai_serving_tokenization.create_detokenize(request)
     if isinstance(generator, ErrorResponse):
-        return JSONResponse(content=generator.model_dump(),
-                            status_code=generator.code)
+        return JSONResponse(content=generator.model_dump(), status_code=generator.code)
     elif isinstance(generator, DetokenizeResponse):
         return JSONResponse(content=generator.model_dump())
 
@@ -295,15 +316,14 @@ async def show_version():
 
 
 @router.post("/v1/chat/completions")
-async def create_chat_completion(request: ChatCompletionRequest,
-                                 raw_request: Request):
+async def create_chat_completion(request: ChatCompletionRequest, raw_request: Request):
 
     generator = await openai_serving_chat.create_chat_completion(
-        request, raw_request,use_index)
+        request, raw_request, use_index
+    )
 
     if isinstance(generator, ErrorResponse):
-        return JSONResponse(content=generator.model_dump(),
-                            status_code=generator.code)
+        return JSONResponse(content=generator.model_dump(), status_code=generator.code)
 
     elif isinstance(generator, ChatCompletionResponse):
         return JSONResponse(content=generator.model_dump())
@@ -313,11 +333,9 @@ async def create_chat_completion(request: ChatCompletionRequest,
 
 @router.post("/v1/completions")
 async def create_completion(request: CompletionRequest, raw_request: Request):
-    generator = await openai_serving_completion.create_completion(
-        request, raw_request)
+    generator = await openai_serving_completion.create_completion(request, raw_request)
     if isinstance(generator, ErrorResponse):
-        return JSONResponse(content=generator.model_dump(),
-                            status_code=generator.code)
+        return JSONResponse(content=generator.model_dump(), status_code=generator.code)
     elif isinstance(generator, CompletionResponse):
 
         return JSONResponse(content=generator.model_dump())
@@ -327,11 +345,9 @@ async def create_completion(request: CompletionRequest, raw_request: Request):
 
 @router.post("/v1/embeddings")
 async def create_embedding(request: EmbeddingRequest, raw_request: Request):
-    generator = await openai_serving_embedding.create_embedding(
-        request, raw_request)
+    generator = await openai_serving_embedding.create_embedding(request, raw_request)
     if isinstance(generator, ErrorResponse):
-        return JSONResponse(content=generator.model_dump(),
-                            status_code=generator.code)
+        return JSONResponse(content=generator.model_dump(), status_code=generator.code)
     elif isinstance(generator, EmbeddingResponse):
         return JSONResponse(content=generator.model_dump())
 
@@ -341,7 +357,8 @@ async def create_embedding(request: EmbeddingRequest, raw_request: Request):
 if envs.VLLM_TORCH_PROFILER_DIR:
     logger.warning(
         "Torch Profiler is enabled in the API server. This should ONLY be "
-        "used for local development!")
+        "used for local development!"
+    )
 
     @router.post("/start_profile")
     async def start_profile():
@@ -376,8 +393,7 @@ def build_app(args: Namespace) -> FastAPI:
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(_, exc):
         err = openai_serving_chat.create_error_response(message=str(exc))
-        return JSONResponse(err.model_dump(),
-                            status_code=HTTPStatus.BAD_REQUEST)
+        return JSONResponse(err.model_dump(), status_code=HTTPStatus.BAD_REQUEST)
 
     if token := envs.VLLM_API_KEY or args.api_key:
 
@@ -389,8 +405,7 @@ def build_app(args: Namespace) -> FastAPI:
             if not request.url.path.startswith(f"{root_path}/v1"):
                 return await call_next(request)
             if request.headers.get("Authorization") != "Bearer " + token:
-                return JSONResponse(content={"error": "Unauthorized"},
-                                    status_code=401)
+                return JSONResponse(content={"error": "Unauthorized"}, status_code=401)
             return await call_next(request)
 
     for middleware in args.middleware:
@@ -401,8 +416,9 @@ def build_app(args: Namespace) -> FastAPI:
         elif inspect.iscoroutinefunction(imported):
             app.middleware("http")(imported)
         else:
-            raise ValueError(f"Invalid middleware {middleware}. "
-                             f"Must be a function or a class.")
+            raise ValueError(
+                f"Invalid middleware {middleware}. " f"Must be a function or a class."
+            )
 
     return app
 
@@ -421,62 +437,68 @@ def wait_for_server(url, timeout=100):
     raise TimeoutError(f"Server did not start within {timeout} seconds.")
 
 
-
-async def warmup(args,llm_engine):
+async def warmup(args, llm_engine):
 
     print("Warmup prefix caching")
+
     def extract_macro_instructions(content):
-        macro_pattern = r"\{% macro\s+[a-zA-Z_]+_instruction\(\)\s*%\}([\s\S]*?)\{% endmacro %\}"
+        macro_pattern = (
+            r"\{% macro\s+[a-zA-Z_]+_instruction\(\)\s*%\}([\s\S]*?)\{% endmacro %\}"
+        )
         macros = re.findall(macro_pattern, content, re.DOTALL)
         return macros
-    
-    dir_path=args.prompt_dir
-    contents=""
+
+    dir_path = args.prompt_dir
+    contents = ""
     for root, dirs, files in os.walk(dir_path):
         for file in files:
-            if file.endswith('.j2'):
-                file_path= os.path.join(root, file)
-                with open(file_path, 'r') as f:
-                    contents+= f.read()
+            if file.endswith(".j2"):
+                file_path = os.path.join(root, file)
+                with open(file_path, "r") as f:
+                    contents += f.read()
 
     instructions = extract_macro_instructions(contents)
     logger.info("Instructions: %s", instructions)
     for instruction in instructions:
+
         def prepare_request(data, instruction):
             # 修改 content 字段为 instruction
-            for message in data['messages']:
-                if message['role'] == 'user':
-                    message['content'] = instruction
+            for message in data["messages"]:
+                if message["role"] == "user":
+                    message["content"] = instruction
 
             # 构造 ChatCompletionRequest 实例
             request_data = ChatCompletionRequest(
-                model=data['model'],
-                messages=data['messages'],
-                temperature=data.get('temperature', 0.7),
-                max_tokens=data.get('max_tokens', 10),
-                stream=data.get('stream', False)
+                model=data["model"],
+                messages=data["messages"],
+                temperature=data.get("temperature", 0.7),
+                max_tokens=data.get("max_tokens", 10),
+                stream=data.get("stream", False),
             )
 
             return request_data
-        
+
         data = {
-            'temperature': 0.7,
-            'max_tokens': 10,
-            'model': '/data/pretrain_dir/Meta-Llama-3-8B-Instruct',
-            'messages': [{
-                'role': 'user',
-                'content': '## Conversation History\nuser: [INSTRUCTION]\n\nYou are a job seeker...'
-            }],
-            'stream': False
+            "temperature": 0.7,
+            "max_tokens": 10,
+            "model": args.model,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "## Conversation History\nuser: [INSTRUCTION]\n\nYou are a job seeker...",
+                }
+            ],
+            "stream": False,
         }
 
         # 调用函数生成 create_chat_completion 所需的参数
         request_data = prepare_request(data, instruction)
-        _ = await openai_serving_chat.create_chat_completion(request_data, None,False)
-        blocks = llm_engine.engine.scheduler[0].block_manager.gpu_allocator.evictor.free_table
+        _ = await openai_serving_chat.create_chat_completion(request_data, None, False)
+        blocks = llm_engine.engine.scheduler[
+            0
+        ].block_manager.gpu_allocator.evictor.free_table
         for k in blocks.keys():
             blocks[k].last_accessed = datetime(3000, 12, 31, 23, 59, 59).timestamp()
-    
 
 
 async def init_app(
@@ -513,7 +535,8 @@ async def init_app(
         chat_template=args.chat_template,
         return_tokens_as_token_ids=args.return_tokens_as_token_ids,
         enable_auto_tools=args.enable_auto_tool_choice,
-        tool_parser=args.tool_call_parser)
+        tool_parser=args.tool_call_parser,
+    )
     openai_serving_completion = OpenAIServingCompletion(
         async_engine_client,
         model_config,
@@ -539,7 +562,6 @@ async def init_app(
     )
     app.root_path = args.root_path
 
-   
     return app
 
 
@@ -554,7 +576,7 @@ async def run_server(args, **uvicorn_kwargs) -> None:
 
         app = await init_app(async_engine_client, args)
         if args.prompt_dir is not None:
-            await warmup(args,async_engine_client)
+            await warmup(args, async_engine_client)
 
         shutdown_task = await serve_http(
             app,
@@ -578,11 +600,14 @@ if __name__ == "__main__":
     # NOTE(simon):
     # This section should be in sync with vllm/scripts.py for CLI entrypoints.
     parser = FlexibleArgumentParser(
-        description="vLLM OpenAI-Compatible RESTful API server.")
+        description="vLLM OpenAI-Compatible RESTful API server."
+    )
     parser = make_arg_parser(parser)
-    parser.add_argument('--prompt-dir', type=str, help='The file path to the prompt file',default=None)
-    parser.add_argument('--use-index', action='store_true', help='Whether to use index')
+    parser.add_argument(
+        "--prompt-dir", type=str, help="The file path to the prompt file", default=None
+    )
+    parser.add_argument("--use-index", action="store_true", help="Whether to use index")
     args = parser.parse_args()
     if args.use_index:
-        use_index=True
+        use_index = True
     asyncio.run(run_server(args))

@@ -67,13 +67,13 @@ class SeekerAgent(BaseAgent):
         self,
         name: str,
         model_config_name: str,
-        memory_config: dict,
-        embedding_api: str,
         cv: str,
         trait: str,
-        embedding: list,
         env: BaseEnv,
-        job_ids_pool: list[str] = [],
+        embedding: list = None,
+        embedding_api: str = None,
+        memory_config: dict = None,
+        job_ids_pool: list[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -82,15 +82,16 @@ class SeekerAgent(BaseAgent):
         )
         self.memory_config = memory_config
         self.embedding_api = embedding_api
-        self.memory = setup_memory(memory_config)
-        self.memory.embedding_api = embedding_api
-        self.memory.model = self.model
-        self.memory._send_message = self._send_message
+        self.memory = None
+        if memory_config:
+            self.memory = setup_memory(memory_config)
+            self.memory.embedding_api = embedding_api
+            self.memory.model = self.model
+            self.memory.get_tokennum_func = self.get_tokennum_func
+            self.memory._send_message = self._send_message
         self.job_ids_pool = job_ids_pool
         self.embedding = embedding
         self.env = env
-
-        self.memory.get_tokennum_func = self.get_tokennum_func
 
         self.seeker = Seeker(name, cv, trait)
         self._update_profile()
@@ -99,7 +100,7 @@ class SeekerAgent(BaseAgent):
     def _update_profile(self):
         cv = self.seeker.cv
         cv_mdstr = ""
-        level = 4  
+        level = 4
 
         for key, value in cv.items():
             cv_mdstr += f"{'#' * level} {key}\n"  # Add the section title
@@ -108,7 +109,9 @@ class SeekerAgent(BaseAgent):
             if isinstance(value, list):
                 for item in value:
                     if isinstance(item, dict):  # For work experience
-                        cv_mdstr += f"- {'#' * (level + 1)} Company: {item['Company']}\n"
+                        cv_mdstr += (
+                            f"- {'#' * (level + 1)} Company: {item['Company']}\n"
+                        )
                         cv_mdstr += f"\tPosition: {item['Position']}\n"
                         cv_mdstr += f"\tTime: {item['Time']}\n"
                     else:  # For skills
@@ -121,7 +124,9 @@ class SeekerAgent(BaseAgent):
         cv_mdstr = cv_mdstr.strip()
 
         trait = self.seeker.trait
-        trait_mdstr = "\n".join([f"#### {key}\n{value}" for key, value in trait.items()])
+        trait_mdstr = "\n".join(
+            [f"#### {key}\n{value}" for key, value in trait.items()]
+        )
 
         self._profile = (
             f"### Name \n{self.seeker.name}\n"
@@ -196,7 +201,9 @@ class SeekerAgent(BaseAgent):
         guided_choice = ["no", "yes"]
         for job_id, agent in interviewer_agent_infos.items():
             job_info = agent.job
-            observation = Template.determine_apply_jobs_observation(job_info, guided_choice)
+            observation = Template.determine_apply_jobs_observation(
+                job_info, guided_choice
+            )
             msg = Msg("user", None, role="user")
             msg.instruction = instruction
             msg.observation = observation
@@ -217,7 +224,7 @@ class SeekerAgent(BaseAgent):
             results.append(agent.screening_cv(str(self.seeker)))
 
         for (agent_id, agent), result in zip(
-            apply_interviewer_agent_infos.items(), 
+            apply_interviewer_agent_infos.items(),
             results,
         ):
             if "yes" == result:
@@ -249,15 +256,11 @@ class SeekerAgent(BaseAgent):
             if "yes" == result:
                 offer_interviewer_agent_infos[agent_id] = agent
                 self.observe(
-                    get_assistant_msg(
-                        Template.interview_observation(agent.job, True)
-                    )
+                    get_assistant_msg(Template.interview_observation(agent.job, True))
                 )
             else:
                 self.observe(
-                    get_assistant_msg(
-                        Template.interview_observation(agent.job, False)
-                    )
+                    get_assistant_msg(Template.interview_observation(agent.job, False))
                 )
 
         return offer_interviewer_agent_infos
@@ -267,7 +270,7 @@ class SeekerAgent(BaseAgent):
         """Make decision."""
         if len(offer_interviewer_agent_infos) == 0:
             return -1
-        
+
         if len(offer_interviewer_agent_infos) == 1:
             agent = list(offer_interviewer_agent_infos.values())[0]
             final_job = agent.job
@@ -279,7 +282,10 @@ class SeekerAgent(BaseAgent):
             return list(offer_interviewer_agent_infos.keys())[0]
 
         instruction = Template.make_final_decision_instruction()
-        jobs = {agent.agent_id: agent.job for agent in offer_interviewer_agent_infos.values()}
+        jobs = {
+            agent.agent_id: agent.job
+            for agent in offer_interviewer_agent_infos.values()
+        }
         guided_choice = list(offer_interviewer_agent_infos.keys())
         observation = Template.make_final_decision_observation(jobs, guided_choice)
         msg = Msg("user", None, role="user")
@@ -289,9 +295,7 @@ class SeekerAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg).content)]
 
         final_job = offer_interviewer_agent_infos[response].job
-        self.seeker.working_condition = (
-            "Position Name: " + final_job["Position Name"]
-        )
+        self.seeker.working_condition = "Position Name: " + final_job["Position Name"]
         self._update_profile()
 
         # results = []

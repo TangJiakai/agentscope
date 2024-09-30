@@ -1,3 +1,5 @@
+AGENT_PER_ENV = 200
+
 CONFIG_DIR = "configs"
 SIMULATION_CONFIG = "simulation_config.yml"
 MODEL_CONFIG = "model_configs.json"
