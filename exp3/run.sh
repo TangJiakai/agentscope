@@ -26,7 +26,7 @@ python $script_dir/code/api_server.py \
   --enable-prefix-caching \
   --disable-frontend-multiprocessing \
   --guided-decoding-backend=lm-format-enforcer \
-  --gpu-memory-utilization 0.8 \
+  --gpu-memory-utilization 0.9 \
   --prompt-dir /mnt/jiakai/GeneralSimulation/simulation/examples/job_seeking/prompts \
   --use-index \
   2> "$script_dir/api_server_$port.log" &

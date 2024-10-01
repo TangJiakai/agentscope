@@ -352,7 +352,7 @@ class Simulator(BaseSimulator):
                 elif result == -1:
                     no_job_cnt += 1
                 elif result == "Done":
-                    pass
+                    continue
                 else:
                     get_job_cnt += 1
 
@@ -362,13 +362,19 @@ class Simulator(BaseSimulator):
             logger.info(f"No Job: {no_job_cnt}")
             logger.info(f"Get Job: {get_job_cnt}")
             logger.info("====================================")
-            
-            message_save_path = "/data/tangjiakai/general_simulation/"
+
+            message_save_path = os.path.join(
+                "/mnt/jiakai/GeneralSimulation/runs",
+                self.config["project_name"],
+                self.config["runtime_id"],
+            )
             resp = requests.post(
                 "http://localhost:9111/store_message",
                 json={
-                    "save_data_path": os.path.join(message_save_path, f"Round-{r}.json"),
-                }
+                    "save_data_path": os.path.join(
+                        message_save_path, f"Round-{r}.json"
+                    ),
+                },
             )
 
         message_manager.message_queue.put("Simulation finished.")

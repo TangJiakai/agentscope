@@ -67,9 +67,12 @@ class BaseSimulator:
         results = []
         for agent in self.agents:
             results.append(agent.run())
+        outputs = []
         for res in results:
-            logger.info(res.result())
-        return results
+            output = res.result()
+            outputs.append(output)
+            logger.info(output)
+        return outputs
 
     def run(self):
         raise NotImplementedError

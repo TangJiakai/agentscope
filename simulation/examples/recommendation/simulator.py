@@ -244,13 +244,19 @@ class Simulator(BaseSimulator):
                 logger.info(f"Kill simulation by user at round {r}.")
                 return
 
-            # message_save_path = "/data/tangjiakai/general_simulation/"
-            # resp = requests.post(
-            #     "http://localhost:9111/store_message",
-            #     json={
-            #         "save_data_path": os.path.join(message_save_path, f"Round-{r}.json"),
-            #     }
-            # )
+            message_save_path = os.path.join(
+                "/mnt/jiakai/GeneralSimulation/runs",
+                self.config["project_name"],
+                self.config["runtime_id"],
+            )
+            resp = requests.post(
+                "http://localhost:9111/store_message",
+                json={
+                    "save_data_path": os.path.join(
+                        message_save_path, f"Round-{r}.json"
+                    ),
+                },
+            )
 
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
