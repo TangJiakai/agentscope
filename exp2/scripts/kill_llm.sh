@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PID_FILE="$(cd `dirname $0`; pwd)/.pid"
+PID_FILE="$(realpath "$(dirname "${BASH_SOURCE[0]}")")/.pid"
 
 if [ -f "$PID_FILE" ]; then
     while IFS= read -r PID; do

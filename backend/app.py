@@ -212,7 +212,9 @@ async def websocket_round_endpoint(websocket: WebSocket):
 async def websocket_chat_endpoint(websocket: WebSocket, id: str):
     await manager.connect(websocket, id)
     try:
-        send_msgs = [msg.model_dump_json() for msg in manager.agent_connections_history[id]]
+        send_msgs = [
+            msg.model_dump_json() for msg in manager.agent_connections_history[id]
+        ]
         await manager.agent_connections[id].send_text(f"[{', '.join(send_msgs)}]")
         env = None
         if simulator is not None:
@@ -310,7 +312,10 @@ def get_agents(
                 state=agent.get_attr(attr="state"),
                 profile=agent.get_attr(attr="_profile"),
                 gender=gender,
-                coordinates=Coord(x=agent_coordinates[agent.agent_id][0], y=agent_coordinates[agent.agent_id][1]),
+                coordinates=Coord(
+                    x=agent_coordinates[agent.agent_id][0],
+                    y=agent_coordinates[agent.agent_id][1],
+                ),
                 avatar=avatar_path,
             )
         )
@@ -412,9 +417,7 @@ def put_agent_config(req: AgentConfig):
     with open(profile_path, "r") as f:
         agent_configs = json.load(f)
         agent_configs = random.choices(agent_configs, k=req.num_agents)
-        agent_configs_path = os.path.join(
-            configs_path, f"{req.cls}_configs.json"
-        )
+        agent_configs_path = os.path.join(configs_path, f"{req.cls}_configs.json")
         with open(agent_configs_path, "w") as agent_config_file:
             json.dump(agent_configs, agent_config_file, ensure_ascii=False, indent=4)
     return HTMLResponse()
@@ -464,7 +467,10 @@ def get_favorite_agents():
                 state=agent.get_attr(attr="state"),
                 profile=agent.get_attr(attr="_profile"),
                 gender=gender,
-                coordinates=Coord(x=agent_coordinates[agent.agent_id][0], y=agent_coordinates[agent.agent_id][1]),
+                coordinates=Coord(
+                    x=agent_coordinates[agent.agent_id][0],
+                    y=agent_coordinates[agent.agent_id][1],
+                ),
                 avatar=avatar_path,
             )
         )
@@ -527,7 +533,9 @@ def get_agent(id: str):
                     state=agent.get_attr(attr="state"),
                     profile=agent.get_attr(attr="_profile"),
                     gender=gender,
-                    coordinates=Coord(x=agent_coordinates[id][0], y=agent_coordinates[id][1]),
+                    coordinates=Coord(
+                        x=agent_coordinates[id][0], y=agent_coordinates[id][1]
+                    ),
                     avatar=avatar_path,
                 )
     return HTMLResponse(content="Agent not found.", status_code=404)
@@ -816,7 +824,7 @@ def chatgpt(req: GPTReq):
 
 @app.post("/tune/{mode}")
 def tune(mode: Literal["rewrite", "rate"]):
-    
+
     # Kill LLM
     # kill_llm_sh_path = os.path.join(proj_path, "llm", "kill_llm.sh")
     # run_sh_blocking(kill_llm_sh_path)
@@ -830,9 +838,7 @@ def tune(mode: Literal["rewrite", "rate"]):
     run_sh_blocking(tune_llm_sh_path, tuning_mode)
 
     # Launch LLM
-    launch_llm_sh_path = os.path.join(
-        proj_path, "llm", "launch_llm.sh"
-    )
+    launch_llm_sh_path = os.path.join(proj_path, "llm", "launch_llm.sh")
     run_sh_async(launch_llm_sh_path)
 
     # Reset agents' model.model_name
@@ -939,17 +945,24 @@ async def start():
 
     # Parameters
     n_samples = len(agents)  # 需要生成的点数
-    canvas_size=1.0  # 画布的尺寸，此时默认为1*1的
+    canvas_size = 1.0  # 画布的尺寸，此时默认为1*1的
     initial_center_dist = 0.12  # 初始默认圆心距
     radius_ratio = 0.4  # 初始默认半径占圆心距的比例
 
     # Generate points using Poisson disk sampling
     # points, final_radius = poisson_disk_sampling(width, height, n_samples, initial_radius)
-    points, final_radius = generate_points_sampling(k=n_samples, radius_ratio=radius_ratio, initial_center_dist=initial_center_dist, canvas_size=canvas_size)
+    points, final_radius = generate_points_sampling(
+        k=n_samples,
+        radius_ratio=radius_ratio,
+        initial_center_dist=initial_center_dist,
+        canvas_size=canvas_size,
+    )
     avatar_radius = final_radius
     for idx, agent in enumerate(agents):
         agent_coordinates[agent.agent_id] = list(points[idx])
-    manager.all_agents_state = {agent.agent_id: agent.get_attr("state") for agent in agents}
+    manager.all_agents_state = {
+        agent.agent_id: agent.get_attr("state") for agent in agents
+    }
     simulation_thread = Thread(target=simulator.run)
     simulation_thread.start()
     return HTMLResponse()
