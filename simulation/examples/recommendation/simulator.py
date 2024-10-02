@@ -110,9 +110,9 @@ class Simulator(BaseSimulator):
                 args = [
                     {
                         "sentence": item_info["title"] + item_info["genres"],
-                        "api": self.config["embedding_api"][0],
+                        "api": self.config["embedding_api"][i % len(self.config["embedding_api"])],
                     }
-                    for item_info in item_infos
+                    for i, item_info in enumerate(item_infos)
                 ]
                 for item_emb in tqdm(
                     executor.map(lambda arg: get_embedding(**arg), args),
@@ -260,10 +260,6 @@ class Simulator(BaseSimulator):
 
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
-
-    def load(file_path):
-        with open(file_path, "rb") as f:
-            return dill.load(f)
 
     def get_save_state(self):
         results = []
