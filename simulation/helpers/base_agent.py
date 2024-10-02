@@ -83,6 +83,7 @@ class BaseAgent(AgentBase):
         return state
 
     def __setstate__(self, state: object) -> None:
+        state.pop("model_config_name")
         self.__dict__.update(state)
         if hasattr(self, "memory_config"):
             self.memory = setup_memory(self.memory_config)
