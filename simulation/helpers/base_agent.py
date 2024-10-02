@@ -74,20 +74,28 @@ class BaseAgent(AgentBase):
         state = self.__dict__.copy()
         state.pop("model", None)
         state.pop("env", None)
+        state.pop("get_tokennum_func", None)
+        state.pop("_send_message", None)
         if hasattr(self, "memory"):
             memory_state = self.memory.__getstate__()
             memory_state["model"] = None
-            memory_state.pop("get_tokennum_func")
-            memory_state.pop("_send_message")
+            memory_state.pop("get_tokennum_func", None)
+            memory_state.pop("_send_message", None)
             state["memory"] = memory_state
         return state
 
     def __setstate__(self, state: object) -> None:
-        state.pop("model_config_name")
+        state.pop("model", None)
+        state.pop("env", None)
+        state.pop("model_config_name", None)
+        state.pop("embedding_api", None)
+        state.pop("get_tokennum_func", None)
+        state.pop("_send_message", None)
         self.__dict__.update(state)
         if hasattr(self, "memory_config"):
             self.memory = setup_memory(self.memory_config)
             self.memory.__setstate__(state["memory"])
+            self.memory.embedding_api = self.embedding_api
             self.memory.get_tokennum_func = self.get_tokennum_func
             self.memory._send_message = self._send_message
         if hasattr(self, "model_config_name"):

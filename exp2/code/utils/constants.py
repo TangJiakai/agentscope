@@ -1,4 +1,4 @@
-LLM_DIR_PATH = "/data/pretrain_dir/Meta-Llama-3-8B-Instruct"
+LLM_DIR_PATH = "/mnt/jiakai/Download/Meta-Llama-3-8B-Instruct"
 
 SFT_FILE_PATH = "exp2/datasets/sft_data"
 PPO_FILE_PATH = "exp2/datasets/ppo_data"
