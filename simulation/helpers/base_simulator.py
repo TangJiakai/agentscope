@@ -33,7 +33,7 @@ class BaseSimulator:
             loaded_simulator = self.load(self.config["load_simulator_path"])
             self.__dict__.update(loaded_simulator.__dict__)
             self.resume = True
-            self._init_agents_envs(resume=True)
+            self._init_agents_envs()
             logger.info("Load simulator successfully")
         else:
             self._init_agents_envs()
@@ -77,7 +77,7 @@ class BaseSimulator:
     def run(self):
         raise NotImplementedError
 
-    def load(file_path):
+    def load(self, file_path):
         with open(file_path, "rb") as f:
             return dill.load(f)
 

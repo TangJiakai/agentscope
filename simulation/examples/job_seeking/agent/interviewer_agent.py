@@ -134,7 +134,6 @@ class InterviewerAgent(BaseAgent):
         #         logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
 
     def get_attr(self, attr):
-        logger.info(self.job)
         if attr == "job":
             job = {
                 "Position Name": self.job['name'],
