@@ -30,8 +30,10 @@ class BaseSimulator:
 
         if self.config["load_simulator_path"] is not None:
             logger.info(f"Load simulator from {self.config['load_simulator_path']}")
+            config = self.config
             loaded_simulator = self.load(self.config["load_simulator_path"])
             self.__dict__.update(loaded_simulator.__dict__)
+            self.config = config
             self.resume = True
             self._init_agents_envs()
             logger.info("Load simulator successfully")
