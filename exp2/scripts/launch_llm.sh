@@ -14,9 +14,9 @@ echo "GPU ID: $CUDA_VISIBLE_DEVICES"
 echo "Port: $port"
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PARENT_PARENT_DIR="$(realpath "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")"
+save_dir="$(realpath "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")/saves"
 
-if [ -f "${PARENT_PARENT_DIR}/saves/adapter_config.json" ]; then
+if [ -f "${save_dir}/adapter_config.json" ]; then
     echo "Using adapter-based LORA." >> "${script_dir}/.log"
     python -m vllm.entrypoints.openai.api_server \
         --model /data/pretrain_dir/Meta-Llama-3-8B-Instruct \
@@ -27,10 +27,10 @@ if [ -f "${PARENT_PARENT_DIR}/saves/adapter_config.json" ]; then
         --enforce-eager \
         --enable-prefix-caching \
         --enable-lora \
-        --lora-modules lora="${PARENT_PARENT_DIR}/saves" \
+        --lora-modules lora="${save_dir}" \
         --disable-frontend-multiprocessing \
         --guided-decoding-backend=lm-format-enforcer \
-        --gpu-memory-utilization 0.9 \
+        --gpu-memory-utilization 0.8 \
         2>> "${script_dir}/.log" &
 else
     python -m vllm.entrypoints.openai.api_server \

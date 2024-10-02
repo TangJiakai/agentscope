@@ -155,7 +155,6 @@ simulation/examples/recommendation/configs/all_RecUserAgent_configs.json
 exp1/
 exp2/datasets/ori_data
 exp2/*saves
-exp3/
 sample.ipynb
 *.pid
 simulation/examples/recommendation/*RecUserAgent_configs.json
