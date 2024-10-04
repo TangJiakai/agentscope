@@ -104,6 +104,7 @@ class Tuner:
             for name, param in model.named_parameters():
                 if "lora" in name:
                     param.requires_grad = True
+            print("Loaded the adapter.")
         else:
             peft_config = LoraConfig(
                 r=16,
@@ -174,6 +175,7 @@ class Tuner:
                 device_map="auto",
                 torch_dtype=torch.bfloat16,
             )
+            print("Loaded the adapter.")
         else:
             peft_config = LoraConfig(
                 r=16,
