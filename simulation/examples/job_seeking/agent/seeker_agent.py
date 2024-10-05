@@ -139,20 +139,6 @@ class SeekerAgent(BaseAgent):
     def state(self):
         return self._state
 
-    @state.setter
-    def state(self, new_value):
-        pass
-        # if hasattr(self, "backend_server_url"):
-        #     if new_value not in SeekerAgentStates:
-        #         raise ValueError(f"Invalid state: {new_value}")
-        #     self._state = new_value
-        #     url = f"{self.backend_server_url}/api/state"
-        #     resp = requests.post(
-        #         url, json={"agent_id": self.agent_id, "state": new_value}
-        #     )
-        #     if resp.status_code != 200:
-        #         logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
-
     @set_state("whether to seek")
     def _determine_if_seeking(self, **kwargs):
         instruction = Template.determine_if_seeking_instruction()

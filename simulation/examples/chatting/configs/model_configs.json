@@ -2,11 +2,11 @@
     {
         "config_name": "LLM-1",
         "model_type": "openai_chat",
-        "model_name": "/data/pretrain_dir/Meta-Llama-3-8B-Instruct",
+        "model_name": "your_llm_model_path or id set in vllm",
         "api_key": "tangjiakai",
         "client_args": {
             "max_retries": 10,
-            "base_url": "http://localhost:8083/v1",
+            "base_url": "base_url",
             "timeout": 6000
         },
         "generate_args": {

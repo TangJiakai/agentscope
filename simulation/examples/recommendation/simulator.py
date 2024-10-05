@@ -47,7 +47,7 @@ class Simulator(BaseSimulator):
         )
 
     def _prepare_agents_args(self):
-        agent_configs = super()._prepare_agents_args()[0]
+        agent_configs = super()._prepare_agents_args()
         agent_relationships = []
         for config in agent_configs:
             agent_relationships.append(config["args"].pop("relationship"))

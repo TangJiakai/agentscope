@@ -85,19 +85,6 @@ class RecUserAgent(BaseAgent):
     def state(self):
         return self._state
 
-    @state.setter
-    def state(self, new_value):
-        if hasattr(self, "backend_server_url"):
-            if new_value not in RecUserAgentStates:
-                raise ValueError(f"Invalid state: {new_value}")
-            self._state = new_value
-            url = f"{self.backend_server_url}/api/state"
-            resp = requests.post(
-                url, json={"agent_id": self.agent_id, "state": new_value}
-            )
-            if resp.status_code != 200:
-                logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
-
     def generate_feeling(self, movie):
         instruction = Template.generate_feeling_instruction()
         observation = Template.generate_feeling_observation(movie)

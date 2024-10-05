@@ -1,6 +1,5 @@
 import faiss
 import numpy as np
-from loguru import logger
 
 from simulation.helpers.utils import *
 from simulation.helpers.emb_service import *

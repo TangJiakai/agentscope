@@ -3,7 +3,6 @@
 from typing import Any, Union, Generator, Tuple
 import threading
 import os
-import requests
 import jinja2
 from loguru import logger
 
@@ -11,10 +10,7 @@ from agentscope.rpc import async_func
 
 from agentscope.message import Msg
 from simulation.helpers.base_agent import BaseAgent
-from simulation.helpers.utils import (
-    setup_memory,
-    get_assistant_msg,
-)
+from simulation.helpers.utils import setup_memory
 from simulation.examples.chatting.environment.env import ChatRoom
 
 
@@ -69,7 +65,7 @@ class ChatRoomAgent(BaseAgent):
             self.memory.model = self.model
             self.memory.get_tokennum_func = self.get_tokennum_func
         self.env = env
-        self._profile = f"- Name: {self.name} - Profile: {profile}"
+        self._profile = f"### Name: {self.name}\n" f"### Profile: {profile}"
         self._state = "idle"
 
         self.room = None
@@ -130,13 +126,12 @@ class ChatRoomAgent(BaseAgent):
         response = self.model(
             prompt,
             parse_func=self.room.chatting_parse_func,
-            max_retries=3,
         ).text
         msg = Msg(name=self.name, content=response, role="assistant")
         if response:
             self.speak(msg)
         return msg
-    
+
     @async_func
     def run(self, **kwargs):
         self.join(self.env)

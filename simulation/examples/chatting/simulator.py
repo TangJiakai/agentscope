@@ -45,44 +45,6 @@ class Simulator(BaseSimulator):
             runtime_id=self.config["runtime_id"],
         )
 
-    def _prepare_agents_args(self):
-        logger.info("Load configs")
-        memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
-        model_configs = load_json(os.path.join(scene_path, CONFIG_DIR, MODEL_CONFIG))
-        agent_configs = load_json(
-            os.path.join(
-                scene_path, CONFIG_DIR, self.config["chatting_agent_configs_path"]
-            )
-        )
-
-        logger.info("Prepare agents args")
-        llm_num = len(model_configs)
-        agent_num = len(agent_configs)
-        agent_num_per_llm = math.ceil(agent_num / llm_num)
-        embedding_api_num = len(self.config["embedding_api"])
-        logger.info(f"llm_num: {llm_num}")
-        logger.info(f"agent_num: {agent_num}")
-        logger.info(f"agent_num_per_llm: {agent_num_per_llm}")
-        logger.info(f"embedding_api_num: {embedding_api_num}")
-        memory_config["args"]["embedding_size"] = get_embedding_dimension(
-            self.config["embedding_api"][0]
-        )
-
-        index_ls = list(range(agent_num))
-        random.shuffle(index_ls)
-        for config, shuffled_idx in zip(agent_configs, index_ls):
-            model_config = model_configs[shuffled_idx // agent_num_per_llm]
-            config["args"]["model_config_name"] = model_config["config_name"]
-            memory_config["args"]["embedding_size"] = get_embedding_dimension(
-                self.config["embedding_api"][0]
-            )
-            config["args"]["memory_config"] = None if self.resume else memory_config
-            config["args"]["embedding_api"] = self.config["embedding_api"][
-                shuffled_idx % embedding_api_num
-            ]
-
-        return agent_configs
-
     def _create_envs(self, agent_num):
         logger.info("Init environment")
         embedding_api_num = len(self.config["embedding_api"])
