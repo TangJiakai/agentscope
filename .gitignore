@@ -151,5 +151,6 @@ exp1/
 llm_tuning/datasets/ori_data/*
 **/*saves
 *.pid
-simulation/examples/recommendation/*RecUserAgent_configs.json
+**/*RecUserAgent_configs.json
 **/data_augment.py
+**/plot/

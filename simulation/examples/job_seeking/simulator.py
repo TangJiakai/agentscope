@@ -2,7 +2,6 @@ from datetime import timedelta
 import math
 import os
 import sys
-
 from tqdm import tqdm
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
@@ -15,13 +14,6 @@ import faiss
 
 from agentscope.agents.agent import DistConf
 
-from simulation.helpers.events import (
-    play_event,
-    stop_event,
-    kill_event,
-    pause_success_event,
-    check_pause,
-)
 from simulation.helpers.message import message_manager
 from simulation.helpers.constants import *
 from simulation.examples.job_seeking.agent import *
@@ -230,24 +222,11 @@ class Simulator(BaseSimulator):
             self.set_job_ids_pool(seeker_agents, seeker_configs)
 
     def run(self):
-        play_event.set()
-
         message_manager.message_queue.put("Start simulation.")
         for r in range(self.cur_round, self.config["round_n"] + 1):
             logger.info(f"Round {r} started")
             _ = self._one_round()
             self.save()
-            if stop_event.is_set():
-                message_manager.message_queue.put(
-                    f"Stop simulation by user at round {r}."
-                )
-                logger.info(f"Stop simulation by user at round {r}.")
-                break
-            pause_success_event.set()
-            check_pause()
-            if kill_event.is_set():
-                logger.info(f"Kill simulation by user at round {r}.")
-                return
 
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")

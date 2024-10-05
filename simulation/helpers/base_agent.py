@@ -35,24 +35,6 @@ class BaseAgent(AgentBase):
             api_key=self.model.api_key,
         )
         self.global_intervention = None
-        # self.backend_server_url = "http://localhost:9111"
-
-    def _send_message(self, prompt, response, selection_num=None):
-        if hasattr(self, "backend_server_url"):
-            url = f"{self.backend_server_url}/api/message"
-            resp = requests.post(
-                url,
-                json={
-                    "name": self.name,
-                    "prompt": "\n".join([p["content"] for p in prompt]),
-                    "completion": response.text,
-                    "agent_type": type(self).__name__,
-                    "agent_id": self.agent_id,
-                    "selection_num": selection_num,
-                },
-            )
-            if resp.status_code != 200:
-                logger.error(f"Failed to send message: {self.agent_id}")
 
     @property
     def profile(self):
@@ -75,7 +57,6 @@ class BaseAgent(AgentBase):
         state.pop("model", None)
         state.pop("env", None)
         state.pop("get_tokennum_func", None)
-        state.pop("_send_message", None)
         if hasattr(self, "memory"):
             memory_state = self.memory.__getstate__()
             memory_state["model"] = None
@@ -90,14 +71,12 @@ class BaseAgent(AgentBase):
         state.pop("model_config_name", None)
         state.pop("embedding_api", None)
         state.pop("get_tokennum_func", None)
-        state.pop("_send_message", None)
         self.__dict__.update(state)
         if hasattr(self, "memory_config"):
             self.memory = setup_memory(self.memory_config)
             self.memory.__setstate__(state["memory"])
             self.memory.embedding_api = self.embedding_api
             self.memory.get_tokennum_func = self.get_tokennum_func
-            self.memory._send_message = self._send_message
         if hasattr(self, "model_config_name"):
             self.model = ModelManager.get_instance().get_model_by_config_name(
                 self.model_config_name
