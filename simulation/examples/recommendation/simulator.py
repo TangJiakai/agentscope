@@ -1,7 +1,6 @@
 from datetime import timedelta
 import math
 import os
-import random
 import sys
 import faiss
 import numpy as np
@@ -55,41 +54,9 @@ class Simulator(BaseSimulator):
         )
 
     def _prepare_agents_args(self):
-        logger.info("Load configs")
-        memory_config = load_json(os.path.join(scene_path, CONFIG_DIR, MEMORY_CONFIG))
-        model_configs = load_json(os.path.join(scene_path, CONFIG_DIR, MODEL_CONFIG))
-        agent_configs = load_json(
-            os.path.join(
-                scene_path, CONFIG_DIR, self.config["recuser_agent_configs_path"]
-            )
-        )
-
-        logger.info("Prepare agents args")
-        llm_num = len(model_configs)
-        agent_num = len(agent_configs)
-        agent_num_per_llm = math.ceil(agent_num / llm_num)
-        embedding_api_num = len(self.config["embedding_api"])
-        logger.info(f"llm_num: {llm_num}")
-        logger.info(f"agent_num: {agent_num}")
-        logger.info(f"agent_num_per_llm: {agent_num_per_llm}")
-        logger.info(f"embedding_api_num: {embedding_api_num}")
-        memory_config["args"]["embedding_size"] = get_embedding_dimension(
-            self.config["embedding_api"][0]
-        )
-
-        index_ls = list(range(agent_num))
+        agent_configs = super()._prepare_agents_args()[0]
         agent_relationships = []
-        random.shuffle(index_ls)
-        for config, shuffled_idx in zip(agent_configs, index_ls):
-            model_config = model_configs[shuffled_idx // agent_num_per_llm]
-            config["args"]["model_config_name"] = model_config["config_name"]
-            memory_config["args"]["embedding_size"] = get_embedding_dimension(
-                self.config["embedding_api"][0]
-            )
-            config["args"]["memory_config"] = None if self.resume else memory_config
-            config["args"]["embedding_api"] = self.config["embedding_api"][
-                shuffled_idx % embedding_api_num
-            ]
+        for config in agent_configs:
             agent_relationships.append(config["args"].pop("relationship"))
 
         return agent_configs, agent_relationships
@@ -110,7 +77,9 @@ class Simulator(BaseSimulator):
                 args = [
                     {
                         "sentence": item_info["title"] + item_info["genres"],
-                        "api": self.config["embedding_api"][i % len(self.config["embedding_api"])],
+                        "api": self.config["embedding_api"][
+                            i % len(self.config["embedding_api"])
+                        ],
                     }
                     for i, item_info in enumerate(item_infos)
                 ]
@@ -211,6 +180,7 @@ class Simulator(BaseSimulator):
 
         # Init agents
         agents = self._create_agents(agent_configs, agent_relationships)
+
         # Resume agents
         if self.resume:
             logger.info("Resume agents...")
@@ -244,39 +214,8 @@ class Simulator(BaseSimulator):
                 logger.info(f"Kill simulation by user at round {r}.")
                 return
 
-            message_save_path = os.path.join(
-                "/mnt/jiakai/GeneralSimulation/runs",
-                self.config["project_name"],
-                self.config["runtime_id"],
-            )
-            resp = requests.post(
-                "http://localhost:9111/store_message",
-                json={
-                    "save_data_path": os.path.join(
-                        message_save_path, f"Round-{r}.json"
-                    ),
-                },
-            )
-
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
-
-    def get_save_state(self):
-        results = []
-        for agent in self.agents:
-            results.append(agent.save())
-        agent_save_state = []
-        for res in tqdm(results, total=len(results), desc="Get agent save state"):
-            agent_save_state.append(res.result())
-
-        results = []
-        for env in self.envs:
-            results.append(env.save())
-        env_save_state = []
-        for res in tqdm(results, total=len(results), desc="Get env save state"):
-            env_save_state.append(res.result())
-
-        return agent_save_state, env_save_state
 
 
 if __name__ == "__main__":

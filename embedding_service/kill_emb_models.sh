@@ -12,9 +12,7 @@ if [[ -f $pid_file ]]; then
             echo "Process $pid does not exist"
         fi
     done < $pid_file
-
     rm $pid_file
-    echo ".pid has been removed."
 else
     echo ".pid does not exist."
 fi

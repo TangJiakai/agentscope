@@ -8,7 +8,7 @@ from agentscope.models import ModelResponse
 from agentscope.message import Msg
 
 from simulation.memory.short_long_memory import ShortLongMemory
-from simulation.helpers.utils import get_memory_until_limit
+import simulation.helpers.utils as utils
 
 file_loader = FileSystemLoader(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "prompts")
@@ -44,7 +44,7 @@ class ShortLongReflectionMemory(ShortLongMemory):
         msg = Msg(
             "user",
             Template.get_topics_of_reflection_prompt(
-                get_memory_until_limit(
+                utils.get_memory_until_limit(
                     [x for x in self.ltm_memory[-last_k:]],
                     self.get_tokennum_func,
                     limit=3000
@@ -74,7 +74,7 @@ class ShortLongReflectionMemory(ShortLongMemory):
 
     def _get_insights_on_topic(self, topic: Msg) -> List[str]:
         retrieved_memories = self.get_ltm_memory(topic)
-        limited_retrieved_memories = get_memory_until_limit(
+        limited_retrieved_memories = utils.get_memory_until_limit(
             [x for x in retrieved_memories], 
             self.get_tokennum_func,
             topic.content, 

@@ -33,6 +33,9 @@ def parse_args() -> argparse.Namespace:
     """Parse arguments"""
     parser = argparse.ArgumentParser()
     parser.add_argument("--tuning_mode", type=str, help="sft or ppo", default="sft")
+    parser.add_argument(
+        "--llm_path", type=str, help="Path to the base LLM model", required=True
+    )
     return parser.parse_args()
 
 
@@ -43,15 +46,16 @@ def copy_saves():
 
 
 class Tuner:
-    def __init__(self, tuning_mode):
+    def __init__(self, tuning_mode, llm_path):
         self.tuning_mode = tuning_mode
+        self.llm_path = llm_path
         tokenizer = AutoTokenizer.from_pretrained(
-            LLM_DIR_PATH,
+            llm_path,
             trust_remote_code=True,
         )
         tokenizer.pad_token = tokenizer.eos_token
         self.tokenizer = tokenizer
-        check_dirs()
+        check_dirs(llm_path)
 
     def train_func(self):
         if self.tuning_mode == "sft":
@@ -92,10 +96,10 @@ class Tuner:
             max_seq_length=8192,
         )
 
-        if_load_adapter = check_load_adapter()
+        if_load_adapter = check_load_adapter(self.llm_path)
         if if_load_adapter:
             model = AutoModelForCausalLM.from_pretrained(
-                LLM_DIR_PATH,
+                self.llm_path,
                 trust_remote_code=True,
                 device_map="auto",
                 torch_dtype=torch.bfloat16,
@@ -115,7 +119,7 @@ class Tuner:
             )
 
             model = AutoModelForCausalLM.from_pretrained(
-                LLM_DIR_PATH,
+                self.llm_path,
                 trust_remote_code=True,
                 device_map="auto",
                 torch_dtype=torch.bfloat16,
@@ -161,10 +165,10 @@ class Tuner:
             type="torch", columns=["query_ids", "response_ids", "reward"]
         )
 
-        if_load_adapter = check_load_adapter()
+        if_load_adapter = check_load_adapter(self.llm_path)
         if if_load_adapter:
             model = AutoModelForCausalLM.from_pretrained(
-                LLM_DIR_PATH,
+                self.llm_path,
                 trust_remote_code=True,
                 device_map="auto",
                 torch_dtype=torch.bfloat16,
@@ -185,7 +189,7 @@ class Tuner:
                 task_type="CAUSAL_LM",
             )
             model = AutoModelForCausalLMWithValueHead.from_pretrained(
-                LLM_DIR_PATH,
+                self.llm_path,
                 trust_remote_code=True,
                 device_map="auto",
                 torch_dtype=torch.bfloat16,
@@ -231,7 +235,7 @@ class Tuner:
 
 
 def main(args):
-    tuner = Tuner(args.tuning_mode)
+    tuner = Tuner(args.tuning_mode, args.llm_path)
     tuner.train_func()
 
 

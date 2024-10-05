@@ -8,6 +8,7 @@ from loguru import logger
 MAX_TIMEOUT_DELAY = 60
 session = requests.Session()
 
+
 def get_embedding(sentence, api, delay=5):
     url = f"{api}/encode"
     attempt = 0
@@ -19,12 +20,16 @@ def get_embedding(sentence, api, delay=5):
             embedding = response.json().get("embedding")
             return embedding
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
-            logger.info(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Attempt {attempt} to get embedding failed. Retrying after {delay} seconds...")
+            logger.info(
+                f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Attempt {attempt} to get embedding failed. Retrying after {delay} seconds..."
+            )
             delay = min(2 * delay, MAX_TIMEOUT_DELAY)
             delay = (random.random() + 0.5) * delay
-            time.sleep(delay)  # 等待一段时间后重试
+            time.sleep(delay)
         except requests.exceptions.RequestException as e:
-            raise RuntimeError(f"Request failed with error: {e}, Sentence: {sentence}, URL: {url}")
+            raise RuntimeError(
+                f"Request failed with error: {e}, Sentence: {sentence}, URL: {url}"
+            )
 
 
 def get_embedding_dimension(api, delay=5):
@@ -38,9 +43,11 @@ def get_embedding_dimension(api, delay=5):
             embedding_dimension = response.json().get("embedding_dimension")
             return embedding_dimension
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
-            logger.info(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Attempt {attempt} to get embedding failed. Retrying after {delay} seconds...")
+            logger.info(
+                f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Attempt {attempt} to get embedding failed. Retrying after {delay} seconds..."
+            )
             delay = min(2 * delay, MAX_TIMEOUT_DELAY)
             delay = (random.random() + 0.5) * delay
-            time.sleep(delay)  # 等待一段时间后重试
+            time.sleep(delay)
         except requests.exceptions.RequestException as e:
             raise RuntimeError(f"Request failed with error: {e}, URL: {url}")

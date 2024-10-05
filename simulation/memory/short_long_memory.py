@@ -13,7 +13,7 @@ import numpy as np
 from agentscope.models import ModelResponse
 from agentscope.message import Msg
 
-from simulation.memory import ShortMemory
+import simulation.memory.short_memory as ShortMemory
 from simulation.helpers.emb_service import *
 
 
@@ -24,7 +24,7 @@ env = Environment(loader=file_loader)
 Template = env.get_template("prompts.j2").module
 
 
-class ShortLongMemory(ShortMemory):
+class ShortLongMemory(ShortMemory.ShortMemory):
     def __init__(
         self,
         *,
@@ -48,15 +48,19 @@ class ShortLongMemory(ShortMemory):
 
     def __getstate__(self):
         state = super().__getstate__()
-        state.pop('ltm_lock', None) 
+        state.pop("ltm_lock", None)
         return state
-    
+
     def __setstate__(self, state):
         super().__setstate__(state)
         self.ltm_lock = threading.Lock()
 
     def _score_memory_importance(self, memory_content: str) -> float:
-        msg = Msg("assistant", Template.score_importance_prompt(memory_content), role="assistant")
+        msg = Msg(
+            "assistant",
+            Template.score_importance_prompt(memory_content),
+            role="assistant",
+        )
         prompt = self.model.format(msg)
 
         def parse_func(response: ModelResponse) -> ModelResponse:
@@ -74,13 +78,14 @@ class ShortLongMemory(ShortMemory):
                     f"Invalid response format in parse_func "
                     f"with response: {response.text}",
                 )
+
         response = self.model(prompt, parse_func=parse_func).raw
         return response
 
     def add_ltm_memory(self, ltm_memory_unit: Msg):
         memory_content = ltm_memory_unit.content
         ltm_memory_unit.importance_score = self._score_memory_importance(memory_content)
-        
+
         with self.ltm_lock:
             self.ltm_memory.append(ltm_memory_unit)
             self.retriever.add(
@@ -127,10 +132,11 @@ class ShortLongMemory(ShortMemory):
             for doc, relevance_score in docs_and_scores.values()
         ]
         rescored_docs.sort(key=lambda x: x[1], reverse=True)
-        return [x[0] for x in rescored_docs[:self.ltm_K]]
+        return [x[0] for x in rescored_docs[: self.ltm_K]]
 
     def add(self, memory: Union[Sequence[Msg], Msg, None] = None):
-        if memory is None: return None
+        if memory is None:
+            return None
 
         ltm_memory_unit = super().add(memory)
         if ltm_memory_unit:
@@ -140,7 +146,7 @@ class ShortLongMemory(ShortMemory):
         query.embedding = get_embedding(query.content, self.embedding_api)
         docs_and_scores = {
             len(self.ltm_memory) - self.ltm_K + i: (doc, 0.0)
-            for i, doc in enumerate(self.ltm_memory[-self.ltm_K:])
+            for i, doc in enumerate(self.ltm_memory[-self.ltm_K :])
         }
 
         docs_and_scores.update(self.get_salient_docs(query))

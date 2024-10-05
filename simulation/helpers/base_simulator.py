@@ -1,3 +1,5 @@
+import itertools
+import math
 import os
 import dill
 from tqdm import tqdm
@@ -53,6 +55,48 @@ class BaseSimulator:
             runtime_id=self.config["runtime_id"],
         )
 
+    def _prepare_agents_args(self):
+        logger.info("Load configs")
+        memory_config = load_json(
+            os.path.join(self.scene_path, CONFIG_DIR, MEMORY_CONFIG)
+        )
+        model_configs = load_json(
+            os.path.join(self.scene_path, CONFIG_DIR, MODEL_CONFIG)
+        )
+        agent_configs = [
+            load_json(os.path.join(self.scene_path, CONFIG_DIR, config_path))
+            for config_path in self.config["agent_configs_paths"].values()
+        ]
+
+        logger.info("Prepare agents args")
+        llm_num = len(model_configs)
+        agent_num = sum([len(config) for config in agent_configs])
+        agent_num_per_llm = math.ceil(agent_num / llm_num)
+        embedding_api_num = len(self.config["embedding_api"])
+        logger.info(f"llm_num: {llm_num}")
+        logger.info(f"agent_num: {agent_num}")
+        logger.info(f"agent_num_per_llm: {agent_num_per_llm}")
+        logger.info(f"embedding_api_num: {embedding_api_num}")
+        memory_config["args"]["embedding_size"] = get_embedding_dimension(
+            self.config["embedding_api"][0]
+        )
+
+        # Prepare agent args
+        logger.info("Prepare agent args")
+        index_ls = list(range(agent_num))
+        random.shuffle(index_ls)
+        for config, shuffled_idx in zip(
+            list(itertools.chain.from_iterable(agent_configs)), index_ls
+        ):
+            model_config = model_configs[shuffled_idx // agent_num_per_llm]
+            config["args"]["model_config_name"] = model_config["config_name"]
+            config["args"]["memory_config"] = None if self.resume else memory_config
+            config["args"]["embedding_api"] = self.config["embedding_api"][
+                shuffled_idx % embedding_api_num
+            ]
+
+        return agent_configs
+
     def _set_env4agents(self):
         logger.info("Set all_agents for envs")
         agent_dict = {agent.agent_id: agent for agent in self.agents}
@@ -84,7 +128,23 @@ class BaseSimulator:
             return dill.load(f)
 
     def get_save_state(self):
-        raise NotImplementedError
+        results = []
+        if hasattr(self, "agents"):
+            for agent in self.agents:
+                results.append(agent.save())
+            agent_save_state = []
+            for res in tqdm(results, total=len(results), desc="Get agent save state"):
+                agent_save_state.append(res.result())
+
+        if hasattr(self, "envs"):
+            results = []
+            for env in self.envs:
+                results.append(env.save())
+            env_save_state = []
+            for res in tqdm(results, total=len(results), desc="Get env save state"):
+                env_save_state.append(res.result())
+
+        return agent_save_state, env_save_state
 
     def save(self):
         try:

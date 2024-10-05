@@ -1,5 +1,0 @@
-model_name_or_path: /data/pretrain_dir/Meta-Llama-3-8B-Instruct
-adapter_name_or_path: saves
-template: llama3
-finetuning_type: lora
-infer_backend: vllm

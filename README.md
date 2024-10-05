@@ -1,86 +1,84 @@
-# General Simulation
-## Pre-requisites
-### 0. Install Dependencies
-**Agentscope**:
+<div align=center>
+    <h1>GenSim: A General Social Simulation Platform with Large Language Model based Agents</h1>
+    <img src="https://img.shields.io/badge/License-MIT-blue" alt="license">
+    <img src="https://img.shields.io/github/stars/TangJiakai/GenSim" alt="license">
+</div>
+
+With the rapid advancement of large language models (LLMs), recent years have witnessed many promising studies on leveraging LLM-based agents to simulate human social behavior. While prior work has demonstrated significant potential across various domains, much of it has focused on specific scenarios involving a limited number of agents and has lacked the ability to adapt when errors occur during simulation. To overcome these limitations, we propose a novel LLM-agent-based simulation platform called GenSim, which: (1) Abstracts a set of general functions to simplify the simulation of customized social scenarios; (2) Supports one hundred thousand agents to better simulate large-scale populations in real-world contexts; (3) Incorporates error-correction mechanisms to ensure more reliable and long-term simulations. To evaluate our platform, we assess both the efficiency of large-scale agent simulations and the effectiveness of the error-correction mechanisms. To our knowledge, GenSim represents an initial step toward a general, large-scale, and correctable social simulation platform based on LLM agents, promising to further advance the field of social science.
+
+<p align="center">
+  <img src="assets/framework.png" alt="GenSim Framework" width="100%">
+  <br>
+  <b>Figure 1</b>: GenSim Framework
+</p>
+
+## 1. Install Dependencies
+#### 1.1 Agentscope:
+
 Install from source code (https://github.com/pan-x-c/AgentScope/tree/feature/pxc/async_create_agent). 
-    
-- Modify the default function parameter `timeout` of `call_agent_func` in `src.agentscope.rpc.rpc_client.py` to 60000.
-- Add two lines of code:
+- Add two lines of code in the ``__init__`` function of `OpenAIWrapperBase` in the file `src/agentscope/models/openai_model.py`:
     ```python
     self.api_key = api_key
     self.client_args = client_args or {}
     ```
-In the ``__init__`` function of `OpenAIWrapperBase` in the file `src/agentscope/models/openai_model.py`.
-- Modify the variables in the `src/agentscope/constants.py` file:
-    ```python
-    _DEFAULT_RPC_OPTIONS = [
-        ("grpc.max_send_message_length", 64 * 1024 * 1024),
-        ("grpc.max_receive_message_length", 64 * 1024 * 1024),
-        ("grpc.max_metadata_size", 64 * 1024),
-    ]
-    _DEFAULT_RPC_TIMEOUT = 2
-    _DEFAULT_RPC_RETRY_TIMES = 20
-    ```
 
-**vllm**
-```bash
-pip install vllm
+#### 1.2 Install the required dependencies:
+```
+pip install -r requirements.txt
 ```
 
-
-### 1. Launch Embedding Model
-1. Run 
-```bash
-bash simulation/tools/launch_multi_emb_models.sh
+### 2. Launch Embedding Model
+#### 2.1 Run 
+```
+bash embedding_service/launch_multi_emb_models.sh
 ```
 to launch the embedding model services.
 
-2. Get the `embedding_api` (for example, [http://localhost:8003/](http://localhost:8003/)), and fill that URL into `simulation/examples/job_seeking/configs/simulation_config.yml`.
+#### 2.2 Config
+Get the `embedding_api` (for example, [http://localhost:8001/](http://localhost:8003/)), and fill that URL into `simulation/examples/<scenario>/configs/simulation_config.yml`.
 
-### 2. Launch LLM Model
-1. Run 
+## 2. Launch LLM Model
+#### 2.1 Run 
 ```bash
-bash llm/launch_all_llm.sh
+bash llm_service/launch_all_llm.sh
 ```
 to launch the LLM model server.
 
-2. Get the `base_url` (for example, [http://localhost:8083/](http://localhost:8083/v1)), and fill that URL into `simulation/examples/job_seeking/configs/model_configs.json`. You can set multiply LLM models.
+#### 2.2 Config
+Get the `llm_api` (for example, [http://localhost:8083/](http://localhost:8083/v1)), and fill that URL into `simulation/examples/<scenario>/configs/model_configs.json`. You can set multiply LLM models.
 
-### 3. Config
-Configure the following files in the configs directory of the specific scenario (e.g., `examples/job_seeking`):
+## 3. Config
+Configure the following files in the configs directory of the specific scenario (e.g., `simulation/examples/<scenario>/configs`):
 
     - simulation_config.yml
     - memory_config.json
     - model_configs.json
-    - all_xx_agent_configs.json
-    - xx_agent_configs.json
-    - all_yy_agent_configs.json
-    - yy_agent_configs.json
-    - ......
+    - xAgent_configs.json
+    - yAgent_configs.json
+    - ...
 
 p.s. 
-1. The `xx` and `yy` in the file names are placeholders for the specific agent types.
-2. The `all_xx_agent_configs.json` file is used to store all configurations for xx-type agents (serving the frontend's agent quantity selection operations), while `xx_agent_configs.json` is the configuration file that the simulation will actually read later.
+The `x` and `y` in the file names are placeholders for the specific agent class.
 
-## Pipline
-### 1. Launch Distributed Server
+
+## Simulate
+### 1. Launch Distributed Agent Server
 Run the following command to launch the distributed server:
 ```bash
-bash simulation/examples/job_seeking/launch_server.sh <server_num_per_host> <base_port>
+bash simulation/launch_server.sh <server_num_per_host> <base_port> <scenario>
 ```
 
 ### 2. Run Simulation
 Run the following command to run the simulation:
 ```python
-python simulation/examples/job_seeking/simulator.py
+python simulation/examples/<scenario>/simulator.py
 ```
 
 ### 3. Kill Distributed Server
+After the simulation is completed, you can kill the distributed server.
+
 Run the following command to kill the distributed server:
 ```bash
-bash simulation/examples/job_seeking/kill_all_server.sh
+bash simulation/kill_all_server.sh
 ```
 
-
-### Monitor
-You can run the command `as_studio` in the terminal to monitor the server.

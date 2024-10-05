@@ -1,25 +1,30 @@
 #!/bin/bash
 
-if [ -z "\$1" ]; then
-    echo "usage: $0 <port> [gpu_id]"
+if [ -z "$1" ] || [ -z "$2" ]; then
+    echo "usage: $0 <port> <gpu_id>"
     exit 1
 fi
 
 port=$1
-gpuid=${2:-0}
+gpuid=$2
 export CUDA_VISIBLE_DEVICES="$gpuid"
 export VLLM_ATTENTION_BACKEND=XFORMERS
 
-echo "GPU ID: $CUDA_VISIBLE_DEVICES"
 echo "Port: $port"
+echo "GPU ID: $CUDA_VISIBLE_DEVICES"
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-save_dir="$(realpath "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")/saves"
+current_dir=$(cd `dirname $0`; pwd)
+llm_tuning_dir="$(dirname "$current_dir")/llm_tuning/saves"
 
-if [ -f "${save_dir}/adapter_config.json" ]; then
-    echo "Using adapter-based LORA." >> "${script_dir}/.log"
+LLM_FILE="your_llm_path"
+
+LOG_FILE="${current_dir}/.log"
+PID_FILE="${current_dir}/.pid"
+
+if [ -f "${llm_tuning_dir}/adapter_config.json" ]; then
+    echo "Using adapter-based LORA." >> $LOG_FILE
     python -m vllm.entrypoints.openai.api_server \
-        --model /data/pretrain_dir/Meta-Llama-3-8B-Instruct \
+        --model $LLM_FILE \
         --trust-remote-code \
         --port $port \
         --dtype auto \
@@ -31,10 +36,10 @@ if [ -f "${save_dir}/adapter_config.json" ]; then
         --disable-frontend-multiprocessing \
         --guided-decoding-backend=lm-format-enforcer \
         --gpu-memory-utilization 0.8 \
-        2>> "${script_dir}/.log" &
+        2>> $LOG_FILE &
 else
     python -m vllm.entrypoints.openai.api_server \
-        --model /data/pretrain_dir/Meta-Llama-3-8B-Instruct \
+        --model $LLM_FILE \
         --trust-remote-code \
         --port $port \
         --dtype auto \
@@ -45,10 +50,10 @@ else
         --disable-frontend-multiprocessing \
         --guided-decoding-backend=lm-format-enforcer \
         --gpu-memory-utilization 0.9 \
-        2>> "${script_dir}/.log" &
+        2>> $LOG_FILE &
 fi
 
-echo $! >> "$(dirname "$0")/.pid"
+echo $! >> $PID_FILE
 
 sleep 10
 

@@ -1,6 +1,9 @@
 #!/bin/bash
 
-PID_FILE="$(realpath "$(dirname "${BASH_SOURCE[0]}")")/.pid"
+current_dir="$(cd "$(dirname "$0")"; pwd)"
+parent_dir="$(cd "$(dirname "$0")/.."; pwd)"
+PID_FILE="$current_dir/.pid"
+LOG_FILE="$current_dir/.log"
 
 if [ -f "$PID_FILE" ]; then
     while IFS= read -r PID; do
@@ -15,3 +18,9 @@ if [ -f "$PID_FILE" ]; then
 else
     echo "No PID file found."
 fi
+
+rm "$LOG_FILE"
+rm -rf "$parent_dir/saves"
+rm -rf "$parent_dir/tmp_saves"
+
+echo "Tuning process has been terminated."
