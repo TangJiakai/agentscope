@@ -94,14 +94,14 @@ async def lifespan(app: FastAPI):
     port = os.environ.get("PORT", 9000)
     backend_server_url = f"http://{host}:{port}"
     # Launch LLM
-    launch_llm_sh_path = os.path.join(proj_path, "exp2", "scripts", "launch_llm.sh")
-    run_sh_async(launch_llm_sh_path, "8084", "2")
+    # launch_llm_sh_path = os.path.join(proj_path, "exp2", "scripts", "launch_llm.sh")
+    # run_sh_async(launch_llm_sh_path, "8084", "2")
 
     yield
 
     # Kill LLM
-    kill_llm_sh_path = os.path.join(proj_path, "exp2", "scripts", "kill_llm.sh")
-    run_sh_blocking(kill_llm_sh_path)
+    # kill_llm_sh_path = os.path.join(proj_path, "exp2", "scripts", "kill_llm.sh")
+    # run_sh_blocking(kill_llm_sh_path)
 
     # Clean distributed servers
     if distributed:
@@ -432,98 +432,98 @@ def get_agents(
 #     return [try_serialize_dict(agent.__dict__) for agent in agents]
 
 
-@app.get("/agent/config", response_model=List[AgentConfig])
-def get_agent_config():
-    configs_path = Path(
-        os.path.join(proj_path, "simulation", "examples", _scene, "configs")
-    )
-    all_agent_configs = configs_path.glob("all_*_configs.json")
-    resp = []
-    for agent_config in all_agent_configs:
-        with open(agent_config, "r") as f:
-            agent_config = json.load(f)
-            agent_cls = {
-                "class": agent_config[0]["class"],
-                "num_agents": len(agent_config),
-            }
-            print(agent_cls)
-            resp.append(AgentConfig(**agent_cls))
-    return resp
-
-
-@app.put("/agent/config")
-def put_agent_config(req: List[AgentConfig]):
-    req = {agent.cls: agent.num_agents for agent in req}
-    configs_path = Path(
-        os.path.join(proj_path, "simulation", "examples", _scene, "configs")
-    )
-    all_agent_configs = configs_path.glob("all_*_configs.json")
-    for all_agent_config in all_agent_configs:
-        with open(all_agent_config, "r") as f:
-            agent_configs = json.load(f)
-            agent_num = req[agent_configs[0]["class"]]
-            agent_configs = random.choices(agent_configs, k=agent_num)
-            agent_configs_path = os.path.join(
-                configs_path, all_agent_config.name.removeprefix("all_")
-            )
-            with open(agent_configs_path, "w") as agent_config_file:
-                json.dump(
-                    agent_configs, agent_config_file, ensure_ascii=False, indent=4
-                )
-    return HTMLResponse()
-
-
-# @app.get("/agent/config", response_model=List[str])
-# def get_agent_classes_config():
-#     agent_module = importlib.import_module(f"simulation.examples.{_scene}.agent")
-#     agent_classes = inspect.getmembers(agent_module, inspect.isclass)
-#     resp = [agent_cls[0] for agent_cls in agent_classes]
-#     # configs_path = Path(
-#     #     os.path.join(proj_path, "simulation", "examples", _scene, "configs")
-#     # )
-#     # all_agent_configs = configs_path.glob("all_*_agent_configs.json")
-#     # resp = []
-#     # for agent_config in all_agent_configs:
-#     #     with open(agent_config, "r") as f:
-#     #         agent_config = json.load(f)
-#     #         agent_cls = {
-#     #             "class": agent_config[0]["class"],
-#     #             "num_agents": len(agent_config),
-#     #         }
-#     #         print(agent_cls)
-#     #         resp.append(AgentConfig(**agent_cls))
+# @app.get("/agent/config", response_model=List[AgentConfig])
+# def get_agent_config():
+#     configs_path = Path(
+#         os.path.join(proj_path, "simulation", "examples", _scene, "configs")
+#     )
+#     all_agent_configs = configs_path.glob("all_*_configs.json")
+#     resp = []
+#     for agent_config in all_agent_configs:
+#         with open(agent_config, "r") as f:
+#             agent_config = json.load(f)
+#             agent_cls = {
+#                 "class": agent_config[0]["class"],
+#                 "num_agents": len(agent_config),
+#             }
+#             print(agent_cls)
+#             resp.append(AgentConfig(**agent_cls))
 #     return resp
 
 
 # @app.put("/agent/config")
-# def put_agent_config(req: AgentConfig):
-#     configs_path = os.path.join(proj_path, "simulation", "examples", _scene, "configs")
-#     profile_path = os.path.join(configs_path, f"all_{req.cls}_configs.json")
-#     with open(profile_path, "r") as f:
-#         agent_configs = json.load(f)
-#         agent_configs = random.choices(agent_configs, k=req.num_agents)
-#         agent_configs_path = os.path.join(configs_path, f"{req.cls}_configs.json")
-#         with open(agent_configs_path, "w") as agent_config_file:
-#             json.dump(agent_configs, agent_config_file, ensure_ascii=False, indent=4)
+# def put_agent_config(req: List[AgentConfig]):
+#     req = {agent.cls: agent.num_agents for agent in req}
+#     configs_path = Path(
+#         os.path.join(proj_path, "simulation", "examples", _scene, "configs")
+#     )
+#     all_agent_configs = configs_path.glob("all_*_configs.json")
+#     for all_agent_config in all_agent_configs:
+#         with open(all_agent_config, "r") as f:
+#             agent_configs = json.load(f)
+#             agent_num = req[agent_configs[0]["class"]]
+#             agent_configs = random.choices(agent_configs, k=agent_num)
+#             agent_configs_path = os.path.join(
+#                 configs_path, all_agent_config.name.removeprefix("all_")
+#             )
+#             with open(agent_configs_path, "w") as agent_config_file:
+#                 json.dump(
+#                     agent_configs, agent_config_file, ensure_ascii=False, indent=4
+#                 )
 #     return HTMLResponse()
 
 
-# @app.post("/agent/profile/{cls}", response_model=AgentConfig)
-# async def post_agent_profile(cls: str, profile: UploadFile):
-#     profile_path = os.path.join(
-#         proj_path,
-#         "simulation",
-#         "examples",
-#         _scene,
-#         "configs",
-#         f"all_{cls}_configs.json",
-#     )
-#     async with aiofiles.open(profile_path, "wb") as f:
-#         await f.write(await profile.read())
-#     with open(profile_path, "r") as f:
-#         agent_configs = json.load(f)
-#         num_agents = len(agent_configs)
-#     return AgentConfig(**{"class": cls, "num_agents": num_agents})
+@app.get("/agent/config", response_model=List[str])
+def get_agent_classes_config():
+    agent_module = importlib.import_module(f"simulation.examples.{_scene}.agent")
+    agent_classes = inspect.getmembers(agent_module, inspect.isclass)
+    resp = [agent_cls[0] for agent_cls in agent_classes]
+    # configs_path = Path(
+    #     os.path.join(proj_path, "simulation", "examples", _scene, "configs")
+    # )
+    # all_agent_configs = configs_path.glob("all_*_agent_configs.json")
+    # resp = []
+    # for agent_config in all_agent_configs:
+    #     with open(agent_config, "r") as f:
+    #         agent_config = json.load(f)
+    #         agent_cls = {
+    #             "class": agent_config[0]["class"],
+    #             "num_agents": len(agent_config),
+    #         }
+    #         print(agent_cls)
+    #         resp.append(AgentConfig(**agent_cls))
+    return resp
+
+
+@app.put("/agent/config")
+def put_agent_config(req: AgentConfig):
+    configs_path = os.path.join(proj_path, "simulation", "examples", _scene, "configs")
+    profile_path = os.path.join(configs_path, f"all_{req.cls}_configs.json")
+    with open(profile_path, "r") as f:
+        agent_configs = json.load(f)
+        agent_configs = random.choices(agent_configs, k=req.num_agents)
+        agent_configs_path = os.path.join(configs_path, f"{req.cls}_configs.json")
+        with open(agent_configs_path, "w") as agent_config_file:
+            json.dump(agent_configs, agent_config_file, ensure_ascii=False, indent=4)
+    return HTMLResponse()
+
+
+@app.post("/agent/profile/{cls}", response_model=AgentConfig)
+async def post_agent_profile(cls: str, profile: UploadFile):
+    profile_path = os.path.join(
+        proj_path,
+        "simulation",
+        "examples",
+        _scene,
+        "configs",
+        f"all_{cls}_configs.json",
+    )
+    async with aiofiles.open(profile_path, "wb") as f:
+        await f.write(await profile.read())
+    with open(profile_path, "r") as f:
+        agent_configs = json.load(f)
+        num_agents = len(agent_configs)
+    return AgentConfig(**{"class": cls, "num_agents": num_agents})
 
 
 @app.get("/agent/favorite", response_model=List[AgentInfo])
@@ -708,6 +708,48 @@ def put_memory_config(memory_config: MemoryConfig):
 #             )
 #         )
 #     return resp
+
+
+# @app.get("/checkpoint/{scene}", response_model=List[CheckpointResp])
+# def get_checkpoint(scene: str = "job_seeking"):
+#     runs = Path(os.path.join(proj_path, "simulation", "examples", scene, "runs"))
+#     if not runs.exists():
+#         runs.mkdir()
+#     checkpoints = runs.glob("*/*.pkl")
+#     run_names = [checkpoint.parent for checkpoint in checkpoints]
+#     resp = []
+#     for run_name in run_names:
+#         checkpoints = run_name.glob("*.pkl")
+#         resp.append(
+#             CheckpointResp(
+#                 run_name=run_name.name,
+#                 pkls=[checkpoint.name for checkpoint in checkpoints],
+#             )
+#         )
+#     return resp
+
+
+# @app.post("/checkpoint/{scene}", response_model=CheckpointReq)
+# def load_checkpoint(checkpoint_req: CheckpointReq, scene: str = "job_seeking"):
+#     logger.info(f"Load checkpoint from {checkpoint_req.run_name}/{checkpoint_req.pkl}")
+#     checkpoint_path = os.path.join(
+#         proj_path,
+#         "simulation",
+#         "examples",
+#         scene,
+#         "runs",
+#         checkpoint_req.run_name,
+#         checkpoint_req.pkl,
+#     )
+#     simulation_config_path = os.path.join(
+#         proj_path, "simulation", "examples", scene, "configs", "simulation_config.yml"
+#     )
+#     with open(simulation_config_path, "r") as f:
+#         simulation_config = yaml.safe_load(f)
+#     simulation_config["restore_file_path"] = checkpoint_path
+#     with open(simulation_config_path, "w") as f:
+#         yaml.safe_dump(simulation_config, f)
+#     return HTMLResponse()
 
 
 @app.get("/checkpoint")
@@ -901,36 +943,36 @@ def chatgpt(req: GPTReq):
     return HTMLResponse()
 
 
-@app.post("/tune/{mode}")
-def tune(mode: Literal["rewrite", "rate"]):
+# @app.post("/tune/{mode}")
+# def tune(mode: Literal["rewrite", "rate"]):
 
-    # Kill LLM
-    kill_llm_sh_path = os.path.join(proj_path, "exp2", "scripts", "kill_llm.sh")
-    run_sh_blocking(kill_llm_sh_path)
+#     # Kill LLM
+#     kill_llm_sh_path = os.path.join(proj_path, "exp2", "scripts", "kill_llm.sh")
+#     run_sh_blocking(kill_llm_sh_path)
 
-    # Tune LLM
-    tune_llm_sh_path = os.path.join(proj_path, "exp2", "scripts", "tune_llm.sh")
-    if mode == "rewrite":
-        tuning_mode = "sft"
-    elif mode == "rate":
-        tuning_mode = "ppo"
-    run_sh_train_blocking(tune_llm_sh_path, tuning_mode)
+#     # Tune LLM
+#     tune_llm_sh_path = os.path.join(proj_path, "exp2", "scripts", "tune_llm.sh")
+#     if mode == "rewrite":
+#         tuning_mode = "sft"
+#     elif mode == "rate":
+#         tuning_mode = "ppo"
+#     run_sh_train_blocking(tune_llm_sh_path, tuning_mode)
 
-    # Launch LLM
-    launch_llm_sh_path = os.path.join(
-        proj_path, "exp2", "scripts", "launch_llm.sh"
-    )
-    run_sh_async(launch_llm_sh_path, "8084", "2")
+#     # Launch LLM
+#     launch_llm_sh_path = os.path.join(
+#         proj_path, "exp2", "scripts", "launch_llm.sh"
+#     )
+#     run_sh_async(launch_llm_sh_path, "8084", "2")
 
-    # Reset agents' model.model_name
-    agents = simulator.agents
-    results = []
-    for agent in agents:
-        results.append(agent.set_attr("model.model_name", "lora"))
-    for res in results:
-        res.result()
+#     # Reset agents' model.model_name
+#     agents = simulator.agents
+#     results = []
+#     for agent in agents:
+#         results.append(agent.set_attr("model.model_name", "lora"))
+#     for res in results:
+#         res.result()
 
-    return HTMLResponse()
+#     return HTMLResponse()
 
 
 @app.post("/export")

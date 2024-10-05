@@ -10,8 +10,8 @@ embedding_api: [
 ]
 load_simulator_path: 
 host: localhost
-base_port: 13000
-server_num_per_host: 90
+base_port: 15000
+server_num_per_host: 10
 runtime_id: 
 
 # custom settings
