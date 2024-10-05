@@ -82,3 +82,43 @@ Run the following command to kill the distributed server:
 bash simulation/kill_all_server.sh
 ```
 
+## Experiments
+### 1. The benefits of Large Language Model-based Agents
+
+<p align="center">
+  <img src="assets/experiment/standard_deviation.png" alt="The standard deviation of the simulation results with different agent scales" width="60%">
+  <br>
+  <b>Figure 2</b>: The standard deviation of the simulation results with different agent scales
+</p>
+
+### 2. Time Cost vs. Agent Quality 
+
+<p align="center">
+  <img src="assets/experiment/time_vs_agent_quanlity.png" alt="The time costs of different numbers of agents" width="100%">
+  <br>
+  <b>Figure 3</b>: The time costs of different numbers of agents
+</p>
+
+### 3. The effects of our error-correction mechanism
+
+<p align="center">
+  <img src="assets/experiment/error-correction.png" alt="The effects of our error-correction mechanism in single (a) and multi (b) rounds, respectively" width="100%">
+  <br>
+  <b>Figure 4</b>: The effects of our error-correction mechanism in single (a) and multi (b) rounds, respectively
+</p>
+
+### 4. Time Cost vs. GPU Number
+
+<p align="center">
+  <img src="assets/experiment/time_vs_gpunum.png" alt="The time costs of different numbers of LLM" width="100%">
+  <br>
+  <b>Figure 5</b>: The time costs of different numbers of LLM
+</p>
+
+### 5. Platform Display
+
+<p align="center">
+  <img src="assets/platform.png" alt="The platform display" width="100%">
+  <br>
+  <b>Figure 6</b>: The platform display
+</p>
