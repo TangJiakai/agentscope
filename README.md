@@ -37,14 +37,14 @@ to launch the embedding model services.
 #### 2.2 Config
 Get the `embedding_api` (for example, [http://localhost:8001/](http://localhost:8003/)), and fill that URL into `simulation/examples/<scenario>/configs/simulation_config.yml`.
 
-## 2. Launch LLM Model
-#### 2.1 Run 
+## 3. Launch LLM Model
+#### 3.1 Run 
 ```bash
 bash llm_service/launch_all_llm.sh
 ```
 to launch the LLM model server.
 
-#### 2.2 Config
+#### 3.2 Config
 Get the `llm_api` (for example, [http://localhost:8083/](http://localhost:8083/v1)), and fill that URL into `simulation/examples/<scenario>/configs/model_configs.json`. You can set multiply LLM models.
 
 ## 3. Config
@@ -61,20 +61,20 @@ p.s.
 The `x` and `y` in the file names are placeholders for the specific agent class.
 
 
-## Simulate
-### 1. Launch Distributed Agent Server
+## 4. Simulate
+### 4.1 Launch Distributed Agent Server
 Run the following command to launch the distributed server:
 ```bash
 bash simulation/launch_server.sh <server_num_per_host> <base_port> <scenario>
 ```
 
-### 2. Run Simulation
+### 4.2 Run Simulation
 Run the following command to run the simulation:
 ```python
 python simulation/examples/<scenario>/simulator.py
 ```
 
-### 3. Kill Distributed Server
+### 4.3 Kill Distributed Server
 After the simulation is completed, you can kill the distributed server.
 
 Run the following command to kill the distributed server:

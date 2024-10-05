@@ -2,7 +2,7 @@
     {
         "config_name": "LLM-1",
         "model_type": "openai_chat",
-        "model_name": "/mnt/jiakai/Download/Meta-Llama-3-8B-Instruct",
+        "model_name": "your_llm_path",
         "api_key": "tangjiakai",
         "client_args": {
             "max_retries": 10,
@@ -17,7 +17,7 @@
     {
         "config_name": "LLM-2",
         "model_type": "openai_chat",
-        "model_name": "/mnt/jiakai/Download/Meta-Llama-3-8B-Instruct",
+        "model_name": "your_llm_path",
         "api_key": "tangjiakai",
         "client_args": {
             "max_retries": 10,
@@ -32,7 +32,7 @@
     {
         "config_name": "LLM-3",
         "model_type": "openai_chat",
-        "model_name": "/mnt/jiakai/Download/Meta-Llama-3-8B-Instruct",
+        "model_name": "your_llm_path",
         "api_key": "tangjiakai",
         "client_args": {
             "max_retries": 10,
@@ -47,7 +47,7 @@
     {
         "config_name": "LLM-4",
         "model_type": "openai_chat",
-        "model_name": "/mnt/jiakai/Download/Meta-Llama-3-8B-Instruct",
+        "model_name": "your_llm_path",
         "api_key": "tangjiakai",
         "client_args": {
             "max_retries": 10,
