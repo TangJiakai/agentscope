@@ -7,9 +7,9 @@ meta_data_path = "all_SeekerAgent_configs.json"
 
 scale_map = {
     "2421": 1,
-    "4842": 2,
     "9684": 4,
-    "49233": 20,
+    "24210": 10,
+    "48420": 20,
     "99261": 41,
 }
 
