@@ -91,7 +91,7 @@ bash simulation/kill_all_server.sh
   <b>Figure 2</b>: The standard deviation of the simulation results with different agent scales
 </p>
 
-### 2. Time Cost vs. Agent Quality 
+### 2. Time Cost :vs: Agent Quality 
 
 <p align="center">
   <img src="assets/experiment/time_vs_agent_quanlity.png" alt="The time costs of different numbers of agents" width="100%">
@@ -107,7 +107,7 @@ bash simulation/kill_all_server.sh
   <b>Figure 4</b>: The effects of our error-correction mechanism in single (a) and multi (b) rounds, respectively
 </p>
 
-### 4. Time Cost vs. GPU Number
+### 4. Time Cost :vs: GPU Number 
 
 <p align="center">
   <img src="assets/experiment/time_vs_gpunum.png" alt="The time costs of different numbers of LLM" width="100%">
@@ -122,3 +122,10 @@ bash simulation/kill_all_server.sh
   <br>
   <b>Figure 6</b>: The platform display
 </p>
+
+## :page_with_curl: Citation
+Welcome to cite our paper if you find it helpful. [![Paper](https://img.shields.io/badge/arxiv-PDF-red)](xxx)
+
+```
+xxx
+```
