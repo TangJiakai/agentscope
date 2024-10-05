@@ -14,13 +14,6 @@ from loguru import logger
 import agentscope
 from agentscope.agents.agent import DistConf
 
-from simulation.helpers.events import (
-    play_event,
-    stop_event,
-    kill_event,
-    pause_success_event,
-    check_pause,
-)
 from simulation.helpers.message import message_manager
 from simulation.helpers.constants import *
 from agentscope.constants import _DEFAULT_SAVE_DIR
@@ -101,13 +94,13 @@ class Simulator(BaseSimulator):
             for i in range(env_num)
         ]
         ann = Msg(
-                name="Boss",
-                content=(
-                    "This is a game development work group, "
-                    "please discuss how to develop an open world game."
-                ),
-                role="system",
-            )
+            name="Boss",
+            content=(
+                "This is a game development work group, "
+                "please discuss how to develop an open world game."
+            ),
+            role="system",
+        )
         envs = []
         with futures.ThreadPoolExecutor() as executor:
             args = [
@@ -186,41 +179,13 @@ class Simulator(BaseSimulator):
         self._set_env4agents()
 
     def run(self):
-        play_event.set()
-
         message_manager.message_queue.put("Start simulation.")
         for r in range(self.cur_round, self.config["round_n"] + 1):
             logger.info(f"Round {r} started")
             self._one_round()
             self.env.chatting()
             self.save()
-            if stop_event.is_set():
-                message_manager.message_queue.put(
-                    f"Stop simulation by user at round {r}."
-                )
-                logger.info(f"Stop simulation by user at round {r}.")
-                break
-            pause_success_event.set()
-            check_pause()
-            if kill_event.is_set():
-                logger.info(f"Kill simulation by user at round {r}.")
-                return
 
-            # message_save_path = os.path.join(
-            #     "/mnt/jiakai/GeneralSimulation/runs",
-            #     self.config["project_name"],
-            #     self.config["runtime_id"],
-            # )
-            # resp = requests.post(
-            #     "http://localhost:9111/store_message",
-            #     json={
-            #         "save_data_path": os.path.join(
-            #             message_save_path, f"Round-{r}.json"
-            #         ),
-            #     },
-            # )
-
-            
         self.cur_round = -1
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
