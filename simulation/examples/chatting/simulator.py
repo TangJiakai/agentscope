@@ -69,7 +69,6 @@ class Simulator(BaseSimulator):
         )
 
         index_ls = list(range(agent_num))
-        agent_relationships = []
         random.shuffle(index_ls)
         for config, shuffled_idx in zip(agent_configs, index_ls):
             model_config = model_configs[shuffled_idx // agent_num_per_llm]
