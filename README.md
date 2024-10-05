@@ -82,20 +82,20 @@ p.s.
 The `x` and `y` in the file names are placeholders for the specific agent class.
 
 
-### 2.3 Starting Simulation
-#### 2.3.1 Launch Distributed Agent Server
+### 2.4 Starting Simulation
+#### 2.4.1 Launch Distributed Agent Server
 Run the following command to launch the distributed server:
 ```bash
 bash simulation/launch_server.sh <server_num_per_host> <base_port> <scenario>
 ```
 
-#### 2.3.2 Run Simulator
-Run the following command to run the simulation:
+#### 2.4.2 Run Simulator
+Run the following command to launch the simulator:
 ```python
 python simulation/examples/<scenario>/simulator.py
 ```
 
-#### 2.3.3 Kill Distributed Server
+#### 2.4.3 Kill Distributed Server
 After the simulation is completed, you can kill the distributed server.
 
 Run the following command to kill the distributed server:
@@ -103,7 +103,7 @@ Run the following command to kill the distributed server:
 bash simulation/kill_all_server.sh
 ```
 
-## 3. Efficiency and Effectiveness of GenSim Platform
+## 3. Efficiency and Effectiveness of GenSim
 ### 3.1 Efficiency
 #### 3.1.1 Time Cost :vs: Agent Quality 
 
