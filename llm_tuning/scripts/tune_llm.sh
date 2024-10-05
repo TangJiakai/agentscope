@@ -5,7 +5,7 @@ export CUDA_VISIBLE_DEVICES="0"
 current_dir=$(cd `dirname $0`; pwd)
 parent_dir=$(cd `dirname $0`/..; pwd)
 
-LLM_FILE="/mnt/jiakai/Download/Meta-Llama-3-8B-Instruct"
+LLM_FILE="your_llm_path"
 
 LOG_FILE="$current_dir/.log"
 PID_FILE="$current_dir/.pid"
