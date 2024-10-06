@@ -147,7 +147,7 @@ nohup.output
 .vscode/
 nohup.out
 *_all_*.json
-exp1/
+exp*/
 llm_tuning/datasets/ori_data/*
 **/*saves
 *.pid

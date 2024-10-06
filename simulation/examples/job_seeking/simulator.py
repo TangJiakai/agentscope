@@ -14,7 +14,6 @@ import faiss
 
 from agentscope.agents.agent import DistConf
 
-from simulation.helpers.message import message_manager
 from simulation.helpers.constants import *
 from simulation.examples.job_seeking.agent import *
 from simulation.helpers.base_env import BaseEnv
@@ -222,13 +221,11 @@ class Simulator(BaseSimulator):
             self.set_job_ids_pool(seeker_agents, seeker_configs)
 
     def run(self):
-        message_manager.message_queue.put("Start simulation.")
         for r in range(self.cur_round, self.config["round_n"] + 1):
             logger.info(f"Round {r} started")
             _ = self._one_round()
             self.save()
 
-        message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 
 
