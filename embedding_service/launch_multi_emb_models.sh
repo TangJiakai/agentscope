@@ -2,7 +2,7 @@
 
 port_list=(8666 8667 8668 8669)
 gpu_list=(0 1 2 3)
-model_path="your_model_path"
+model_path="your_embedding_model_path"
 
 script_path=$(cd `dirname $0`; pwd)
 PID_FILE="${script_path}/.pid"

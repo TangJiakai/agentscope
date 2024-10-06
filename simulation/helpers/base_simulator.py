@@ -95,7 +95,7 @@ class BaseSimulator:
                 shuffled_idx % embedding_api_num
             ]
 
-        return agent_configs
+        return agent_configs if len(agent_configs) > 1 else agent_configs[0]
 
     def _set_env4agents(self):
         logger.info("Set all_agents for envs")
