@@ -56,7 +56,7 @@ You can also use other embedding APIs.
 #### 2.2.2 Embedding-Model Configuration
 Get the `embedding_api` (for example, [http://localhost:8001/](http://localhost:8003/)), and fill that URL into `simulation/examples/<scenario>/configs/simulation_config.yml`.
 
-## 2.3 Launching the LLM Models
+### 2.3 Launching the LLM Models
 #### 2.3.1 [Optional] Running the LLM Models
 ```bash
 bash llm_service/launch_all_llm.sh
