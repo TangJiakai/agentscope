@@ -138,11 +138,11 @@ We explore the evolution and enhancement of the model using two methods: SFT and
 - Figure 5(b) illustrates the performance of continuous evolution enhancement in a multi-round setting, and it can be observed that our method has a good self-correction effect.
 
 ## Acknowledgement  
-:rose::rose::rose:Gratitude is extended to the developers of [AgentScope](https://github.com/modelscope/agentscope), whose outstanding work has made this project possible. Their contributions have provided a solid foundation and essential tools that greatly enhanced the development process.
+:rose:Gratitude is extended to the developers of [AgentScope](https://github.com/modelscope/agentscope), whose outstanding work has made this project possible. Their contributions have provided a solid foundation and essential tools that greatly enhanced the development process.
 
-:sparkling_heart::sparkling_heart::sparkling_heart:Special thanks also go to [@GaoHeYang](https://github.com/PatrickG1014), [@WangLei](https://github.com/Paitesanshi), [@PanXuChen](https://github.com/pan-x-c), [@TanHaoRan](https://github.com/import-myself) and [@ChenYuShuo](https://github.com/chenyushuo) for their valuable contributions, feedback, and support throughout the course of this project. Their collaboration and insights have been instrumental in refining and improving the project.
+:sparkling_heart:Special thanks also go to [@GaoHeYang](https://github.com/PatrickG1014), [@WangLei](https://github.com/Paitesanshi), [@PanXuChen](https://github.com/pan-x-c), [@TanHaoRan](https://github.com/import-myself) and [@ChenYuShuo](https://github.com/chenyushuo) for their valuable contributions, feedback, and support throughout the course of this project. Their collaboration and insights have been instrumental in refining and improving the project.
 
-:heart::heart::heart:Sincere appreciation is expressed to everyone who has contributed to the success of this project.
+:heart:Sincere appreciation is expressed to everyone who has contributed to the success of this project.
 
 
 
