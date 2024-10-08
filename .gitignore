@@ -153,3 +153,5 @@ llm_tuning/datasets/ori_data/*
 *.pid
 **/*RecUserAgent_configs.json
 **/data_augment.py
+simulation/examples/recommendation/*RecUserAgent_configs.json
+nohup/

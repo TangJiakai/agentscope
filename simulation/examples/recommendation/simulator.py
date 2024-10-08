@@ -213,7 +213,8 @@ class Simulator(BaseSimulator):
             if kill_event.is_set():
                 logger.info(f"Kill simulation by user at round {r}.")
                 return
-
+            
+        self.cur_round = -1
         message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 

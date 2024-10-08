@@ -15,6 +15,11 @@ class MessageUnit(BaseModel):
     selection_num: Optional[int] = None
 
 
+class MessagesResp(BaseModel):
+    messages: List[MessageUnit]
+    pages: int
+
+
 class StateUnit(BaseModel):
     agent_id: str
     state: str

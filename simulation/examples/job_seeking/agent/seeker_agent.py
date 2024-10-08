@@ -92,6 +92,7 @@ class SeekerAgent(BaseAgent):
         self.job_ids_pool = job_ids_pool
         self.embedding = embedding
         self.env = env
+        self.gender = trait["Gender"]
 
         self.seeker = Seeker(name, cv, trait)
         self._update_profile()
@@ -141,17 +142,16 @@ class SeekerAgent(BaseAgent):
 
     @state.setter
     def state(self, new_value):
-        pass
-        # if hasattr(self, "backend_server_url"):
-        #     if new_value not in SeekerAgentStates:
-        #         raise ValueError(f"Invalid state: {new_value}")
-        #     self._state = new_value
-        #     url = f"{self.backend_server_url}/api/state"
-        #     resp = requests.post(
-        #         url, json={"agent_id": self.agent_id, "state": new_value}
-        #     )
-        #     if resp.status_code != 200:
-        #         logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
+        if hasattr(self, "backend_server_url"):
+            if new_value not in SeekerAgentStates:
+                raise ValueError(f"Invalid state: {new_value}")
+            self._state = new_value
+            url = f"{self.backend_server_url}/api/state"
+            resp = requests.post(
+                url, json={"agent_id": self.agent_id, "state": new_value}
+            )
+            if resp.status_code != 200:
+                logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
 
     @set_state("whether to seek")
     def _determine_if_seeking(self, **kwargs):
