@@ -3,7 +3,7 @@
         "config_name": "LLM-1",
         "model_type": "openai_chat",
         "model_name": "your_llm_model_path or id set in vllm",
-        "api_key": "tangjiakai",
+        "api_key": "api_key",
         "client_args": {
             "max_retries": 10,
             "base_url": "base_url",
@@ -18,7 +18,7 @@
         "config_name": "LLM-2",
         "model_type": "openai_chat",
         "model_name": "your_llm_model_path or id set in vllm",
-        "api_key": "tangjiakai",
+        "api_key": "api_key",
         "client_args": {
             "max_retries": 10,
             "base_url": "base_url",

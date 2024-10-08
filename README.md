@@ -151,8 +151,18 @@ We explore the evolution and enhancement of the model using two methods: SFT and
 GenSim uses [MIT License](./LICENSE). All data and code in this project can only be used for academic purposes.
 
 ## :page_with_curl: Citation
-Welcome to cite our paper if you find it helpful. [![Paper](https://img.shields.io/badge/arxiv-PDF-red)](xxx)
+If you find our work helpful for your research or application, please cite our papers.
 
-```
-xxx
-```
+[GenSim: A General Social Simulation Platform with Large Language Model based Agents](https://arxiv.org/abs/2410.04360)
+
+  ```
+  @misc{tang2024gensimgeneralsocialsimulation,
+      title={GenSim: A General Social Simulation Platform with Large Language Model based Agents}, 
+      author={Jiakai Tang and Heyang Gao and Xuchen Pan and Lei Wang and Haoran Tan and Dawei Gao and Yushuo Chen and Xu Chen and Yankai Lin and Yaliang Li and Bolin Ding and Jingren Zhou and Ji-Rong Wen},
+      year={2024},
+      eprint={2410.04360},
+      archivePrefix={arXiv},
+      primaryClass={cs.MA},
+      url={https://arxiv.org/abs/2410.04360}, 
+  }
+  ```
