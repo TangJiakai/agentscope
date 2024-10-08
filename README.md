@@ -14,9 +14,11 @@ With the rapid advancement of large language models (LLMs), recent years have wi
 
 ## Unique Features
 
-💡 GenSim provides a general framework for user customized simulations.
-💡 GenSim supports large-scale simulation (up to one handred thousands of agents).
-💡 GenSim has error-correction mechanisms for reliable simulations.
+💡 **GenSim provides a general framework for user customized simulations**
+
+💡 **GenSim supports large-scale simulation (up to one handred thousands of agents)** 
+
+💡 **GenSim has error-correction mechanisms for reliable simulations**
 
 
 
