@@ -61,7 +61,6 @@ class BaseAgent(AgentBase):
             memory_state = self.memory.__getstate__()
             memory_state["model"] = None
             memory_state.pop("get_tokennum_func", None)
-            memory_state.pop("_send_message", None)
             state["memory"] = memory_state
         return state
 
@@ -213,12 +212,8 @@ class BaseAgent(AgentBase):
             response = self.model(
                 prompt_msg, extra_body={"guided_choice": x.guided_choice}
             )
-            if not hasattr(x, "external_interview"):
-                self._send_message(prompt_msg, response, len(x.guided_choice))
         else:
             response = self.model(prompt_msg)
-            if not hasattr(x, "external_interview"):
-                self._send_message(prompt_msg, response)
 
         add_memory_msg = Msg(
             "user", instruction + observation + response.text, role="user"

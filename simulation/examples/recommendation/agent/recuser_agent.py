@@ -1,6 +1,5 @@
 import random
 import os
-import requests
 import jinja2
 from loguru import logger
 
@@ -19,29 +18,6 @@ scene_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 file_loader = jinja2.FileSystemLoader(os.path.join(scene_path, "prompts"))
 env = jinja2.Environment(loader=file_loader)
 Template = env.get_template("recuser_prompts.j2").module
-
-
-RecUserAgentStates = [
-    "idle",
-    "watching",
-    "chatting",
-    "posting",
-]
-
-
-def set_state(flag: str):
-    def decorator(func):
-        def wrapper(self, *args, **kwargs):
-            init_state = self.state
-            self.state = flag
-            try:
-                return func(self, *args, **kwargs)
-            finally:
-                self.state = init_state
-
-        return wrapper
-
-    return decorator
 
 
 class RecUserAgent(BaseAgent):
@@ -69,7 +45,6 @@ class RecUserAgent(BaseAgent):
             self.memory.embedding_api = embedding_api
             self.memory.model = self.model
             self.memory.get_tokennum_func = self.get_tokennum_func
-            self.memory._send_message = self._send_message
         self.env = env
         self._profile = f"- Name: {self.name} - Profile: {profile}"
         self.relationship = relationship
@@ -80,10 +55,6 @@ class RecUserAgent(BaseAgent):
         state = super().__getstate__()
         state.pop("relationship", None)
         return state
-
-    @property
-    def state(self):
-        return self._state
 
     def generate_feeling(self, movie):
         instruction = Template.generate_feeling_instruction()
@@ -122,7 +93,6 @@ class RecUserAgent(BaseAgent):
 
         return action
 
-    @set_state("watching")
     def recommend(self):
         user_info = (
             self.profile
@@ -143,7 +113,6 @@ class RecUserAgent(BaseAgent):
         feeling = self.generate_feeling(response)
         rating = self.rating_item(response)
 
-    @set_state("chatting")
     def conversation(self):
         friend_agent_id = random.choice(list(self.relationship.keys()))
         friend_agent = self.relationship[friend_agent_id]
@@ -159,7 +128,6 @@ class RecUserAgent(BaseAgent):
 
         return dialog_observation
 
-    @set_state("posting")
     def post(self):
         instruction = Template.post_instruction()
         msg = get_assistant_msg()
