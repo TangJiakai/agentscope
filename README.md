@@ -66,7 +66,8 @@ to launch the embedding model services.
 #### 2.2.2 Embedding-Model Configuration
 Get the `embedding_api` (for example, [http://localhost:8001/](http://localhost:8003/)), and fill that URL into `simulation/examples/<scenario>/configs/simulation_config.yml`.
 
-*p.s. You can set multiply embedding models.*
+p.s. 
+- You can set multiply embedding models.
 
 ### 2.3 Launching the LLM Models
 #### 2.3.1 [Optional] Running the LLM Models
@@ -75,9 +76,9 @@ bash llm_service/launch_all_llm.sh
 ```
 to launch the LLM model server.
 
-You can also use other LLM APIs based on vllm inference framework.
-
-*p.s. You can set multiply LLM models.*
+p.s. 
+- You can set multiply LLM models.
+- You can also use other LLM APIs based on vllm inference framework.
 
 #### 2.3.2 LLM Configuration
 Get the `llm_api` (for example, [http://localhost:8083/v1](http://localhost:8083/v1)), and fill that URL into `simulation/examples/<scenario>/configs/model_configs.json`. You can set multiply LLM models.
@@ -93,7 +94,7 @@ Configure the following files in the configs directory of the specific scenario 
     - ...
 
 p.s. 
-The `x` and `y` in the file names are placeholders for the specific agent class.
+- The `x` and `y` in the file names are placeholders for the specific agent class.
 
 
 ### 2.4 Starting Simulation
@@ -102,6 +103,11 @@ Run the following command to launch the distributed server:
 ```bash
 bash simulation/launch_server.sh <server_num_per_host> <base_port> <scenario>
 ```
+
+p.s. 
+- `<server_num_per_host>` is the number of servers per host (Typically less than or equal to the number of CPU cores on your computer); 
+- `<base_port>` is the starting port number (GenSim will allocate agent servers on ports ranging from `base_port` to `base_port + server_num_per_host - 1`);  
+- `<scenario>` is the name of the scenario you want to simulate.
 
 #### 2.4.2 Run Simulator
 Run the following command to launch the simulator:
