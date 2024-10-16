@@ -20,26 +20,6 @@ env = jinja2.Environment(loader=file_loader)
 Template = env.get_template("chatting_prompts.j2").module
 
 
-ChatRoomAgentStates = [
-    "idle",
-]
-
-
-def set_state(flag: str):
-    def decorator(func):
-        def wrapper(self, *args, **kwargs):
-            init_state = self.state
-            self.state = flag
-            try:
-                return func(self, *args, **kwargs)
-            finally:
-                self.state = init_state
-
-        return wrapper
-
-    return decorator
-
-
 class ChatRoomAgent(BaseAgent):
     """A agent with chat room"""
 
@@ -66,7 +46,6 @@ class ChatRoomAgent(BaseAgent):
             self.memory.get_tokennum_func = self.get_tokennum_func
         self.env = env
         self._profile = f"### Name: {self.name}\n" f"### Profile: {profile}"
-        self._state = "idle"
 
         self.room = None
         self.mentioned_messages = []

@@ -16,30 +16,6 @@ env = Environment(loader=file_loader)
 Template = env.get_template("interviewer_prompts.j2").module
 
 
-InterviewerAgentStates = [
-    "idle",
-    "screening cv",
-    "making decision",
-    "interviewing",
-    "receiving notif",
-]
-
-
-def set_state(flag: str):
-    def decorator(func):
-        def wrapper(self, *args, **kwargs):
-            init_state = self.state
-            self.state = flag
-            try:
-                return func(self, *args, **kwargs)
-            finally:
-                self.state = init_state
-
-        return wrapper
-
-    return decorator
-
-
 class Job(dict):
     def __init__(self, 
                 name: str, 
@@ -103,21 +79,15 @@ class InterviewerAgent(BaseAgent):
             self.memory = setup_memory(memory_config)
             self.memory.model = self.model
             self.memory.embedding_api = embedding_api
-            self.memory._send_message = self._send_message
             self.memory.get_tokennum_func = self.get_tokennum_func
         self.job = Job(name=name, jd=jd, jr=jr, company=company, salary=salary, benefits=benefits, location=location)
         self.embedding = embedding
         self.env = env
 
         self.update_profile()
-        self._state = "idle"
 
     def update_profile(self):
         self._profile = self.job.__str__()
-
-    @property
-    def state(self):
-        return self._state
 
     def get_attr(self, attr):
         if attr == "job":
@@ -133,7 +103,6 @@ class InterviewerAgent(BaseAgent):
             return job
         return super().get_attr(attr)
 
-    @set_state("screening cv")
     def screening_cv(self, seeker_info: str):
         msg = get_assistant_msg()
         msg.instruction = Template.screening_cv_instruction()
@@ -143,7 +112,6 @@ class InterviewerAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg).content)]
         return response
 
-    @set_state("interviewing")
     def interview(self, dialog: str):
         instruction = Template.interview_closing_instruction()
         guided_choice = ["no", "yes"]
@@ -155,7 +123,6 @@ class InterviewerAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg).content)]
         return response
 
-    @set_state("receiving notif")
     def receive_notification(self, seeker_name: str, is_accept: bool, **kwargs):
         self.observe(
             get_assistant_msg(

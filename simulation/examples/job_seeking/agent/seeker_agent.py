@@ -18,33 +18,6 @@ env = jinja2.Environment(loader=file_loader)
 Template = env.get_template("seeker_prompts.j2").module
 
 
-SeekerAgentStates = [
-    "idle",
-    "whether to seek",
-    "search number",
-    "searching jobs",
-    "jobs to apply",
-    "applying jobs",
-    "interviewing",
-    "making decision",
-]
-
-
-def set_state(flag: str):
-    def decorator(func):
-        def wrapper(self, *args, **kwargs):
-            init_state = self.state
-            self.state = flag
-            try:
-                return func(self, *args, **kwargs)
-            finally:
-                self.state = init_state
-
-        return wrapper
-
-    return decorator
-
-
 class Seeker(object):
     def __init__(self, name: str, cv: str, trait: str):
         self.name = name
@@ -88,14 +61,12 @@ class SeekerAgent(BaseAgent):
             self.memory.embedding_api = embedding_api
             self.memory.model = self.model
             self.memory.get_tokennum_func = self.get_tokennum_func
-            self.memory._send_message = self._send_message
         self.job_ids_pool = job_ids_pool
         self.embedding = embedding
         self.env = env
 
         self.seeker = Seeker(name, cv, trait)
         self._update_profile()
-        self._state = "idle"
 
     def _update_profile(self):
         cv = self.seeker.cv
@@ -135,11 +106,6 @@ class SeekerAgent(BaseAgent):
             f"### Working Condition \n{self.seeker.working_condition}"
         )
 
-    @property
-    def state(self):
-        return self._state
-
-    @set_state("whether to seek")
     def _determine_if_seeking(self, **kwargs):
         instruction = Template.determine_if_seeking_instruction()
         guided_choice = ["no", "yes"]
@@ -151,7 +117,6 @@ class SeekerAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg).content)]
         return response
 
-    @set_state("search number")
     def _determine_search_job_number(self, **kwargs):
         """Set search job number."""
         SearchJobNumber = 5
@@ -166,7 +131,6 @@ class SeekerAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg).content)]
         return int(response)
 
-    @set_state("searching jobs")
     def _determine_search_jobs(self, search_job_number: int, **kwargs):
         search_job_indices = random.sample(
             range(len(self.job_ids_pool)), search_job_number
@@ -179,7 +143,6 @@ class SeekerAgent(BaseAgent):
 
         return interviewer_agent_infos
 
-    @set_state("jobs to apply")
     def _determine_apply_job(self, interviewer_agent_infos: dict, **kwargs):
         """Determine which jobs to apply."""
         instruction = Template.determine_apply_jobs_instruction()
@@ -201,7 +164,6 @@ class SeekerAgent(BaseAgent):
 
         return apply_interviewer_agent_infos
 
-    @set_state("applying jobs")
     def _apply_job(self, apply_interviewer_agent_infos: dict, **kwargs):
         """Apply jobs."""
         results = []
@@ -225,7 +187,6 @@ class SeekerAgent(BaseAgent):
 
         return cv_passed_interviewer_agent_infos
 
-    @set_state("interviewing")
     def _interview_fun(self, cv_passed_interviewer_agent_infos: dict, **kwargs):
         """Interview."""
         results = []
@@ -251,7 +212,6 @@ class SeekerAgent(BaseAgent):
 
         return offer_interviewer_agent_infos
 
-    @set_state("making decision")
     def _make_final_decision(self, offer_interviewer_agent_infos: dict, **kwargs):
         """Make decision."""
         if len(offer_interviewer_agent_infos) == 0:
@@ -284,7 +244,6 @@ class SeekerAgent(BaseAgent):
         self.seeker.working_condition = "Position Name: " + final_job["Position Name"]
         self._update_profile()
 
-        # results = []
         for agent_id, agent in offer_interviewer_agent_infos.items():
             agent.receive_notification(self.seeker.name, agent_id == response)
 

@@ -65,8 +65,6 @@ class ShortLongMemory(ShortMemory.ShortMemory):
 
         def parse_func(response: ModelResponse) -> ModelResponse:
             try:
-                if hasattr(self, "_send_message"):
-                    self._send_message(prompt, response)
                 match = re.search(r"^\D*(\d+)", response.text.strip())
                 if match:
                     res = (float(match.group(1)) / 10) * self.importance_weight
