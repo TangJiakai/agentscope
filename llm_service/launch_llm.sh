@@ -32,7 +32,7 @@ if [ -f "${llm_tuning_dir}/adapter_config.json" ]; then
         --enforce-eager \
         --enable-prefix-caching \
         --enable-lora \
-        --lora-modules lora="${save_dir}" \
+        --lora-modules lora="${llm_tuning_dir}" \
         --disable-frontend-multiprocessing \
         --guided-decoding-backend=lm-format-enforcer \
         --gpu-memory-utilization 0.8 \
