@@ -3,7 +3,7 @@
 script_dir=$(cd "$(dirname "$0")"; pwd)
 
 # get number of server
-if ! [[ "$1" =~ ^[0-9]+$ ]] || ! [[ "$2" =~ ^[0-9]+$ ]] || [[ -z "\$3" ]]; then
+if ! [[ "$1" =~ ^[0-9]+$ ]] || ! [[ "$2" =~ ^[0-9]+$ ]] || [[ -z "$3" ]]; then
     echo "Usage: $0 <server_num_per_host> <base_port> <scenario>"
     exit 1
 fi

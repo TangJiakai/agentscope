@@ -298,7 +298,6 @@ class SeekerAgent(BaseAgent):
         self.seeker.working_condition = "Position Name: " + final_job["Position Name"]
         self._update_profile()
 
-        # results = []
         for agent_id, agent in offer_interviewer_agent_infos.items():
             agent.receive_notification(self.seeker.name, agent_id == response)
 
