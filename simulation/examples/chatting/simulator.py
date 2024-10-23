@@ -14,7 +14,6 @@ from loguru import logger
 import agentscope
 from agentscope.agents.agent import DistConf
 
-from simulation.helpers.message import message_manager
 from simulation.helpers.constants import *
 from agentscope.constants import _DEFAULT_SAVE_DIR
 from simulation.examples.chatting.agent import *
@@ -140,7 +139,6 @@ class Simulator(BaseSimulator):
         self._set_env4agents()
 
     def run(self):
-        message_manager.message_queue.put("Start simulation.")
         for r in range(self.cur_round, self.config["round_n"] + 1):
             logger.info(f"Round {r} started")
             self._one_round()
@@ -148,7 +146,6 @@ class Simulator(BaseSimulator):
             self.save()
 
         self.cur_round = -1
-        message_manager.message_queue.put("Simulation finished.")
         logger.info("Simulation finished")
 
     def get_save_state(self):
