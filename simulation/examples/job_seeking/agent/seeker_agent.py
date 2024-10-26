@@ -19,14 +19,14 @@ Template = env.get_template("seeker_prompts.j2").module
 
 
 SeekerAgentStates = [
-    "idle",
-    "whether to seek",
-    "search number",
-    "searching jobs",
-    "jobs to apply",
-    "applying jobs",
-    "interviewing",
-    "making decision",
+    "Idle",
+    "Determining whether to seek",
+    "Determining application count",
+    "Searching jobs",
+    "Determine the jobs to apply for",
+    "Applying jobs",
+    "Interviewing",
+    "Making final decision",
 ]
 
 
@@ -96,7 +96,7 @@ class SeekerAgent(BaseAgent):
 
         self.seeker = Seeker(name, cv, trait)
         self._update_profile()
-        self._state = "idle"
+        self._state = "Idle"
 
     def _update_profile(self):
         cv = self.seeker.cv
@@ -153,7 +153,7 @@ class SeekerAgent(BaseAgent):
             if resp.status_code != 200:
                 logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
 
-    @set_state("whether to seek")
+    @set_state("Determining whether to seek")
     def _determine_if_seeking(self, **kwargs):
         instruction = Template.determine_if_seeking_instruction()
         guided_choice = ["no", "yes"]
@@ -165,7 +165,7 @@ class SeekerAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg).content)]
         return response
 
-    @set_state("search number")
+    @set_state("Determining application count")
     def _determine_search_job_number(self, **kwargs):
         """Set search job number."""
         SearchJobNumber = 5
@@ -180,7 +180,7 @@ class SeekerAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg).content)]
         return int(response)
 
-    @set_state("searching jobs")
+    @set_state("Searching jobs")
     def _determine_search_jobs(self, search_job_number: int, **kwargs):
         search_job_indices = random.sample(
             range(len(self.job_ids_pool)), search_job_number
@@ -193,7 +193,7 @@ class SeekerAgent(BaseAgent):
 
         return interviewer_agent_infos
 
-    @set_state("jobs to apply")
+    @set_state("Determine the jobs to apply for")
     def _determine_apply_job(self, interviewer_agent_infos: dict, **kwargs):
         """Determine which jobs to apply."""
         instruction = Template.determine_apply_jobs_instruction()
@@ -215,7 +215,7 @@ class SeekerAgent(BaseAgent):
 
         return apply_interviewer_agent_infos
 
-    @set_state("applying jobs")
+    @set_state("Applying jobs")
     def _apply_job(self, apply_interviewer_agent_infos: dict, **kwargs):
         """Apply jobs."""
         results = []
@@ -239,7 +239,7 @@ class SeekerAgent(BaseAgent):
 
         return cv_passed_interviewer_agent_infos
 
-    @set_state("interviewing")
+    @set_state("Interviewing")
     def _interview_fun(self, cv_passed_interviewer_agent_infos: dict, **kwargs):
         """Interview."""
         results = []
@@ -265,7 +265,7 @@ class SeekerAgent(BaseAgent):
 
         return offer_interviewer_agent_infos
 
-    @set_state("making decision")
+    @set_state("Making final decision")
     def _make_final_decision(self, offer_interviewer_agent_infos: dict, **kwargs):
         """Make decision."""
         if len(offer_interviewer_agent_infos) == 0:

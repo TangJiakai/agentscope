@@ -37,7 +37,6 @@ def save_configs(configs):
 
 
 def setup_memory(memory_config):
-
     memory = eval(memory_config["class"])(**memory_config["args"])
     return memory
 

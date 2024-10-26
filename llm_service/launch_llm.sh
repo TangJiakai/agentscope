@@ -9,6 +9,7 @@ port=$1
 gpuid=$2
 export CUDA_VISIBLE_DEVICES="$gpuid"
 export VLLM_ATTENTION_BACKEND=XFORMERS
+export MKL_THREADING_LAYER="GNU"
 
 echo "Port: $port"
 echo "GPU ID: $CUDA_VISIBLE_DEVICES"
@@ -37,7 +38,6 @@ if [ -f "${llm_tuning_dir}/adapter_config.json" ]; then
         --guided-decoding-backend=lm-format-enforcer \
         --gpu-memory-utilization 0.8 \
         >> $LOG_FILE 2>&1 &
-        # 2>> $LOG_FILE &
 else
     python -m vllm.entrypoints.openai.api_server \
         --model $LLM_FILE \

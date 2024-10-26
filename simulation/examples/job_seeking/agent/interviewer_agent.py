@@ -17,11 +17,10 @@ Template = env.get_template("interviewer_prompts.j2").module
 
 
 InterviewerAgentStates = [
-    "idle",
-    "screening cv",
-    "making decision",
-    "interviewing",
-    "receiving notif",
+    "Idle",
+    "Screening cv",
+    "Interviewing",
+    "Receiving notif",
 ]
 
 
@@ -110,7 +109,7 @@ class InterviewerAgent(BaseAgent):
         self.env = env
 
         self.update_profile()
-        self._state = "idle"
+        self._state = "Idle"
 
     def update_profile(self):
         self._profile = self.job.__str__()
@@ -146,7 +145,7 @@ class InterviewerAgent(BaseAgent):
             return job
         return super().get_attr(attr)
 
-    @set_state("screening cv")
+    @set_state("Screening cv")
     def screening_cv(self, seeker_info: str):
         msg = get_assistant_msg()
         msg.instruction = Template.screening_cv_instruction()
@@ -156,7 +155,7 @@ class InterviewerAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg).content)]
         return response
 
-    @set_state("interviewing")
+    @set_state("Interviewing")
     def interview(self, dialog: str):
         instruction = Template.interview_closing_instruction()
         guided_choice = ["no", "yes"]
@@ -168,7 +167,7 @@ class InterviewerAgent(BaseAgent):
         response = guided_choice[int(self.reply(msg).content)]
         return response
 
-    @set_state("receiving notif")
+    @set_state("Receiving notif")
     def receive_notification(self, seeker_name: str, is_accept: bool, **kwargs):
         self.observe(
             get_assistant_msg(

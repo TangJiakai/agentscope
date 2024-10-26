@@ -13,7 +13,7 @@ import numpy as np
 from agentscope.models import ModelResponse
 from agentscope.message import Msg
 
-import simulation.memory.short_memory as ShortMemory
+import simulation.memory.short_memory as short_memory
 from simulation.helpers.emb_service import *
 
 
@@ -24,7 +24,7 @@ env = Environment(loader=file_loader)
 Template = env.get_template("prompts.j2").module
 
 
-class ShortLongMemory(ShortMemory.ShortMemory):
+class ShortLongMemory(short_memory.ShortMemory):
     def __init__(
         self,
         *,

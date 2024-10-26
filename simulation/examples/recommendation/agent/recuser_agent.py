@@ -22,10 +22,10 @@ Template = env.get_template("recuser_prompts.j2").module
 
 
 RecUserAgentStates = [
-    "idle",
-    "watching",
-    "chatting",
-    "posting",
+    "Idle",
+    "Watching",
+    "Chatting",
+    "Posting",
 ]
 
 
@@ -55,7 +55,7 @@ class RecUserAgent(BaseAgent):
         env: RecommendationEnv,
         embedding_api: str = None,
         memory_config: dict = None,
-        relationship: dict = None,
+        relationship: list = None,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -77,7 +77,7 @@ class RecUserAgent(BaseAgent):
         )
         self.relationship = relationship
 
-        self._state = "idle"
+        self._state = "Idle"
 
     def __getstate__(self) -> object:
         state = super().__getstate__()
@@ -138,7 +138,7 @@ class RecUserAgent(BaseAgent):
 
         return action
 
-    @set_state("watching")
+    @set_state("Watching")
     def recommend(self):
         user_info = (
             self.profile
@@ -159,7 +159,7 @@ class RecUserAgent(BaseAgent):
         feeling = self.generate_feeling(response)
         rating = self.rating_item(response)
 
-    @set_state("chatting")
+    @set_state("Chatting")
     def conversation(self):
         friend_agent_id = random.choice(list(self.relationship.keys()))
         friend_agent = self.relationship[friend_agent_id]
@@ -175,7 +175,7 @@ class RecUserAgent(BaseAgent):
 
         return dialog_observation
 
-    @set_state("posting")
+    @set_state("Posting")
     def post(self):
         instruction = Template.post_instruction()
         msg = get_assistant_msg()

@@ -21,7 +21,10 @@ Template = env.get_template("chatting_prompts.j2").module
 
 
 ChatRoomAgentStates = [
-    "idle",
+    "Idle",
+    "Mentioned by others",
+    "Joining the chatroom",
+    "Speaking"
 ]
 
 
@@ -75,11 +78,17 @@ class ChatRoomAgent(BaseAgent):
         self.mentioned_messages = []
         self.mentioned_messages_lock = threading.Lock()
 
+    @property
+    def state(self):
+        return self._state
+
+    @set_state("Mentioned by others")
     def add_mentioned_message(self, msg: Msg) -> None:
         """Add mentioned messages"""
         with self.mentioned_messages_lock:
             self.mentioned_messages.append(msg)
 
+    @set_state("Joining the chatroom")
     def join(self, room: ChatRoom) -> bool:
         """Join a room"""
         self.room = room
@@ -100,6 +109,7 @@ class ChatRoomAgent(BaseAgent):
         else:
             return Msg("system", self.profile, role="system")
 
+    @set_state("Speaking")
     def speak(
         self,
         content: Union[str, Msg, Generator[Tuple[bool, str], None, None]],
