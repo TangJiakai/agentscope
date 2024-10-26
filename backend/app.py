@@ -80,9 +80,9 @@ assets_files = StaticFiles(directory=os.path.join(proj_path, "assets"))
 
 _scene = "job_seeking"
 _scene_for_frontend_dict = {
-    "job_seeking": "Job Seeking",
-    "recommendation": "Recommendation",
-    "chatting": "Chatting Room",
+    "job_seeking": "Job Market",
+    "recommendation": "Recommendation Systems",
+    "chatting": "Multi-User Discussion",
 }
 events: Dict[str, Event] = {}
 queue = Queue()
@@ -772,7 +772,7 @@ def put_memory_config(memory_config: MemoryConfig):
     )
     logger.info(f"Put memory config to {config_file}")
     with open(config_file, "w") as f:
-        json.dump(memory_config.model_dump(), f, ensure_ascii=False, indent=4)
+        json.dump(memory_config.model_dump(by_alias=True), f, ensure_ascii=False, indent=4)
     return HTMLResponse()
 
 

@@ -38,7 +38,7 @@ class ModelConfig(BaseModel):
     model_type: str = Field("openai_chat", description="The type of the model, e.g., openai_chat.")
     model_name: str = Field("/data/pretrain_dir/Meta-Llama-3-8B-Instruct", description="Your LLM model path or id set in vllm.")
     api_key: str = Field("api_key", description="The API key for the model.")
-    client_args: ClientArgs = None
+    client_args: ClientArgs = ClientArgs()
     generate_args: GenerateArgs = None
 
 

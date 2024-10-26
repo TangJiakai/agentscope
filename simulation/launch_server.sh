@@ -18,7 +18,7 @@ echo "scenario: $scenario"
 
 mkdir -p log
 
-> "${script_dir}/.pid"
+>> "${script_dir}/.pid"
 
 for ((i=0; i<server_num_per_host; i++)); do
     port=$((base_port + i))
