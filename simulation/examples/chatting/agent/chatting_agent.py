@@ -73,7 +73,7 @@ class ChatRoomAgent(BaseAgent):
             f"### Name: {self.name}\n"
             f"### Profile: {profile}"
         )
-        self._state = "idle"
+        self._state = "Idle"
 
         self.room = None
         self.mentioned_messages = []
