@@ -147,6 +147,8 @@ class Simulator(BaseSimulator):
         self._set_env4agents()
 
     def run(self):
+        play_event.set()
+
         message_manager.message_queue.put("Start simulation.")
         for r in range(self.cur_round, self.config["round_n"] + 1):
             logger.info(f"Round {r} started")
