@@ -65,7 +65,10 @@ class ChatRoomAgent(BaseAgent):
             self.memory.model = self.model
             self.memory.get_tokennum_func = self.get_tokennum_func
         self.env = env
-        self._profile = f"### Name: {self.name}\n" f"### Profile: {profile}"
+        self._profile = (
+            f"### Name: {self.name}\n"
+            f"### Profile: {profile}"
+        )
         self._state = "idle"
 
         self.room = None
