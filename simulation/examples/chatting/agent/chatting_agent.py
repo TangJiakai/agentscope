@@ -9,6 +9,7 @@ from loguru import logger
 from agentscope.rpc import async_func
 
 from agentscope.message import Msg
+import requests
 from simulation.helpers.base_agent import BaseAgent
 from simulation.helpers.utils import setup_memory
 from simulation.examples.chatting.environment.env import ChatRoom
@@ -74,12 +75,31 @@ class ChatRoomAgent(BaseAgent):
         self.room = None
         self.mentioned_messages = []
         self.mentioned_messages_lock = threading.Lock()
+    
+    @property
+    def state(self):
+        return self._state
 
+    @state.setter
+    def state(self, new_value):
+        if hasattr(self, "backend_server_url"):
+            if new_value not in ChatRoomAgentStates:
+                raise ValueError(f"Invalid state: {new_value}")
+            self._state = new_value
+            url = f"{self.backend_server_url}/api/state"
+            resp = requests.post(
+                url, json={"agent_id": self.agent_id, "state": new_value}
+            )
+            if resp.status_code != 200:
+                logger.error(f"Failed to set state: {self.agent_id} -- {new_value}")
+
+    @set_state("add mentioned message")
     def add_mentioned_message(self, msg: Msg) -> None:
         """Add mentioned messages"""
         with self.mentioned_messages_lock:
             self.mentioned_messages.append(msg)
 
+    @set_state("join room")
     def join(self, room: ChatRoom) -> bool:
         """Join a room"""
         self.room = room
@@ -100,6 +120,7 @@ class ChatRoomAgent(BaseAgent):
         else:
             return Msg("system", self.profile, role="system")
 
+    @set_state("speak")
     def speak(
         self,
         content: Union[str, Msg, Generator[Tuple[bool, str], None, None]],

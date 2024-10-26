@@ -772,7 +772,9 @@ def put_memory_config(memory_config: MemoryConfig):
     )
     logger.info(f"Put memory config to {config_file}")
     with open(config_file, "w") as f:
-        json.dump(memory_config.model_dump(by_alias=True), f, ensure_ascii=False, indent=4)
+        json.dump(
+            memory_config.model_dump(by_alias=True), f, ensure_ascii=False, indent=4
+        )
     return HTMLResponse()
 
 
@@ -1287,10 +1289,13 @@ async def start():
                     avatar_path = os.path.join("/assets", "avatar")
                     match = re.search(r"\d", agents[idx].agent_id)
                     num = match.group() if match else 0
-                    if gender is None:
+                    if gender is None and _scene == "job_seeking":
                         gender = None
                         avatar_path = os.path.join(avatar_path, "none", "hr.png")
-                    elif gender.lower() not in ["female", "male"]:
+                    elif (
+                        _scene == "job_seeking"
+                        and gender.lower() not in ["female", "male"]
+                    ) or (gender is None and _scene != "job_seeking"):
                         gender = None
                         avatar_path = os.path.join(avatar_path, "none", f"{num}.png")
                     else:
