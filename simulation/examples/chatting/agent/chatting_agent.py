@@ -24,7 +24,7 @@ Template = env.get_template("chatting_prompts.j2").module
 ChatRoomAgentStates = [
     "Idle",
     "Mentioned by others",
-    "Joining the chatroom",
+    "Joining chatroom",
     "Speaking"
 ]
 
