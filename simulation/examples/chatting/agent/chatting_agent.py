@@ -70,8 +70,8 @@ class ChatRoomAgent(BaseAgent):
             self.memory.get_tokennum_func = self.get_tokennum_func
         self.env = env
         self._profile = (
-            f"### Name: {self.name}\n"
-            f"### Profile: {profile}"
+            f"### Name\n {self.name}\n"
+            f"### Profile\n {profile}"
         )
         self._state = "Idle"
 
@@ -123,7 +123,6 @@ class ChatRoomAgent(BaseAgent):
         else:
             return Msg("system", self.profile, role="system")
 
-    @set_state("Speaking")
     def speak(
         self,
         content: Union[str, Msg, Generator[Tuple[bool, str], None, None]],
@@ -138,7 +137,8 @@ class ChatRoomAgent(BaseAgent):
         super().speak(content)
         self.room.speak(content)
 
-    def reply(self, x: Msg = None) -> Msg:
+    @set_state("Speaking")
+    def talk(self, x: Msg = None) -> Msg:
         """Generate reply to chat room"""
         msg_hint = self.generate_hint()
         self_msg = Msg(name=self.name, content="", role="assistant")

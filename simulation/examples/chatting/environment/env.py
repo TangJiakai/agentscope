@@ -57,7 +57,7 @@ class ChatRoomMember(BasicEnv):
         """Make the agent chatting in the chatroom."""
         time.sleep(delay)
         while True:
-            msg = self._agent()
+            msg = self._agent.talk()
             if "goodbye" in msg.content.lower():
                 break
             sleep_time = random.randint(1, 5)
