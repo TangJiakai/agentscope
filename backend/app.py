@@ -634,7 +634,7 @@ def get_favorite_agents():
                 name=agent_info[agent.agent_id]["name"],
                 id=agent.agent_id,
                 cls=agent_info[agent.agent_id]["cls"],
-                state=agent.get_attr("state"),
+                state=manager.all_agents_state.get(agent.agent_id, "idle"),
                 profile=agent_info[agent.agent_id]["profile"],
                 gender=agent_info[agent.agent_id]["gender"],
                 coordinates=Coord(
@@ -689,7 +689,7 @@ def get_agent(id: str):
                     name=agent_info[id]["name"],
                     id=id,
                     cls=agent_info[agent.agent_id]["cls"],
-                    state=agent.get_attr("state"),
+                    state=manager.all_agents_state.get(id, "idle"),
                     profile=agent.get_attr("_profile"),
                     gender=agent_info[id]["gender"],
                     coordinates=Coord(
