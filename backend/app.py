@@ -79,6 +79,11 @@ assets_files = StaticFiles(directory=os.path.join(proj_path, "assets"))
 
 
 _scene = "job_seeking"
+_scene_for_frontend_dict = {
+    "job_seeking": "Job Seeking",
+    "recommendation": "Recommendation",
+    "chatting": "Chatting Room",
+}
 events: Dict[str, Event] = {}
 queue = Queue()
 simulator = None
@@ -374,7 +379,7 @@ async def websocket_chat_endpoint(websocket: WebSocket, id: str):
 
 @app.get("/current-scene")
 def get_current_scene():
-    return _scene
+    return _scene_for_frontend_dict.get(_scene, _scene)
 
 
 @app.get("/scene", response_model=List[Scene])
@@ -387,14 +392,21 @@ def get_scenes():
             with open(os.path.join(scene_path, "desc.txt"), "r") as f:
                 desc = f.read()
             pic_path = os.path.join("/assets", "scenes", scene, "pic.png")
-            scenes.append(Scene(name=scene, desc=desc, pic_path=pic_path))
+            scenes.append(
+                Scene(
+                    name=_scene_for_frontend_dict.get(scene, scene),
+                    desc=desc,
+                    pic_path=pic_path,
+                )
+            )
     return scenes
 
 
 @app.put("/scene")
 def put_scene(scene_name: str):
     global _scene
-    _scene = scene_name
+    _scene_dict = {v: k for k, v in _scene_for_frontend_dict.items()}
+    _scene = _scene_dict.get(scene_name, scene_name)
     return HTMLResponse()
 
 
@@ -756,7 +768,7 @@ async def get_memory_config():
 @app.put("/memory")
 def put_memory_config(memory_config: MemoryConfig):
     config_file = os.path.join(
-        proj_path, "simulation", "examples", _scene, "configs", "memory_configs.json"
+        proj_path, "simulation", "examples", _scene, "configs", "memory_config.json"
     )
     logger.info(f"Put memory config to {config_file}")
     with open(config_file, "w") as f:
@@ -867,7 +879,9 @@ def load_checkpoint(checkpoint_req: PathReq):
     with open(simulation_config_path, "r") as f:
         simulation_config = yaml.load(f)
     if checkpoint_path:
-        simulation_config["load_simulator_path"] = os.path.join(proj_path, "runs", _scene, checkpoint_path)
+        simulation_config["load_simulator_path"] = os.path.join(
+            proj_path, "runs", _scene, checkpoint_path
+        )
     else:
         simulation_config["load_simulator_path"] = None
     with open(simulation_config_path, "w") as f:
