@@ -7,11 +7,11 @@ from backend.prompt_template import GPT_evaluate_prompt, GPT_Evaluate_And_Improv
 
 
 def chatgpt(data_):
-    client = openai.OpenAI(api_key='XXX',
-                            base_url='XXX')
+    client = openai.OpenAI(api_key='sk-iX5pH1e62evjBYFhjiF7rzQMqGEcEzISSTNAap2usSKleAMr',
+                            base_url='https://api.chatanywhere.tech/v1')
     def api(data):
         completion = client.chat.completions.create(
-                model='gpt-4o-2024-08-06',
+                model='gpt-4o-mini',
                 messages=[
                     {"role": "user", "content": data['prompt']}
                 ],
@@ -68,8 +68,8 @@ if __name__ == "__main__":
         "agent_type": "SeekerAgent",
         "prompt": "## Conversation History\nuser: [INSTRUCTION]\n\nYou are a job seeker.\nNow you need to search for jobs and consider applying for these positions. The higher the intensity of your job search, the more positions you will search for, and the greater your chances of finding a job that suits you. \nBased on your current personal situation, please choose an integer to maximize the total discounted utility to the present value across all periods. \n\n[\\INSTRUCTION]\n\n[PROFILE]\n\n        Name: Ethan Rodriguez\n        CV: {'Education': \"Bachelor's Degree in Software Engineering from University of Texas\", 'Work Experience': [{'Company': 'Digital Solutions', 'Position': 'Frontend Developer', 'Time': '2016-2019'}, {'Company': 'AI Startups', 'Position': 'Full Stack Developer', 'Time': '2019-Present'}], 'Skills': ['JavaScript', 'React', 'Node.js', 'Artificial Intelligence', 'Database Management']}\n        Trait: {'Age': 30, 'Gender': 'Male', 'Patience': 'Average', 'Risk Tolerance': 'High', 'Positive Reciprocity': 'Above Average', 'Negative Reciprocity': 'Moderate', 'Altruism': 'Average', 'Trust': 'Above Average'}\n        Working Condition: unemployed\n        \n[\\PROFILE]\n\n\nPlease make a choice from the actions below (output the index, e.g., 0):\n\n    (0) 1\n\n    (1) 2\n\n    (2) 3\n\n    (3) 4\n\n    (4) 5\n\nAnswer:\n",
         "completion": "1",
-        "rewritten_response": None,
-        "rating": None,
+        "rewritten_response": "",
+        "rating": "",
         "selection_num": 5
         },
     ]

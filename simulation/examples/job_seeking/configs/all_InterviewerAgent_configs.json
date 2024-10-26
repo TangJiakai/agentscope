@@ -1,0 +1,252 @@
+[
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "AI Ethics Consultant",
+            "jd": "Provide guidance on ethical implications of AI technologies and develop frameworks for responsible AI deployment.",
+            "jr": [
+                "PhD in Philosophy, Ethics, or related field",
+                "5+ years of experience in AI ethics or policy",
+                "Strong understanding of machine learning technologies and their societal impacts",
+                "Excellent communication and stakeholder engagement skills"
+            ],
+            "company": "Accenture, a global professional services company specializing in IT services and consulting.",
+            "salary": "USD 130,000 - 160,000 annually",
+            "benefits": [
+                "Comprehensive health coverage",
+                "Flexible working hours",
+                "Professional development opportunities",
+                "Wellness programs"
+            ],
+            "location": "Dublin, Ireland",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15000
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Machine Learning Engineer",
+            "jd": "Design and implement machine learning models to improve product features and user engagement.",
+            "jr": [
+                "Bachelor's or Master's degree in Computer Science or Engineering",
+                "2+ years of experience in machine learning and software development",
+                "Proficient in Python, TensorFlow, and scikit-learn",
+                "Experience with cloud services like AWS or Azure"
+            ],
+            "company": "Google, a multinational technology company specializing in Internet-related services and products.",
+            "salary": "USD 110,000 - 140,000 annually",
+            "benefits": [
+                "Generous paid time off",
+                "Health and wellness programs",
+                "Tuition reimbursement",
+                "On-site fitness centers"
+            ],
+            "location": "Mountain View, California, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15001
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "AI Product Manager",
+            "jd": "Lead the development and launch of AI-driven products, collaborating with engineering and design teams.",
+            "jr": [
+                "Bachelor's degree in Business, Computer Science, or related field",
+                "4+ years of experience in product management, preferably in AI or tech",
+                "Strong analytical and problem-solving skills",
+                "Experience with Agile methodologies"
+            ],
+            "company": "Microsoft, a leading global technology company known for its software products and services.",
+            "salary": "USD 120,000 - 150,000 annually",
+            "benefits": [
+                "Stock options",
+                "Health insurance",
+                "Flexible work arrangements",
+                "Employee discounts"
+            ],
+            "location": "Redmond, Washington, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15002
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "AI Research Scientist",
+            "jd": "Conduct cutting-edge research in artificial intelligence and publish findings in scientific journals.",
+            "jr": [
+                "PhD in Computer Science, AI, or related field",
+                "3+ years of research experience in AI or machine learning",
+                "Expertise in neural networks and natural language processing",
+                "Strong programming skills in Python and C++"
+            ],
+            "company": "OpenAI, an AI research organization focused on ensuring that artificial general intelligence benefits all of humanity.",
+            "salary": "USD 140,000 - 180,000 annually",
+            "benefits": [
+                "Health insurance",
+                "Paid parental leave",
+                "Professional growth opportunities",
+                "Collaborative work environment"
+            ],
+            "location": "San Francisco, California, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15003
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Data Privacy Officer",
+            "jd": "Ensure compliance with data protection regulations and develop strategies for data privacy in AI systems.",
+            "jr": [
+                "Degree in Law, Information Technology, or related field",
+                "5+ years of experience in data privacy or compliance roles",
+                "In-depth knowledge of GDPR and other privacy regulations",
+                "Strong analytical and risk assessment skills"
+            ],
+            "company": "IBM, a multinational technology company offering cloud platforms, cognitive computing, and AI solutions.",
+            "salary": "USD 120,000 - 150,000 annually",
+            "benefits": [
+                "Comprehensive health benefits",
+                "Retirement savings plans",
+                "Work-life balance initiatives",
+                "Employee assistance programs"
+            ],
+            "location": "Armonk, New York, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15004
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Machine Learning Engineer",
+            "jd": "Design and implement machine learning models to enhance product capabilities.",
+            "jr": [
+                "Bachelor's degree in Computer Science, Engineering, or equivalent",
+                "2+ years of experience in machine learning or software development",
+                "Strong programming skills in Python and Java",
+                "Experience with TensorFlow or PyTorch"
+            ],
+            "company": "NVIDIA Corporation, a global leader in visual computing technologies.",
+            "salary": "USD 110,000 - 140,000 annually",
+            "benefits": [
+                "Comprehensive health coverage",
+                "Flexible work hours",
+                "Paid parental leave",
+                "Career development programs"
+            ],
+            "location": "Santa Clara, California, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15005
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "AI Research Scientist",
+            "jd": "Conduct innovative research in artificial intelligence and publish findings in top-tier journals.",
+            "jr": [
+                "PhD in AI, Machine Learning, or related field",
+                "Published papers in reputable conferences",
+                "Strong analytical and mathematical skills",
+                "Proficiency in programming languages like Python and C++"
+            ],
+            "company": "DeepMind Technologies, a subsidiary of Alphabet Inc. focused on AI research.",
+            "salary": "USD 130,000 - 160,000 annually",
+            "benefits": [
+                "Health and wellness programs",
+                "Generous vacation policy",
+                "On-site fitness center",
+                "Relocation assistance"
+            ],
+            "location": "London, United Kingdom",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15006
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "Data Analyst",
+            "jd": "Analyze data trends and provide actionable insights to improve business performance.",
+            "jr": [
+                "Bachelor's degree in Statistics, Mathematics, or a related field",
+                "1+ years of experience in data analysis",
+                "Familiarity with SQL and data visualization tools like Tableau or Power BI",
+                "Strong communication skills"
+            ],
+            "company": "Spotify Technology S.A., a digital music service that gives you access to millions of songs.",
+            "salary": "USD 80,000 - 100,000 annually",
+            "benefits": [
+                "Health insurance",
+                "Free music subscription",
+                "Flexible working schedule",
+                "Employee discounts"
+            ],
+            "location": "Stockholm, Sweden",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15007
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "AI Product Manager",
+            "jd": "Lead the development and launch of AI-driven products, ensuring alignment with user needs.",
+            "jr": [
+                "Bachelor's degree in Business, Engineering, or related field",
+                "3+ years of experience in product management",
+                "Understanding of AI technologies and market trends",
+                "Strong project management skills"
+            ],
+            "company": "Salesforce, a global leader in customer relationship management software.",
+            "salary": "USD 120,000 - 150,000 annually",
+            "benefits": [
+                "Comprehensive health care",
+                "Stock options",
+                "Paid time off",
+                "Training and development programs"
+            ],
+            "location": "San Francisco, California, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15008
+        }
+    },
+    {
+        "class": "InterviewerAgent",
+        "args": {
+            "name": "AI Ethics Specialist",
+            "jd": "Evaluate and develop ethical guidelines for AI technologies and implementations.",
+            "jr": [
+                "Master's degree in Philosophy, Ethics, or a related field",
+                "Experience in technology policy or ethics",
+                "Strong research and writing skills",
+                "Ability to communicate complex ideas clearly"
+            ],
+            "company": "OpenAI, an AI research lab focusing on ensuring that artificial general intelligence benefits all of humanity.",
+            "salary": "USD 100,000 - 130,000 annually",
+            "benefits": [
+                "Health benefits",
+                "Flexible work arrangements",
+                "Generous paid leave",
+                "Professional development opportunities"
+            ],
+            "location": "San Francisco, California, USA",
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15009
+        }
+    }
+]

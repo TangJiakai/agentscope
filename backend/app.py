@@ -2,6 +2,7 @@ import asyncio
 from concurrent import futures
 import json
 import os
+import math
 import random
 import importlib
 import inspect
@@ -35,6 +36,8 @@ from simulation.helpers.events import (
     pause_success_event,
 )
 from backend.utils.body_models import (
+    MessagesResp,
+    NoneMemoryArgs,
     Scene,
     ModelConfig,
     AgentConfig,
@@ -50,6 +53,12 @@ from backend.utils.body_models import (
     GPTReq,
     ChangedMsg,
     Transform,
+    ShortMemoryArgs,
+    ShortLongMemoryArgs,
+    ShortLongReflectionMemoryArgs,
+    AllMemoryConfig,
+    AgentProfileConfig,
+    MemoryGenerateJsonSchema,
 )
 from simulation.memory import (
     NoneMemory,
@@ -85,6 +94,9 @@ avatar_radius = 0.0001
 agent_info = {}
 train_progress = -1
 
+LLM_PORT = "8084"
+GPU_ID = "0"
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -94,19 +106,29 @@ async def lifespan(app: FastAPI):
     port = os.environ.get("PORT", 9000)
     backend_server_url = f"http://{host}:{port}"
     # Launch LLM
-    # launch_llm_sh_path = os.path.join(proj_path, "exp2", "scripts", "launch_llm.sh")
-    # run_sh_async(launch_llm_sh_path, "8084", "2")
+    launch_llm_sh_path = os.path.join(proj_path, "llm_service", "launch_llm.sh")
+    run_sh_async(launch_llm_sh_path, LLM_PORT, GPU_ID)
+    # Launch embedding service
+    launch_embedding_sh_path = os.path.join(
+        proj_path, "embedding_service", "launch_multi_emb_models.sh"
+    )
+    run_sh_async(launch_embedding_sh_path)
 
     yield
 
     # Kill LLM
-    # kill_llm_sh_path = os.path.join(proj_path, "exp2", "scripts", "kill_llm.sh")
-    # run_sh_blocking(kill_llm_sh_path)
+    kill_llm_sh_path = os.path.join(proj_path, "llm_service", "kill_llm.sh")
+    run_sh_blocking(kill_llm_sh_path)
+    # Kill embedding service
+    kill_embedding_sh_path = os.path.join(
+        proj_path, "embedding_service", "kill_emb_models.sh"
+    )
+    run_sh_blocking(kill_embedding_sh_path)
 
     # Clean distributed servers
     if distributed:
         kill_server_sh_path = os.path.join(
-            proj_path, "simulation", "examples", _scene, "kill_all_server.sh"
+            proj_path, "simulation", "kill_all_server.sh"
         )
         run_sh_blocking(kill_server_sh_path)
 
@@ -204,27 +226,37 @@ async def websocket_train_endpoint(websocket: WebSocket):
                 data = await asyncio.wait_for(websocket.receive_text(), timeout=0.001)
                 logger.info(f"Receive train message: {data}")
                 if data == "exit":
-                    cancel_tune_sh_path = os.path.join(proj_path, "exp2", "scripts", "cancel_tune.sh")
+                    cancel_tune_sh_path = os.path.join(
+                        proj_path, "llm_tuning", "scripts", "cancel_tune.sh"
+                    )
                     run_sh_blocking(cancel_tune_sh_path)
                     train_thread = None
                     # Launch LLM
                     launch_llm_sh_path = os.path.join(
-                        proj_path, "exp2", "scripts", "launch_llm.sh"
+                        proj_path, "llm_service", "launch_llm.sh"
                     )
-                    run_sh_async(launch_llm_sh_path, "8084", "2")
+                    run_sh_async(launch_llm_sh_path, LLM_PORT, GPU_ID)
                     train_progress = cur_progress = -1
                     await websocket.send_json({"train_progress": train_progress})
                 elif data == "rewrite" or data == "rate":
                     # Kill LLM
-                    kill_llm_sh_path = os.path.join(proj_path, "exp2", "scripts", "kill_llm.sh")
+                    kill_llm_sh_path = os.path.join(
+                        proj_path, "llm_service", "kill_llm.sh"
+                    )
                     run_sh_blocking(kill_llm_sh_path)
                     train_progress = cur_progress = 0
                     await websocket.send_json({"train_progress": train_progress})
-                    tune_llm_sh_path = os.path.join(proj_path, "exp2", "scripts", "tune_llm.sh")
+                    tune_llm_sh_path = os.path.join(
+                        proj_path, "llm_tuning", "scripts", "tune_llm.sh"
+                    )
                     if data == "rewrite":
-                        train_thread = Thread(target=run_sh_train_blocking, args=(tune_llm_sh_path, "sft"))
+                        train_thread = Thread(
+                            target=run_sh_train_blocking, args=(tune_llm_sh_path, "sft")
+                        )
                     elif data == "rate":
-                        train_thread = Thread(target=run_sh_train_blocking, args=(tune_llm_sh_path, "ppo"))
+                        train_thread = Thread(
+                            target=run_sh_train_blocking, args=(tune_llm_sh_path, "ppo")
+                        )
                     train_thread.start()
             except asyncio.TimeoutError:
                 pass
@@ -235,9 +267,9 @@ async def websocket_train_endpoint(websocket: WebSocket):
             if train_progress == 1:
                 # Launch LLM
                 launch_llm_sh_path = os.path.join(
-                    proj_path, "exp2", "scripts", "launch_llm.sh"
+                    proj_path, "llm_service", "launch_llm.sh"
                 )
-                run_sh_async(launch_llm_sh_path, "8084", "2")
+                run_sh_async(launch_llm_sh_path, LLM_PORT, GPU_ID)
                 train_thread = None
 
                 # Reset agents' model.model_name
@@ -254,12 +286,8 @@ async def websocket_train_endpoint(websocket: WebSocket):
         logger.info("WebSocket /train disconnected")
         if train_progress == 1:
             # Launch LLM
-            launch_llm_sh_path = os.path.join(
-                proj_path, "exp2", "scripts", "launch_llm.sh"
-            )
-            run_sh_async(launch_llm_sh_path, "8084", "2")
-            train_thread = None
-
+            launch_llm_sh_path = os.path.join(proj_path, "llm_service", "launch_llm.sh")
+            run_sh_async(launch_llm_sh_path, LLM_PORT, GPU_ID)
             # Reset agents' model.model_name
             if simulator is not None:
                 agents = simulator.agents
@@ -269,6 +297,7 @@ async def websocket_train_endpoint(websocket: WebSocket):
                 for res in results:
                     res.result()
             train_progress = cur_progress = -1
+            train_thread = None
             await websocket.send_json({"train_progress": train_progress})
     finally:
         if websocket.client_state == WebSocketState.CONNECTED:
@@ -293,6 +322,23 @@ async def websocket_round_endpoint(websocket: WebSocket):
     finally:
         if websocket.client_state == WebSocketState.CONNECTED:
             await websocket.close()
+
+
+# @app.websocket("/messages")
+# async def websocket_messages_endpoint(websocket: WebSocket):
+#     await websocket.accept()
+#     try:
+#         while True:
+#             data = await websocket.receive_text()
+#             logger.info(f"Receive message: {data}")
+#             message = json.loads(data)
+#             message = MessageUnit(**message)
+#             message_manager.messages.append(message)
+#     except WebSocketDisconnect:
+#         logger.info("WebSocket /messages disconnected")
+#     finally:
+#         if websocket.client_state == WebSocketState.CONNECTED:
+#             await websocket.close()
 
 
 @app.websocket("/chat/{id}")
@@ -340,7 +386,7 @@ def get_scenes():
         if os.path.isdir(scene_path):
             with open(os.path.join(scene_path, "desc.txt"), "r") as f:
                 desc = f.read()
-            pic_path = os.path.join("/assets", scene, "pic.png")
+            pic_path = os.path.join("/assets", "scenes", scene, "pic.png")
             scenes.append(Scene(name=scene, desc=desc, pic_path=pic_path))
     return scenes
 
@@ -476,8 +522,9 @@ def get_agents(
 @app.get("/agent/config", response_model=List[str])
 def get_agent_classes_config():
     agent_module = importlib.import_module(f"simulation.examples.{_scene}.agent")
-    agent_classes = inspect.getmembers(agent_module, inspect.isclass)
-    resp = [agent_cls[0] for agent_cls in agent_classes]
+    all_agents = agent_module.ALL_AGENT_STATES.keys()
+    # agent_classes = inspect.getmembers(agent_module, inspect.isclass)
+    resp = list(all_agents)
     # configs_path = Path(
     #     os.path.join(proj_path, "simulation", "examples", _scene, "configs")
     # )
@@ -506,6 +553,43 @@ def put_agent_config(req: AgentConfig):
         with open(agent_configs_path, "w") as agent_config_file:
             json.dump(agent_configs, agent_config_file, ensure_ascii=False, indent=4)
     return HTMLResponse()
+
+
+@app.get("/agent/profile/{cls}", response_model=AgentProfileConfig)
+async def get_agent_profile(cls: str):
+    all_profile_path = os.path.join(
+        proj_path,
+        "simulation",
+        "examples",
+        _scene,
+        "configs",
+        f"all_{cls}_configs.json",
+    )
+    if not os.path.exists(all_profile_path):
+        return HTMLResponse(
+            content="Agent Profile not found. You should upload profile file first.",
+            status_code=404,
+        )
+    with open(all_profile_path, "r") as f:
+        agent_configs = json.load(f)
+        max_num_agents = len(agent_configs)
+    profile_path = os.path.join(
+        proj_path,
+        "simulation",
+        "examples",
+        _scene,
+        "configs",
+        f"{cls}_configs.json",
+    )
+    if os.path.exists(profile_path):
+        with open(profile_path, "r") as f:
+            agent_configs = json.load(f)
+            num_agents = len(agent_configs)
+    else:
+        num_agents = 0
+    return AgentProfileConfig(
+        **{"class": cls, "cur_num_agents": num_agents, "max_num_agents": max_num_agents}
+    )
 
 
 @app.post("/agent/profile/{cls}", response_model=AgentConfig)
@@ -653,19 +737,18 @@ def put_model_configs(model_configs: List[ModelConfig]):
     return HTMLResponse()
 
 
-@app.get("/memory", response_model=List[MemoryConfig])
+@app.get("/model-schema")
+def get_model_configs_json_schema():
+    return ModelConfig.model_json_schema()
+
+
+@app.get("/memory", response_model=List[str])
 async def get_memory_config():
     all_memory_configs = [
-        {
-            "class": memory.__name__,
-            "args": inspect.getfullargspec(memory.__init__).kwonlydefaults,
-        }
-        for memory in [
-            NoneMemory,
-            ShortMemory,
-            ShortLongMemory,
-            ShortLongReflectionMemory,
-        ]
+        "NoneMemory",
+        "ShortMemory",
+        "ShortLongMemory",
+        "ShortLongReflectionMemory",
     ]
     return all_memory_configs
 
@@ -679,6 +762,18 @@ def put_memory_config(memory_config: MemoryConfig):
     with open(config_file, "w") as f:
         json.dump(memory_config.model_dump(), f, ensure_ascii=False, indent=4)
     return HTMLResponse()
+
+
+@app.get("/memory-schema/{class_name}")
+def get_memory_config_json_schema(class_name: str):
+    # return AllMemoryConfig.model_json_schema(schema_generator=MemoryGenerateJsonSchema)
+    memory_schema = {
+        "NoneMemory": NoneMemoryArgs.model_json_schema(),
+        "ShortMemory": ShortMemoryArgs.model_json_schema(),
+        "ShortLongMemory": ShortLongMemoryArgs.model_json_schema(),
+        "ShortLongReflectionMemory": ShortLongReflectionMemoryArgs.model_json_schema(),
+    }
+    return memory_schema.get(class_name, NoneMemoryArgs.model_json_schema())
 
 
 # @app.get("/checkpoint/{scene}", response_model=List[CheckpointResp])
@@ -771,10 +866,32 @@ def load_checkpoint(checkpoint_req: PathReq):
     )
     with open(simulation_config_path, "r") as f:
         simulation_config = yaml.load(f)
-    simulation_config["load_simulator_path"] = checkpoint_path
+    if checkpoint_path:
+        simulation_config["load_simulator_path"] = os.path.join(proj_path, "runs", _scene, checkpoint_path)
+    else:
+        simulation_config["load_simulator_path"] = None
     with open(simulation_config_path, "w") as f:
         yaml.dump(simulation_config, f)
     return HTMLResponse()
+
+
+@app.get("/all-checkpoints")
+def get_all_checkpoints():
+    runs = Path(os.path.join(proj_path, "runs", _scene))
+    if not runs.exists():
+        runs.mkdir()
+    checkpoints = runs.glob("*/*.pkl")
+    run_names = [checkpoint.parent for checkpoint in checkpoints]
+    resp = []
+    for run_name in run_names:
+        checkpoints = run_name.glob("*.pkl")
+        resp.append(
+            {
+                "run_name": run_name.name,
+                "pkls": [checkpoint.name for checkpoint in checkpoints],
+            }
+        )
+    return resp
 
 
 @app.get("/savedir", response_model=PathReq)
@@ -784,7 +901,7 @@ def get_savedir():
     )
     with open(simulation_config_path, "r") as f:
         simulation_config = yaml.load(f)
-    return PathReq(path=simulation_config["save_dir"])
+    return PathReq(path=simulation_config["runtime_id"])
 
 
 @app.put("/savedir")
@@ -795,7 +912,7 @@ def put_savedir(req: PathReq):
     )
     with open(simulation_config_path, "r") as f:
         simulation_config = yaml.load(f)
-    simulation_config["save_dir"] = savedir
+    simulation_config["runtime_id"] = savedir
     with open(simulation_config_path, "w") as f:
         yaml.dump(simulation_config, f)
     return HTMLResponse()
@@ -844,7 +961,7 @@ def get_all_agent_states_info():
     ]
 
 
-@app.get("/messages", response_model=List[MessageUnit])
+@app.get("/messages", response_model=MessagesResp)
 def get_messages_with_filter(
     # filter_condition: Optional[FilterCondition] = None,
     offset: Optional[int] = 0,
@@ -857,10 +974,31 @@ def get_messages_with_filter(
             cur_msgs = [msg for msg in cur_msgs if msg.msg_id]
     filter_condition = None
     msgs = filter_msgs_or_states(cur_msgs, filter_condition)
-    return msgs[offset : offset + limit]
+    current_page = math.floor(offset / limit) + 1
+    total_pages = math.ceil(len(msgs) / limit)
+    return MessagesResp(
+        msgs=msgs[offset : offset + limit],
+        cur_page=current_page,
+        total_pages=total_pages,
+    )
 
 
-def change_msgs(new_msgs: List[ChangedMsg], mode: Optional[Literal["rewrite", "rate"]] = None):
+@app.get("/messages/{msg_id}", response_model=MessageUnit)
+def get_message(msg_id: int):
+    global cur_msgs
+    if cur_msgs is None:
+        with lock:
+            cur_msgs = message_manager.messages.copy()
+            cur_msgs = [msg for msg in cur_msgs if msg.msg_id]
+    for msg in cur_msgs:
+        if msg.msg_id == msg_id:
+            return msg
+    return None
+
+
+def change_msgs(
+    new_msgs: List[ChangedMsg], mode: Optional[Literal["rewrite", "rate"]] = None
+):
     with lock:
         for new_msg in new_msgs:
             if mode == "rewrite":
@@ -921,7 +1059,10 @@ def save_changed_messages(msgs: List[ChangedMsg]):
 def chatgpt(req: GPTReq):
     with lock:
         msgs = message_manager.messages.copy()
-    msgs = [msgs[id].model_dump(include={"prompt", "completion", "selection_num"}) for id in req.msg_ids]
+    msgs = [
+        msgs[id].model_dump(include={"prompt", "completion", "selection_num"})
+        for id in req.msg_ids
+    ]
     if req.mode == "rewrite":
         resps = rewritten_responses(msgs)
         change_msgs(
@@ -979,6 +1120,7 @@ def chatgpt(req: GPTReq):
 def export_changed_messages(mode: Literal["rewrite", "rate"]):
     with lock:
         msgs = message_manager.messages.copy()
+    export_path = "None"
     if mode == "rewrite":
         msgs = [
             {"prompt": msg.prompt, "completion": msg.rewritten_response}
@@ -986,7 +1128,7 @@ def export_changed_messages(mode: Literal["rewrite", "rate"]):
             if msg.rewritten_response
         ]
         export_path = os.path.join(
-            proj_path, "exp2", "datasets", "sft_data", "sft_data.json"
+            proj_path, "llm_tuning", "datasets", "sft_data", "sft_data.json"
         )
         with open(export_path, "w") as f:
             json.dump(msgs, f, ensure_ascii=False, indent=4)
@@ -997,11 +1139,11 @@ def export_changed_messages(mode: Literal["rewrite", "rate"]):
             if msg.rating
         ]
         export_path = os.path.join(
-            proj_path, "exp2", "datasets", "ppo_data", "ppo_data.json"
+            proj_path, "llm_tuning", "datasets", "ppo_data", "ppo_data.json"
         )
         with open(export_path, "w") as f:
             json.dump(msgs, f, ensure_ascii=False, indent=4)
-    return HTMLResponse()
+    return HTMLResponse(content=f"Export to {export_path}")
 
 
 @app.post("/api/state")
@@ -1047,17 +1189,23 @@ async def start():
                 )
             # launch server
             simulation_config_path = os.path.join(
-                proj_path, "simulation", "examples", _scene, "configs", "simulation_config.yml"
+                proj_path,
+                "simulation",
+                "examples",
+                _scene,
+                "configs",
+                "simulation_config.yml",
             )
             with open(simulation_config_path, "r") as f:
                 simulation_config = yaml.load(f)
             launch_server_sh_path = os.path.join(
-                proj_path, "simulation", "examples", _scene, "launch_server.sh"
+                proj_path, "simulation", "launch_server.sh"
             )
             run_sh_blocking(
                 launch_server_sh_path,
                 str(simulation_config["server_num_per_host"]),
                 str(simulation_config["base_port"]),
+                _scene,
             )
             time.sleep(10 + 5 * retry_count)
 
@@ -1143,7 +1291,7 @@ async def start():
         except Exception as e:
             logger.error(e)
             kill_server_sh_path = os.path.join(
-                proj_path, "simulation", "examples", _scene, "kill_all_server.sh"
+                proj_path, "simulation", "kill_all_server.sh"
             )
             run_sh_blocking(kill_server_sh_path)
 
@@ -1153,7 +1301,10 @@ async def start():
 
             # 如果达到最大重试次数，返回错误
             if retry_count >= max_retries:
-                return HTMLResponse(content="Failed to start simulator after multiple attempts.", status_code=500)
+                return HTMLResponse(
+                    content="Failed to start simulator after multiple attempts.",
+                    status_code=500,
+                )
 
     return HTMLResponse(content="Simulator started successfully.", status_code=200)
 
@@ -1161,7 +1312,10 @@ async def start():
 @app.post("/pause")
 async def pause():
     if simulator is None:
-        return HTMLResponse(content="Simulator is not running. Please start simulation first.", status_code=400)
+        return HTMLResponse(
+            content="Simulator is not running. Please start simulation first.",
+            status_code=400,
+        )
     if simulator.cur_round == -1:
         # Distribute MsgID for messages
         with lock:
@@ -1187,14 +1341,23 @@ async def pause():
     return HTMLResponse()
 
 
+@app.get("/pause")
+def pause_state():
+    return not play_event.is_set()
+
+
 @app.post("/resume")
 async def resume():
     if simulator is None:
-        return HTMLResponse(content="Simulator is not running. Please start simulation first.", status_code=400)
+        return HTMLResponse(
+            content="Simulator is not running. Please start simulation first.",
+            status_code=400,
+        )
     if simulator.cur_round == -1:
         return HTMLResponse(content="Simulation has already finished.", status_code=409)
     if play_event.is_set():
         return HTMLResponse(content="Simulation is already running.", status_code=409)
+    time.sleep(5)
     global cur_msgs
     cur_msgs = None
     message_manager.clear()
@@ -1215,7 +1378,7 @@ async def reset():
     # Clean distributed servers
     if distributed:
         kill_server_sh_path = os.path.join(
-            proj_path, "simulation", "examples", _scene, "kill_all_server.sh"
+            proj_path, "simulation", "kill_all_server.sh"
         )
         run_sh_blocking(kill_server_sh_path)
     global simulator, simulation_thread, cur_msgs, agent_coordinates, favorite_agents, transform, avatar_radius, agent_info, train_progress

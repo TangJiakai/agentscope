@@ -10,8 +10,8 @@ class MessageUnit(BaseModel):
     agent_type: str
     prompt: str
     completion: str
-    rewritten_response: Optional[str] = None
-    rating: Optional[int] = None
+    rewritten_response: Optional[str] = ""
+    rating: Optional[int] = 0
     selection_num: Optional[int] = None
 
 

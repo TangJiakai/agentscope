@@ -1,8 +1,8 @@
 #!/bin/bash
 
-port_list=(8666 8667 8668 8669)
-gpu_list=(0 1 2 3)
-model_path="your_embedding_model_path"
+port_list=(8666)
+gpu_list=(0)
+model_path="/data/pretrain_dir/m3e-base"
 
 script_path=$(cd `dirname $0`; pwd)
 PID_FILE="${script_path}/.pid"

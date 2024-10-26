@@ -1,0 +1,6 @@
+{
+    "cls": "ShortMemory",
+    "args": {
+        "stm_K": 2
+    }
+}

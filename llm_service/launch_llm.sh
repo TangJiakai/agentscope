@@ -16,7 +16,7 @@ echo "GPU ID: $CUDA_VISIBLE_DEVICES"
 current_dir=$(cd `dirname $0`; pwd)
 llm_tuning_dir="$(dirname "$current_dir")/llm_tuning/saves"
 
-LLM_FILE="your_llm_path"
+LLM_FILE="/data/pretrain_dir/Meta-Llama-3-8B-Instruct"
 
 LOG_FILE="${current_dir}/.log"
 PID_FILE="${current_dir}/.pid"
@@ -32,11 +32,12 @@ if [ -f "${llm_tuning_dir}/adapter_config.json" ]; then
         --enforce-eager \
         --enable-prefix-caching \
         --enable-lora \
-        --lora-modules lora="${save_dir}" \
+        --lora-modules lora="${llm_tuning_dir}" \
         --disable-frontend-multiprocessing \
         --guided-decoding-backend=lm-format-enforcer \
         --gpu-memory-utilization 0.8 \
-        2>> $LOG_FILE &
+        >> $LOG_FILE 2>&1 &
+        # 2>> $LOG_FILE &
 else
     python -m vllm.entrypoints.openai.api_server \
         --model $LLM_FILE \

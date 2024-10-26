@@ -126,7 +126,10 @@ class ChatRoomAgent(BaseAgent):
         response = self.model(
             prompt,
             parse_func=self.room.chatting_parse_func,
-        ).text
+        )
+        if not hasattr(x, "external_interview"):
+            self._send_message(prompt, response)
+        response = response.text
         msg = Msg(name=self.name, content=response, role="assistant")
         if response:
             self.speak(msg)

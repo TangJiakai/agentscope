@@ -14,6 +14,13 @@ from loguru import logger
 import agentscope
 from agentscope.agents.agent import DistConf
 
+from simulation.helpers.events import (
+    play_event,
+    stop_event,
+    kill_event,
+    pause_success_event,
+    check_pause,
+)
 from simulation.helpers.message import message_manager
 from simulation.helpers.constants import *
 from agentscope.constants import _DEFAULT_SAVE_DIR
@@ -146,6 +153,17 @@ class Simulator(BaseSimulator):
             self._one_round()
             self.env.chatting()
             self.save()
+            if stop_event.is_set():
+                message_manager.message_queue.put(
+                    f"Stop simulation by user at round {r}."
+                )
+                logger.info(f"Stop simulation by user at round {r}.")
+                break
+            pause_success_event.set()
+            check_pause()
+            if kill_event.is_set():
+                logger.info(f"Kill simulation by user at round {r}.")
+                return
 
         self.cur_round = -1
         message_manager.message_queue.put("Simulation finished.")

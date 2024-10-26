@@ -2,83 +2,42 @@
     {
         "class": "SeekerAgent",
         "args": {
-            "name": "Brian Lee",
+            "name": "Sophia Chen",
             "cv": {
-                "Education": "Bachelor's Degree in Information Technology from Georgia Institute of Technology",
+                "Education": "Master's in Data Science from Stanford University",
                 "Work Experience": [
                     {
-                        "Company": "Web Solutions Inc.",
-                        "Position": "Frontend Developer",
-                        "Time": "2017-2020"
+                        "Company": "Data Insights Co.",
+                        "Position": "Data Analyst",
+                        "Time": "2017-2019"
                     },
                     {
-                        "Company": "AI Tech Labs",
-                        "Position": "UI/UX Designer",
-                        "Time": "2020-2022"
+                        "Company": "AI Innovations",
+                        "Position": "Machine Learning Engineer",
+                        "Time": "2019-Present"
                     }
                 ],
                 "Skills": [
-                    "JavaScript",
-                    "React",
-                    "HTML/CSS",
-                    "User Research",
-                    "Prototyping"
+                    "Python",
+                    "R",
+                    "Deep Learning",
+                    "Data Visualization",
+                    "Natural Language Processing"
                 ]
             },
             "trait": {
-                "Age": 26,
-                "Gender": "Male",
-                "Patience": "Average",
-                "Risk Tolerance": "Moderate",
-                "Positive Reciprocity": "Average",
+                "Age": 32,
+                "Gender": "Female",
+                "Patience": "High",
+                "Risk Tolerance": "Low",
+                "Positive Reciprocity": "Very High",
                 "Negative Reciprocity": "Low",
-                "Altruism": "Moderate",
-                "Trust": "Average"
+                "Altruism": "High",
+                "Trust": "Very High"
             },
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15000
-        }
-    },
-    {
-        "class": "SeekerAgent",
-        "args": {
-            "name": "Ella Jones",
-            "cv": {
-                "Education": "Bachelor's Degree in Human-Computer Interaction from University of Washington",
-                "Work Experience": [
-                    {
-                        "Company": "Design Innovations",
-                        "Position": "User Experience Researcher",
-                        "Time": "2019-2021"
-                    },
-                    {
-                        "Company": "AI Experience Labs",
-                        "Position": "Product Designer",
-                        "Time": "2021-2022"
-                    }
-                ],
-                "Skills": [
-                    "User Testing",
-                    "Wireframing",
-                    "Usability Testing",
-                    "Graphic Design",
-                    "Prototyping Tools"
-                ]
-            },
-            "trait": {
-                "Age": 27,
-                "Gender": "Female",
-                "Patience": "High",
-                "Risk Tolerance": "Moderate",
-                "Positive Reciprocity": "High",
-                "Negative Reciprocity": "Low",
-                "Altruism": "High",
-                "Trust": "Average"
-            },
-            "model_config_name": "Llama3",
-            "host": "localhost",
-            "port": 15001
         }
     },
     {
@@ -119,7 +78,89 @@
             },
             "model_config_name": "Llama3",
             "host": "localhost",
+            "port": 15001
+        }
+    },
+    {
+        "class": "SeekerAgent",
+        "args": {
+            "name": "Ava Patel",
+            "cv": {
+                "Education": "PhD in Artificial Intelligence from Oxford University",
+                "Work Experience": [
+                    {
+                        "Company": "Smart Robotics Inc.",
+                        "Position": "Research Scientist",
+                        "Time": "2015-2018"
+                    },
+                    {
+                        "Company": "NexGen AI",
+                        "Position": "Lead AI Researcher",
+                        "Time": "2018-Present"
+                    }
+                ],
+                "Skills": [
+                    "Python",
+                    "C++",
+                    "Reinforcement Learning",
+                    "Robotics",
+                    "Algorithm Development"
+                ]
+            },
+            "trait": {
+                "Age": 35,
+                "Gender": "Female",
+                "Patience": "Very High",
+                "Risk Tolerance": "Moderate",
+                "Positive Reciprocity": "High",
+                "Negative Reciprocity": "Very Low",
+                "Altruism": "Very High",
+                "Trust": "High"
+            },
+            "model_config_name": "Llama3",
+            "host": "localhost",
             "port": 15002
+        }
+    },
+    {
+        "class": "SeekerAgent",
+        "args": {
+            "name": "Ethan Rodriguez",
+            "cv": {
+                "Education": "Bachelor's Degree in Software Engineering from University of Texas",
+                "Work Experience": [
+                    {
+                        "Company": "Digital Solutions",
+                        "Position": "Frontend Developer",
+                        "Time": "2016-2019"
+                    },
+                    {
+                        "Company": "AI Startups",
+                        "Position": "Full Stack Developer",
+                        "Time": "2019-Present"
+                    }
+                ],
+                "Skills": [
+                    "JavaScript",
+                    "React",
+                    "Node.js",
+                    "Artificial Intelligence",
+                    "Database Management"
+                ]
+            },
+            "trait": {
+                "Age": 30,
+                "Gender": "Male",
+                "Patience": "Average",
+                "Risk Tolerance": "High",
+                "Positive Reciprocity": "Above Average",
+                "Negative Reciprocity": "Moderate",
+                "Altruism": "Average",
+                "Trust": "Above Average"
+            },
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15003
         }
     },
     {
@@ -160,7 +201,7 @@
             },
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15003
+            "port": 15004
         }
     },
     {
@@ -201,85 +242,44 @@
             },
             "model_config_name": "Llama3",
             "host": "localhost",
-            "port": 15004
-        }
-    },
-    {
-        "class": "SeekerAgent",
-        "args": {
-            "name": "Carmen Rodriguez",
-            "cv": {
-                "Education": "PhD in Artificial Intelligence from Stanford University",
-                "Work Experience": [
-                    {
-                        "Company": "Future Tech Co.",
-                        "Position": "Research Scientist",
-                        "Time": "2015-2018"
-                    },
-                    {
-                        "Company": "Smart Robotics Inc.",
-                        "Position": "Lead Researcher",
-                        "Time": "2018-2022"
-                    }
-                ],
-                "Skills": [
-                    "Deep Learning",
-                    "Natural Language Processing",
-                    "Robotics",
-                    "Algorithm Design",
-                    "Research Methodology"
-                ]
-            },
-            "trait": {
-                "Age": 34,
-                "Gender": "Female",
-                "Patience": "Very High",
-                "Risk Tolerance": "Low",
-                "Positive Reciprocity": "Very High",
-                "Negative Reciprocity": "Low",
-                "Altruism": "Very High",
-                "Trust": "Very High"
-            },
-            "model_config_name": "Llama3",
-            "host": "localhost",
             "port": 15005
         }
     },
     {
         "class": "SeekerAgent",
         "args": {
-            "name": "Carmen Rodriguez",
+            "name": "Brian Lee",
             "cv": {
-                "Education": "PhD in Artificial Intelligence from Stanford University",
+                "Education": "Bachelor's Degree in Information Technology from Georgia Institute of Technology",
                 "Work Experience": [
                     {
-                        "Company": "Future Tech Co.",
-                        "Position": "Research Scientist",
-                        "Time": "2015-2018"
+                        "Company": "Web Solutions Inc.",
+                        "Position": "Frontend Developer",
+                        "Time": "2017-2020"
                     },
                     {
-                        "Company": "Smart Robotics Inc.",
-                        "Position": "Lead Researcher",
-                        "Time": "2018-2022"
+                        "Company": "AI Tech Labs",
+                        "Position": "UI/UX Designer",
+                        "Time": "2020-2022"
                     }
                 ],
                 "Skills": [
-                    "Deep Learning",
-                    "Natural Language Processing",
-                    "Robotics",
-                    "Algorithm Design",
-                    "Research Methodology"
+                    "JavaScript",
+                    "React",
+                    "HTML/CSS",
+                    "User Research",
+                    "Prototyping"
                 ]
             },
             "trait": {
-                "Age": 34,
-                "Gender": "Female",
-                "Patience": "Very High",
-                "Risk Tolerance": "Low",
-                "Positive Reciprocity": "Very High",
+                "Age": 26,
+                "Gender": "Male",
+                "Patience": "Average",
+                "Risk Tolerance": "Moderate",
+                "Positive Reciprocity": "Average",
                 "Negative Reciprocity": "Low",
-                "Altruism": "Very High",
-                "Trust": "Very High"
+                "Altruism": "Moderate",
+                "Trust": "Average"
             },
             "model_config_name": "Llama3",
             "host": "localhost",
@@ -289,37 +289,37 @@
     {
         "class": "SeekerAgent",
         "args": {
-            "name": "Sophia Chen",
+            "name": "Carmen Rodriguez",
             "cv": {
-                "Education": "Master's in Data Science from Stanford University",
+                "Education": "PhD in Artificial Intelligence from Stanford University",
                 "Work Experience": [
                     {
-                        "Company": "Data Insights Co.",
-                        "Position": "Data Analyst",
-                        "Time": "2017-2019"
+                        "Company": "Future Tech Co.",
+                        "Position": "Research Scientist",
+                        "Time": "2015-2018"
                     },
                     {
-                        "Company": "AI Innovations",
-                        "Position": "Machine Learning Engineer",
-                        "Time": "2019-Present"
+                        "Company": "Smart Robotics Inc.",
+                        "Position": "Lead Researcher",
+                        "Time": "2018-2022"
                     }
                 ],
                 "Skills": [
-                    "Python",
-                    "R",
                     "Deep Learning",
-                    "Data Visualization",
-                    "Natural Language Processing"
+                    "Natural Language Processing",
+                    "Robotics",
+                    "Algorithm Design",
+                    "Research Methodology"
                 ]
             },
             "trait": {
-                "Age": 32,
+                "Age": 34,
                 "Gender": "Female",
-                "Patience": "High",
+                "Patience": "Very High",
                 "Risk Tolerance": "Low",
                 "Positive Reciprocity": "Very High",
                 "Negative Reciprocity": "Low",
-                "Altruism": "High",
+                "Altruism": "Very High",
                 "Trust": "Very High"
             },
             "model_config_name": "Llama3",
@@ -330,42 +330,83 @@
     {
         "class": "SeekerAgent",
         "args": {
-            "name": "Carmen Rodriguez",
+            "name": "David Kim",
             "cv": {
-                "Education": "PhD in Artificial Intelligence from Stanford University",
+                "Education": "Bachelor's Degree in Cybersecurity from University of Maryland",
                 "Work Experience": [
                     {
-                        "Company": "Future Tech Co.",
-                        "Position": "Research Scientist",
-                        "Time": "2015-2018"
+                        "Company": "SecureNet Solutions",
+                        "Position": "Cybersecurity Analyst",
+                        "Time": "2018-2021"
                     },
                     {
-                        "Company": "Smart Robotics Inc.",
-                        "Position": "Lead Researcher",
-                        "Time": "2018-2022"
+                        "Company": "AI Defense Corp.",
+                        "Position": "Security Engineer",
+                        "Time": "2021-2022"
                     }
                 ],
                 "Skills": [
-                    "Deep Learning",
-                    "Natural Language Processing",
-                    "Robotics",
-                    "Algorithm Design",
-                    "Research Methodology"
+                    "Network Security",
+                    "Penetration Testing",
+                    "Python",
+                    "Threat Analysis",
+                    "Ethical Hacking"
                 ]
             },
             "trait": {
-                "Age": 34,
-                "Gender": "Female",
-                "Patience": "Very High",
-                "Risk Tolerance": "Low",
-                "Positive Reciprocity": "Very High",
-                "Negative Reciprocity": "Low",
-                "Altruism": "Very High",
-                "Trust": "Very High"
+                "Age": 29,
+                "Gender": "Male",
+                "Patience": "Above Average",
+                "Risk Tolerance": "High",
+                "Positive Reciprocity": "Average",
+                "Negative Reciprocity": "Moderate",
+                "Altruism": "Average",
+                "Trust": "Above Average"
             },
             "model_config_name": "Llama3",
             "host": "localhost",
             "port": 15008
+        }
+    },
+    {
+        "class": "SeekerAgent",
+        "args": {
+            "name": "Ella Jones",
+            "cv": {
+                "Education": "Bachelor's Degree in Human-Computer Interaction from University of Washington",
+                "Work Experience": [
+                    {
+                        "Company": "Design Innovations",
+                        "Position": "User Experience Researcher",
+                        "Time": "2019-2021"
+                    },
+                    {
+                        "Company": "AI Experience Labs",
+                        "Position": "Product Designer",
+                        "Time": "2021-2022"
+                    }
+                ],
+                "Skills": [
+                    "User Testing",
+                    "Wireframing",
+                    "Usability Testing",
+                    "Graphic Design",
+                    "Prototyping Tools"
+                ]
+            },
+            "trait": {
+                "Age": 27,
+                "Gender": "Female",
+                "Patience": "High",
+                "Risk Tolerance": "Moderate",
+                "Positive Reciprocity": "High",
+                "Negative Reciprocity": "Low",
+                "Altruism": "High",
+                "Trust": "Average"
+            },
+            "model_config_name": "Llama3",
+            "host": "localhost",
+            "port": 15009
         }
     }
 ]

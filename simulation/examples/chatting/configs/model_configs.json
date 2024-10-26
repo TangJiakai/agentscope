@@ -2,12 +2,12 @@
     {
         "config_name": "LLM-1",
         "model_type": "openai_chat",
-        "model_name": "your_llm_model_path or id set in vllm",
+        "model_name": "/data/pretrain_dir/Meta-Llama-3-8B-Instruct",
         "api_key": "api_key",
         "client_args": {
             "max_retries": 10,
-            "base_url": "base_url",
-            "timeout": 6000
+            "base_url": "http://localhost:8084/v1",
+            "timeout": 6000.0
         },
         "generate_args": {
             "temperature": 0.7,
@@ -15,4 +15,3 @@
         }
     }
 ]
-

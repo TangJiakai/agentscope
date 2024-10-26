@@ -1,11 +1,11 @@
 #!/bin/bash
 
-export CUDA_VISIBLE_DEVICES="0"
+export CUDA_VISIBLE_DEVICES="0,4"
 
 current_dir=$(cd `dirname $0`; pwd)
 parent_dir=$(cd `dirname $0`/..; pwd)
 
-LLM_FILE="your_llm_path"
+LLM_FILE="/data/pretrain_dir/Meta-Llama-3-8B-Instruct"
 
 LOG_FILE="$current_dir/.log"
 PID_FILE="$current_dir/.pid"

@@ -1,11 +1,18 @@
 import os
 import importlib
+from .interviewer_agent import InterviewerAgentStates
+from .seeker_agent import SeekerAgentStates
 
 module_names = [
     f[:-3] for f in os.listdir(os.path.dirname(__file__)) if f.endswith("_agent.py")
 ]
 
-__all__ = []
+ALL_AGENT_STATES = {
+    "InterviewerAgent": InterviewerAgentStates,
+    "SeekerAgent": SeekerAgentStates,
+}
+
+__all__ = ["ALL_AGENT_STATES"]
 
 for module_name in module_names:
     module = importlib.import_module(f".{module_name}", package=__name__)

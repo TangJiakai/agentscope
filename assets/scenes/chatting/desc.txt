@@ -1,0 +1,1 @@
+In a chatting room scenario, we simulate multiple people chatting around a topic, and the order in which they speak is arbitrary.
