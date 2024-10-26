@@ -1,9 +1,0 @@
-{
-    "cls": "ShortLongReflectionMemory",
-    "args": {
-        "importance_weight": 0.15,
-        "stm_K": 2,
-        "ltm_K": 2,
-        "reflection_threshold": 1
-    }
-}

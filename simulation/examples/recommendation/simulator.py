@@ -56,8 +56,14 @@ class Simulator(BaseSimulator):
     def _prepare_agents_args(self):
         agent_configs = super()._prepare_agents_args()
         agent_relationships = []
-        for config in agent_configs:
-            agent_relationships.append(config["args"].pop("relationship"))
+        for i, config in enumerate(agent_configs):
+            relationship = config["args"].pop("relationship")
+            valid_relationship = []
+            for friend_id in relationship:
+                if friend_id >= len(agent_configs):
+                    friend_id = random.choice(list(range(0, i)) + list(range(i + 1, len(agent_configs))))
+                valid_relationship.append(friend_id)
+            agent_relationships.append(list(set(valid_relationship)))
 
         return agent_configs, agent_relationships
 

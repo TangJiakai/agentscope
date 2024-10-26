@@ -71,7 +71,10 @@ class RecUserAgent(BaseAgent):
             self.memory.get_tokennum_func = self.get_tokennum_func
             self.memory._send_message = self._send_message
         self.env = env
-        self._profile = f"- Name: {self.name} - Profile: {profile}"
+        self._profile = (
+            f"### Name \n{self.name}\n"
+            f"### Profile \n{profile}"
+        )
         self.relationship = relationship
 
         self._state = "idle"

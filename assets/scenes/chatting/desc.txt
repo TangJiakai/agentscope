@@ -1,1 +1,1 @@
-In a chatting room scenario, we simulate multiple people chatting around a topic, and the order in which they speak is arbitrary.
+A multi-agent discussion scenario allows multiple agents to engage in a simulated discussion based on a target task or topic. In the default scenario, the framework sets the topic as a discussion among members of different roles (such as game art designer, game programmer, and game planner) on how to collaborate to develop an open-world game.
