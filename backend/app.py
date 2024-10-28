@@ -897,16 +897,19 @@ def get_all_checkpoints():
     if not runs.exists():
         runs.mkdir()
     checkpoints = runs.glob("*/*.pkl")
-    run_names = [checkpoint.parent for checkpoint in checkpoints]
     resp = []
-    for run_name in run_names:
-        checkpoints = run_name.glob("*.pkl")
-        resp.append(
-            {
-                "run_name": run_name.name,
-                "pkls": [checkpoint.name for checkpoint in checkpoints],
-            }
-        )
+    for checkpoint in checkpoints:
+        resp.append(f"{checkpoint.parent.name}/{checkpoint.name}")
+    # run_names = [checkpoint.parent for checkpoint in checkpoints]
+    # resp = []
+    # for run_name in run_names:
+    #     checkpoints = run_name.glob("*.pkl")
+    #     resp.append(
+    #         {
+    #             "run_name": run_name.name,
+    #             "pkls": [checkpoint.name for checkpoint in checkpoints],
+    #         }
+    #     )
     return resp
 
 
