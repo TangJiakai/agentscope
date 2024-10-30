@@ -105,37 +105,39 @@ GPU_ID = "0"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Update backend_server_url
-    global backend_server_url
-    host = os.environ.get("HOST", "0.0.0.0")
-    port = os.environ.get("PORT", 9000)
-    backend_server_url = f"http://{host}:{port}"
-    # Launch LLM
-    launch_llm_sh_path = os.path.join(proj_path, "llm_service", "launch_llm.sh")
-    run_sh_async(launch_llm_sh_path, LLM_PORT, GPU_ID)
-    # Launch embedding service
-    launch_embedding_sh_path = os.path.join(
-        proj_path, "embedding_service", "launch_multi_emb_models.sh"
-    )
-    run_sh_async(launch_embedding_sh_path)
-
-    yield
-
-    # Kill LLM
-    kill_llm_sh_path = os.path.join(proj_path, "llm_service", "kill_llm.sh")
-    run_sh_blocking(kill_llm_sh_path)
-    # Kill embedding service
-    kill_embedding_sh_path = os.path.join(
-        proj_path, "embedding_service", "kill_emb_models.sh"
-    )
-    run_sh_blocking(kill_embedding_sh_path)
-
-    # Clean distributed servers
-    if distributed:
-        kill_server_sh_path = os.path.join(
-            proj_path, "simulation", "kill_all_server.sh"
+    try:
+        # Update backend_server_url
+        global backend_server_url
+        host = os.environ.get("HOST", "0.0.0.0")
+        port = os.environ.get("PORT", 9000)
+        backend_server_url = f"http://{host}:{port}"
+        # Launch LLM
+        launch_llm_sh_path = os.path.join(proj_path, "llm_service", "launch_llm.sh")
+        run_sh_async(launch_llm_sh_path, LLM_PORT, GPU_ID)
+        # Launch embedding service
+        launch_embedding_sh_path = os.path.join(
+            proj_path, "embedding_service", "launch_multi_emb_models.sh"
         )
-        run_sh_blocking(kill_server_sh_path)
+        run_sh_async(launch_embedding_sh_path)
+
+        yield
+
+    finally:
+        # Kill LLM
+        kill_llm_sh_path = os.path.join(proj_path, "llm_service", "kill_llm.sh")
+        run_sh_blocking(kill_llm_sh_path)
+        # Kill embedding service
+        kill_embedding_sh_path = os.path.join(
+            proj_path, "embedding_service", "kill_emb_models.sh"
+        )
+        run_sh_blocking(kill_embedding_sh_path)
+
+        # Clean distributed servers
+        if distributed:
+            kill_server_sh_path = os.path.join(
+                proj_path, "simulation", "kill_all_server.sh"
+            )
+            run_sh_blocking(kill_server_sh_path)
 
 
 app = FastAPI(lifespan=lifespan)
@@ -875,6 +877,7 @@ def get_current_checkpoint():
 def load_checkpoint(checkpoint_req: PathReq):
     logger.info(f"Load checkpoint from {checkpoint_req.path}")
     checkpoint_path = checkpoint_req.path
+    logger.info("!!!!!!" + checkpoint_path)
     simulation_config_path = os.path.join(
         proj_path, "simulation", "examples", _scene, "configs", "simulation_config.yml"
     )

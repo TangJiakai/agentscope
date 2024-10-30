@@ -10,6 +10,12 @@ class NoneMemory:
     ) -> None:
         pass
 
+    def __getstate__(self):
+        return dict()
+
+    def __setstate__(self, state):
+        pass
+
     def add(self, memory: Union[Sequence[Msg], Msg, None] = None):
         pass
 

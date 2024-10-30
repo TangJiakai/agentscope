@@ -36,7 +36,7 @@ if [ -f "${llm_tuning_dir}/adapter_config.json" ]; then
         --lora-modules lora="${llm_tuning_dir}" \
         --disable-frontend-multiprocessing \
         --guided-decoding-backend=lm-format-enforcer \
-        --gpu-memory-utilization 0.8 \
+        --gpu-memory-utilization 0.9 \
         >> $LOG_FILE 2>&1 &
 else
     python -m vllm.entrypoints.openai.api_server \
